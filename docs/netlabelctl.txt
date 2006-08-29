@@ -1,0 +1,111 @@
+NetLabel Control Utility
+==============================================================================
+Paul Moore <paul.moore@hp.com>
+
+* Introduction
+
+The NetLabel control utility, netlabelctl, is a command line program designed
+to allow system administrators to configure the NetLabel system in the kernel.
+The utility is based around different "modules" which correspond to the
+different types of NetLabel commands supported by the kernel.
+
+* The Management Module (mgmt)
+
+The management module, specified on the command line as "mgmt", is used to
+perform general queries about the NetLabel system.  The different commands are
+as follows:
+
+ # netlabelctl mgmt version
+
+This command displays the version of the kernel's NetLabel module.
+
+ # netlabelctl mgmt protocols
+
+This command lists the supported NetLabel protocols.
+
+ # netlabelctl mgmt list
+
+This command lists the current LSM domain to NetLabel protocol mappings.
+
+* The Domain Mapping Module (map)
+
+The domain mapping module, specified on the command line as "map", is used to
+map different NetLabel protocols such as CIPSO/IPv4 to LSM domains.  Using the
+map module you can assign different labeling protcols to each LSM domain or use
+a single default labeling protocol.
+
+ # netlabelctl map list
+
+This command lists the current LSM domain to NetLabel protocol mappings.
+
+ # netlabelctl map add default|domain:<domain> protocol:<protocol>[,<extra>]
+
+This command adds a LSM domain to NetLabel protocol mapping to the kernel.
+Users can specify either a specific domain by typing "domain:<domain>" or they
+can set the default, used when no other mapping matches, by typing "default".
+When specifying the protocol to use the following options, including the
+"<extra>" fields are as follows:
+
+ o protocol:cipsov4,<doi>
+
+   This specifies the CIPSO/IPv4 protocol with DOI 1
+
+ o protocol:unlbl
+
+   This specifies the Unlabeled protocol, there is no "<extra>" field
+
+You can see what mappings are already configured with the "list" command.
+
+ # netlabelctl map del default|domain:<domain>
+
+This command removes a LSM domain to NetLabel protocol mapping from the kernel.
+
+* The Unlabled Module (unlbl)
+
+The Unlabeled module, specified on the command line as "unlbl", is used to
+configure the handling on unlabeled packets by the NetLabel system in the
+kernel.  The different commands are as follows:
+
+ # netlabelctl unlbl accept on|off
+
+This command enables or disables the receipt of unlabeled packets.
+
+ # netlabelctl unlbl list
+
+This command displays the current unlabeled receive setting.
+
+* The CIPSO/IPv4 Module (cipsov4)
+
+The CIPSO/IPv4 module, specified on the command line as "cipsov4", is used to
+configure the handling of CIPSO/IPv4 packets by the NetLabel system in the
+kernel.  The different commands are as follows:
+
+ # netlabelctl cipsov4 list [doi:<DOI>]
+
+This command lists all of the defined CIPSO/IPv4 definitions, or if a DOI value
+is specified it displays detailed information about the DOI definition.
+
+ # netlabelctl cipsov4 add std doi:<DOI> tags:<T1>,<Tn> \
+                       levels:<LL1>=<RL1>,<LLn>=<RLn> \
+                       categories:<LC1>=<RC1>,<LCn>=<RCn>
+
+This command adds a CIPSO/IPv4 DOI definition to the NetLabel system.  The 
+"<DOI>" field lets you specify the DOI value.  The "<Tx>" fields let you
+specify the CIPSO tags you wish to use with preference given to the first tag
+you list (currently only tag type 1 is supported).  The "<LLx>" and "<RLx>"
+fields allow you to define the local, "<LLx>", to remote/CIPSO, "<RLx>",
+sensitivity level mapping.  The "<LCx>" and "<RCx>" fields allow you to define
+the local, "<LCx>", to remote/CIPSO, "<RCx>", category mappings.
+
+ # netlabelctl cipsov4 add pass doi:<DOI> tags:<T1>,<Tn>
+
+This command adds a CIPSO/IPv4 DOI definition to the NetLabel system similar
+to the "add std" CIPSO/IPv4 command.  However, when using the "add pass"
+command you do not have the option to translate levels or categories, they are
+passed straight through the NetLabel system on both the outbound and inbound
+side.
+
+ # netlabelctl cipsov4 del doi:<DOI>
+
+This command allows you delete a CIPSO/IPv4 DOI definition.
+

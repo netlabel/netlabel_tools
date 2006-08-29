@@ -1,0 +1,46 @@
+NetLabel Tools CHANGELOG
+==============================================================================
+
+* Version 0.16 (August 3, 2006)
+------------------------------------------------------------------------------
+o Added a "version" flag (-V)
+o Moved the mapping commands to the new "map" class
+o Added support for the unlabeled list command
+o Updated the documentation to bring it up to date with the current options
+o Cleanup the libnetlabel interfaces a little bit
+o Shift to using NETLINK attributes, at some point we should use libnetlink
+
+* Version 0.15 (July 6, 2006)
+------------------------------------------------------------------------------
+o Modified the NETLINK communication bits to support the newly aligned fields
+
+* Version 0.14 (June 27, 2006)
+------------------------------------------------------------------------------
+o Added a RPM specfile based on a version from Steve Grubb <sgrubb@redhat.com>
+o Minor Makefile changes to ease tarball and RPM creation
+o Modified the NETLINK communication bits to support the new Generic NETLINK
+  communication mechanism
+
+* Version 0.13 (June 23, 2006)
+------------------------------------------------------------------------------
+o Added some text to the README to explain how to remove any pre-existing
+  NetLabel configuration
+o Added two patches from Klaus Weidner <klaus@atsec.com> to add some error
+  messages and better sendmsg() error reporting
+o Fixed some compiler warnings (added -Wall to CFLAGS) on Klaus' recomendation
+
+* Version 0.12 (June 13, 2006)
+------------------------------------------------------------------------------
+o Added support for the new CIPSO_V4_MAP_PASS CIPSO mapping type
+
+* Version 0.11 (June 7, 2006)
+------------------------------------------------------------------------------
+o Corrected a problem with the netlabel.h header file
+
+* Version 0.11 (June 6, 2006)
+------------------------------------------------------------------------------
+o Changed the libnetlabel to reflect changes to the NetLabel protocol
+
+* Version 0.10 (May 1, 2006)
+------------------------------------------------------------------------------
+o Initial version

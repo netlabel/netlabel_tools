@@ -1,0 +1,72 @@
+NetLabel Tools README
+==============================================================================
+Paul Moore <paul.moore@hp.com>
+
+* Note on the Documentation
+
+The text below is intended as a quick start guide to configuring the Linux
+NetLabel subsystm using the tools provided in this package.  For more
+documentation please look in the "docs/" subdirectory.
+
+* Quick Start
+
+The first step is to compile and install the netlabelctl application.  It
+assumes you are already running a kernel with NetLabel support, if you are not
+please configure your kernel for NetLabel support before going any further.
+Once you have unpacked the NetLabel tools tarball run the following to build
+the application:
+
+ # make
+
+Then as root run the following command to install the required files (installs
+to /usr/local by default):
+
+ # make install
+
+Now you can proceed to configuring the NetLabel system in the kernel.  Before
+you begin you first need to see if your kernel is already configured to some
+extent (it probably is), so run the following commands:
+
+ # netlabelctl -p cipsov4 list
+ # netlabelctl -p map list
+
+If you see any configured CIPSO definitions you can remove them with the
+following command:
+
+ # netlabelctl -p cipsov4 del doi:<DOI>
+
+If you see any domain mappings you can remove them with the following command:
+
+ # netlabelctl -p map del domain:<DOMAIN>
+
+You can remove the default domain mapping with this command:
+
+ # netlabelctl -p map del default
+
+Finally, you set NetLabel to allow or deny incoming unlabeled packets with
+the following command:
+
+ # netlabelctl -p unlbl accept on|off
+
+Now that you have removed any existing NetLabel configuration you can setup a
+basic CIPSO configuration.  The first step is to add a CIPSO/IPv4 definition
+to the kernel.  The command below creates a CIPSO/IPv4 definition using a DOI
+value of 1, the permissive bitmask tag, and three levels and categories both
+mapping straight from the CIPSO values to the local values.
+
+ # netlabelctl cipsov4 add std doi:1 tags:1 levels:0=0,1=1,2=2 \
+   categories:0=0,1=1,2=2
+
+The next step is to tell the NetLabel system to use this CIPSO/IPv4 defintion
+by default.  You do that with the following command:
+
+ # netlabelctl map add default protocol:cipsov4,1
+
+You can verify that everything is configured correctly with the following two
+commands:
+
+ # netlabelctl -p cipsov4 list doi:1
+ # netlabelctl -p map list
+
+For a greater explanation of what these commands do please see the "docs/"
+directory, good luck!

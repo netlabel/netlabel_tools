@@ -1,0 +1,84 @@
+.TH "netlabelctl" 1 "14 July 2006" "paul.moore@hp.com" "NetLabel Documentation"
+.SH NAME
+netlabelctl \- NetLabel control utility
+.SH SYNOPSIS
+.B netlabelctl
+[<flags>] <module> [<commands>]
+.SH DESCRIPTION
+.B netlabelctl
+allows privileged users to query and manipulate the NetLabel subsystem within
+the kernel.
+.SH OPTIONS
+.TP
+Flags
+.TP
+.B \-h
+Help message
+.TP
+.B \-p
+Attempt to make the output "pretty"
+.TP
+.B \-t <seconds>
+Set a timeout to be used when waiting for the NetLabel subsystem to respond
+.TP
+.B \-v
+Enable extra output
+.TP
+.B \-V
+Display the version information
+.TP
+Modules
+.TP
+.B mgmt
+The following commands are valid within this module
+.nf
+
+version
+protocols
+.fi
+.TP
+.B map
+The following commands are valid within this module
+.nf
+
+add default|domain:<domain> protocol:<protocol>[,<extra>]
+del default|domain:<domain>
+list
+.fi
+.TP
+.B unlbl
+The following commands are valid within this module
+.nf
+
+accept on|off
+list
+.fi
+.TP
+.B cipsov4
+The following commands are valid within this module
+.nf
+
+add std doi:<DOI> tags:<T1>,<Tn> levels:<LL1>=<RL1>,<LLn>=<RLn>
+        categories:<LC1>=<RC1>,<LCn>=<RCn>
+add pass doi:<DOI> tags:<T1>,<Tn>
+del doi:<DOI>
+list [doi:<DOI>]
+.fi
+.SH "EXAMPLES"
+.TP
+.B netlabelctl cipsov4 add std doi:8 tags:1 levels:0=0,1=1 categories:0=1,1=0
+Add a CIPSO/IPv4 mapping with a DOI value of "8", using CIPSO tag "1"
+(the permissive bitmap tag).  The specified mapping converts local LSM levels
+"0" and "1" to CIPSO levels "0" and "1" respectively while local LSM categories
+"0" and "1" are mapped to CIPSO categories "1" and "0" respectively.
+.TP
+.B netlabelctl map add domain:lsm_specific_string protocol:cipsov4,8
+Add a domain mapping so that all outgoing packets asscoiated with the
+specified LSM domain string will be labeled according to the CIPSO/IPv4
+protocol using DOI 8.
+.SH "NOTES"
+This program is currently under development, please report any bugs to the author.
+.SH "AUTHOR"
+Paul Moore <paul.moore@hp.com>
+.SH "SEE ALSO"
+<other pages to be created at a future date>
