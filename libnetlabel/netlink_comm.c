@@ -34,8 +34,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
+#include <netlink/netlink.h>
 #include <linux/types.h>
-#include <linux/netlink.h>
 #include <linux/netlabel.h>
 
 #include <libnetlabel.h>

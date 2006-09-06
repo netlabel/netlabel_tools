@@ -31,73 +31,6 @@
 #define _NETLABEL_H
 
 /*
- * Generic NETLINK interface
- */
-
-#define INCLUDE_NL_GUTS
-#ifdef INCLUDE_NL_GUTS
-
-/* FIXME: perhaps some or all this lives in a system header file? */
-
-#define NLMSG_HDRLEN            NLMSG_ALIGN(sizeof(struct nlmsghdr))
-
-struct nlattr
-{
-  unsigned short nla_len;
-  unsigned short nla_type;
-};
-
-enum {
-  NLA_UNSPEC,
-  NLA_U8,
-  NLA_U16,
-  NLA_U32,
-  NLA_U64,
-  NLA_STRING,
-  NLA_FLAG,
-  NLA_MSECS,
-  NLA_NESTED,
-  __NLA_TYPE_MAX,
-};
-#define NLA_TYPE_MAX (__NLA_TYPE_MAX - 1)
-
-#define NLA_HDRLEN              NLMSG_ALIGN(sizeof(struct nlattr))
-
-#define NETLINK_GENERIC		16
-
-struct genlmsghdr {
-  unsigned char cmd;
-  unsigned char version;
-  unsigned short reserved;
-};
-#define GENL_HDRLEN	        NLMSG_ALIGN(sizeof(struct genlmsghdr))
-
-#define GENL_ID_GENERATE	0
-#define GENL_ID_CTRL		0x10
-
-enum {
-  CTRL_CMD_UNSPEC,
-  CTRL_CMD_NEWFAMILY,
-  CTRL_CMD_DELFAMILY,
-  CTRL_CMD_GETFAMILY,
-  CTRL_CMD_NEWOPS,
-  CTRL_CMD_DELOPS,
-  CTRL_CMD_GETOPS,
-  __CTRL_CMD_MAX,
-};
-#define CTRL_CMD_MAX (__CTRL_CMD_MAX - 1)
-
-enum {
-  CTRL_ATTR_UNSPEC,
-  CTRL_ATTR_FAMILY_ID,
-  CTRL_ATTR_FAMILY_NAME,
-  __CTRL_ATTR_MAX,
-};
-#define CTRL_ATTR_MAX (__CTRL_ATTR_MAX - 1)
-
-#endif /* INCLUDE_NL_GUTS */
-
-/*
  * NetLabel NETLINK protocol
  */
 
@@ -116,34 +49,38 @@ enum {
 #define NETLBL_NLTYPE_UNLABELED         5
 #define NETLBL_NLTYPE_UNLABELED_NAME    "NLBL_UNLBL"
 
-/* Generic return codes */
-#define NETLBL_E_OK                     0
-
 /*
  * MGMT
  */
 
 /* NetLabel Management commands */
 enum {
-  NLBL_MGMT_C_UNSPEC,
-  NLBL_MGMT_C_ACK,
-  NLBL_MGMT_C_ADD,
-  NLBL_MGMT_C_REMOVE,
-  NLBL_MGMT_C_LIST,
-  NLBL_MGMT_C_ADDDEF,
-  NLBL_MGMT_C_REMOVEDEF,
-  NLBL_MGMT_C_LISTDEF,
-  NLBL_MGMT_C_MODULES,
-  NLBL_MGMT_C_VERSION,
-  __NLBL_MGMT_C_MAX,
+	NLBL_MGMT_C_UNSPEC,
+	NLBL_MGMT_C_ACK,
+	NLBL_MGMT_C_ADD,
+	NLBL_MGMT_C_REMOVE,
+	NLBL_MGMT_C_LISTALL,
+	NLBL_MGMT_C_ADDDEF,
+	NLBL_MGMT_C_REMOVEDEF,
+	NLBL_MGMT_C_LISTDEF,
+	NLBL_MGMT_C_PROTOCOLS,
+	NLBL_MGMT_C_VERSION,
+	__NLBL_MGMT_C_MAX,
 };
 #define NLBL_MGMT_C_MAX (__NLBL_MGMT_C_MAX - 1)
 
-/*
- * RIPSO
- */
-
-/* XXX - TBD */
+/* NetLabel Management attributes */
+enum {
+	NLBL_MGMT_A_UNSPEC,
+	NLBL_MGMT_A_SEQNUM,
+	NLBL_MGMT_A_ERRNO,
+	NLBL_MGMT_A_DOMAIN,
+	NLBL_MGMT_A_PROTOCOL,
+	NLBL_MGMT_A_VERSION,
+	NLBL_MGMT_A_CV4DOI,
+	__NLBL_MGMT_A_MAX,
+};
+#define NLBL_MGMT_A_MAX (__NLBL_MGMT_A_MAX - 1)
 
 /*
  * CIPSO V4
@@ -156,21 +93,29 @@ enum {
 
 /* NetLabel CIPSOv4 commands */
 enum {
-  NLBL_CIPSOV4_C_UNSPEC,
-  NLBL_CIPSOV4_C_ACK,
-  NLBL_CIPSOV4_C_ADD,
-  NLBL_CIPSOV4_C_REMOVE,
-  NLBL_CIPSOV4_C_LIST,
-  NLBL_CIPSOV4_C_LISTALL,
-  __NLBL_CIPSOV4_C_MAX,
+	NLBL_CIPSOV4_C_UNSPEC,
+	NLBL_CIPSOV4_C_ACK,
+	NLBL_CIPSOV4_C_ADD,
+	NLBL_CIPSOV4_C_REMOVE,
+	NLBL_CIPSOV4_C_LIST,
+	NLBL_CIPSOV4_C_LISTALL,
+	__NLBL_CIPSOV4_C_MAX,
 };
 #define NLBL_CIPSOV4_C_MAX (__NLBL_CIPSOV4_C_MAX - 1)
 
-/*
- * CIPSO V6
- */
-
-/* XXX - TBD */
+/* NetLabel CIPSOv4 attributes */
+enum {
+	NLBL_CIPSOV4_A_UNSPEC,
+	NLBL_CIPSOV4_A_SEQNUM,
+	NLBL_CIPSOV4_A_ERRNO,
+	NLBL_CIPSOV4_A_DOI,
+	NLBL_CIPSOV4_A_MTYPE,
+	NLBL_CIPSOV4_A_TAGLST,
+	NLBL_CIPSOV4_A_MLSLVLLST,
+	NLBL_CIPSOV4_A_MLSCATLST,
+	__NLBL_CIPSOV4_A_MAX,
+};
+#define NLBL_CIPSOV4_A_MAX (__NLBL_CIPSOV4_A_MAX - 1)
 
 /*
  * UNLABELED
@@ -178,12 +123,22 @@ enum {
 
 /* NetLabel Unlabeled commands */
 enum {
-  NLBL_UNLABEL_C_UNSPEC,
-  NLBL_UNLABEL_C_ACK,
-  NLBL_UNLABEL_C_ACCEPT,
-  NLBL_UNLABEL_C_LIST,
-  __NLBL_UNLABEL_C_MAX,
+	NLBL_UNLABEL_C_UNSPEC,
+	NLBL_UNLABEL_C_ACK,
+	NLBL_UNLABEL_C_ACCEPT,
+	NLBL_UNLABEL_C_LIST,
+	__NLBL_UNLABEL_C_MAX,
 };
 #define NLBL_UNLABEL_C_MAX (__NLBL_UNLABEL_C_MAX - 1)
+
+/* NetLabel Unlabeled attributes */
+enum {
+	NLBL_UNLABEL_A_UNSPEC,
+	NLBL_UNLABEL_A_SEQNUM,
+	NLBL_UNLABEL_A_ERRNO,
+	NLBL_UNLABEL_A_ACPTFLG,
+	__NLBL_UNLABEL_A_MAX,
+};
+#define NLBL_UNLABEL_A_MAX (__NLBL_UNLABEL_A_MAX - 1)
 
 #endif /* _NETLABEL_H */

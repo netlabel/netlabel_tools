@@ -39,7 +39,7 @@ include ../macros.mk
 
 OBJS = main.o mgmt.o map.o unlabeled.o cipsov4.o
 
-LIBFLAGS = $(TOPDIR)/libnetlabel/libnetlabel.a
+LIBFLAGS = $(TOPDIR)/libnetlabel/libnetlabel.a -Lnl
 
 #
 # targets

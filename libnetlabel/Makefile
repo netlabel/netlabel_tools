@@ -37,7 +37,7 @@ include ../macros.mk
 # configuration
 #
 
-OBJS =	netlabel_init.o netlink_comm.o fields.o common.o \
+OBJS =	netlabel_init.o netlink_comm.o \
 	mod_mgmt.o mod_unlabeled.o mod_cipsov4.o 
 
 LIB = libnetlabel.a

@@ -4,6 +4,7 @@ NetLabel Tools CHANGELOG
 * Version X.XX (XXXXXX)
 ------------------------------------------------------------------------------
 o Converted to the new method of using NETLINK attributes
+o Use libnl for the NETLINK heavy lifting
 
 * Version 0.16 (August 3, 2006)
 ------------------------------------------------------------------------------

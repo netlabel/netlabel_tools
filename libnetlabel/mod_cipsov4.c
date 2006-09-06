@@ -29,17 +29,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <asm/types.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <linux/types.h>
-#include <linux/netlink.h>
-#include <linux/netlabel.h>
+#include <netlink/netlink.h>
 
+#include <netlabel.h>
 #include <libnetlabel.h>
-
-#include "fields.h"
-#include "common.h"
 
 /* Generic NETLINK family ID */
 static nlbl_type nlbl_cipsov4_fid = -1;
