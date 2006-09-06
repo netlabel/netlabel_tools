@@ -1,6 +1,10 @@
 NetLabel Tools CHANGELOG
 ==============================================================================
 
+* Version X.XX (XXXXXX)
+------------------------------------------------------------------------------
+o Converted to the new method of using NETLINK attributes
+
 * Version 0.16 (August 3, 2006)
 ------------------------------------------------------------------------------
 o Added a "version" flag (-V)

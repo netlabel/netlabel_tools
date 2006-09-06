@@ -30,8 +30,8 @@
 /*
  * Version
  */
-#define NETLBL_VER_STRING               "0.16"
-#define NETLBL_VER_DATE                 "August 3, 2006"
+#define NETLBL_VER_STRING               "X.XX"
+#define NETLBL_VER_DATE                 "Development"
 
 /*
  * Types

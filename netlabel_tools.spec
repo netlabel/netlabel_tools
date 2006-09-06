@@ -1,7 +1,7 @@
 
 Summary: Tools to manage the Linux NetLabel subsystem
 Name: netlabel_tools
-Version: 0.16
+Version: X.XX
 Release: 1
 License: GPL
 Group: System Environment/Daemons
