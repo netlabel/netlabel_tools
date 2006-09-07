@@ -90,7 +90,7 @@ static nlbl_msg *nlbl_mgmt_msg_new(uint16_t command, int flags)
 }
 
 /**
- * nlbl_mgmt_read - Read a NetLbel management message
+ * nlbl_mgmt_recv - Read a NetLbel management message
  * @hndl: the NetLabel handle
  * @msg: the message
  *

@@ -90,7 +90,7 @@ static nlbl_msg *nlbl_unlbl_msg_new(uint16_t command, int flags)
 }
 
 /**
- * nlbl_unlbl_read - Read a NetLbel unlbl message
+ * nlbl_unlbl_recv - Read a NetLbel unlbl message
  * @hndl: the NetLabel handle
  * @msg: the message
  *
