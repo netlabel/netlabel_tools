@@ -332,6 +332,8 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
 
       /* resize the array */
       protos = realloc(protos, sizeof(nlbl_proto) * (protos_count + 1));
+      if (protos == NULL)
+	goto protocols_return;
 
       /* get the attribute information */
       nla = nla_find(nla_head, ans_msg_attrlen, NLBL_MGMT_A_PROTOCOL);
@@ -882,6 +884,8 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
 
       /* resize the array */
       dmns = realloc(dmns, sizeof(nlbl_mgmt_domain) * (dmns_count + 1));
+      if (dmns == NULL)
+	goto listall_return;
       memset(&dmns[dmns_count], 0, sizeof(nlbl_mgmt_domain));
 
       /* get the attribute information */
@@ -889,6 +893,8 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
       if (nla == NULL)
 	goto listall_return;
       dmns[dmns_count].domain = malloc(nla_len(nla));
+      if (dmns[dmns_count].domain == NULL)
+	goto listall_return;
       strncpy(dmns[dmns_count].domain, nla_data(nla), nla_len(nla));
       nla = nla_find(nla_head, ans_msg_attrlen, NLBL_MGMT_A_PROTOCOL);
       if (nla == NULL)
