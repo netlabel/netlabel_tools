@@ -27,6 +27,14 @@
 #ifndef _LIBNETLABEL_H
 #define _LIBNETLABEL_H
 
+#include <sys/types.h>
+#include <linux/types.h>
+#include <netlink/netlink.h>
+#include <netlink/msg.h>
+#include <netlink/attr.h>
+
+#include <netlabel.h>
+
 /*
  * Version
  */

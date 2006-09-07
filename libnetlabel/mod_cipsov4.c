@@ -25,18 +25,11 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <linux/types.h>
-#include <netlink/netlink.h>
-#include <netlink/msg.h>
-#include <netlink/attr.h>
 
-#include <netlabel.h>
 #include <libnetlabel.h>
 
 #include "netlabel_internal.h"
