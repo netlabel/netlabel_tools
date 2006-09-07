@@ -110,6 +110,7 @@ struct nlattr *nlbl_attr_find(nlbl_msg *msg, int nla_type);
 
 /* management */
 int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version);
+int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols);
 int nlbl_mgmt_add(nlbl_handle *hndl, nlbl_mgmt_domain *domain);
 int nlbl_mgmt_adddef(nlbl_handle *hndl, nlbl_mgmt_domain *domain);
 int nlbl_mgmt_del(nlbl_handle *hndl, char *domain);
@@ -118,6 +119,8 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains);
 int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_mgmt_domain *domain);
 
 /* unlabeled */
+int nlbl_unlbl_accept(nlbl_handle *hndl, uint8_t allow_flag);
+int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag);
 
 /* cipso/ipv4 */
 

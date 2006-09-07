@@ -33,153 +33,217 @@
 #include <sys/socket.h>
 #include <linux/types.h>
 #include <netlink/netlink.h>
+#include <netlink/msg.h>
+#include <netlink/attr.h>
 
 #include <netlabel.h>
 #include <libnetlabel.h>
 
-/* Generic NETLINK family ID */
-static nlbl_type nlbl_unlabeled_fid = -1;
+#include "netlabel_internal.h"
+
+/* Generic Netlink family ID */
+static uint16_t nlbl_unlbl_fid = 0;
+
+/*
+ * Helper functions
+ */
+
+/**
+ * nlbl_unlbl_msg_new - Create a new NetLabel unlbl message
+ * @command: the NetLabel unlbl command
+ *
+ * Description:
+ * This function creates a new NetLabel unlbl message using @command and
+ * @flags.  Returns a pointer to the new message on success, or NULL on
+ * failure.
+ *
+ */
+static nlbl_msg *nlbl_unlbl_msg_new(uint16_t command, int flags)
+{
+  nlbl_msg *msg;
+  struct nlmsghdr *nl_hdr;
+  struct genlmsghdr *genl_hdr;
+
+  /* create a new message */
+  msg = nlbl_msg_new();
+  if (msg == NULL)
+    goto msg_new_failure;
+
+  /* setup the netlink header */
+  nl_hdr = nlbl_msg_nlhdr(msg);
+  if (nl_hdr == NULL)
+    goto msg_new_failure;
+  nl_hdr->nlmsg_type = nlbl_unlbl_fid;
+  nl_hdr->nlmsg_flags = flags;
+
+  /* setup the generic netlink header */
+  genl_hdr = nlbl_msg_genlhdr(msg);
+  if (genl_hdr == NULL)
+    goto msg_new_failure;
+  genl_hdr->cmd = command;
+
+  return msg;
+
+ msg_new_failure:
+  nlbl_msg_free(msg);
+  return NULL;
+}
+
+/**
+ * nlbl_unlbl_read - Read a NetLbel unlbl message
+ * @hndl: the NetLabel handle
+ * @msg: the message
+ *
+ * Description:
+ * Try to read a NetLabel unlbl message and return the message in @msg.
+ * Returns the number of bytes read on success, zero on EOF, and negative
+ * values on failure.
+ *
+ */
+static int nlbl_unlbl_recv(nlbl_handle *hndl, nlbl_msg **msg)
+{
+  int ret_val;
+  struct nlmsghdr *nl_hdr;
+
+  /* try to get a message from the handle */
+  ret_val = nlbl_comm_recv(hndl, msg);
+  if (ret_val <= 0)
+    goto recv_failure;
+  
+  /* process the response */
+  nl_hdr = nlbl_msg_nlhdr(*msg);
+  if (nl_hdr == NULL || nl_hdr->nlmsg_type != nlbl_unlbl_fid) {
+    ret_val = -EBADMSG;
+    goto recv_failure;
+  }
+  
+  return ret_val;
+  
+ recv_failure:
+  if (ret_val > 0)
+    nlbl_msg_free(*msg);
+  return ret_val;
+}
+
+/**
+ * nlbl_unlbl_parse_ack - Parse an ACK message
+ * @msg: the message
+ *
+ * Description:
+ * Parse the ACK message in @msg and return the error code specified in the
+ * ACK.
+ *
+ */
+static int nlbl_unlbl_parse_ack(nlbl_msg *msg)
+{
+  struct genlmsghdr *genl_hdr;
+  struct nlattr *nla;
+
+  genl_hdr = nlbl_msg_genlhdr(msg);
+  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_UNLABEL_C_ACK)
+    goto parse_ack_failure;
+  nla = nlbl_attr_find(msg, NLBL_UNLABEL_A_ERRNO);
+  if (nla == NULL)
+    goto parse_ack_failure;
+
+  return nla_get_u32(nla);
+
+ parse_ack_failure:
+  return -EBADMSG;
+}
 
 /*
  * Init functions
  */
 
-
 /**
- * nlbl_unlabeled_init - Perform any setup needed
+ * nlbl_unlbl_init - Perform any setup needed
  *
  * Description:
- * Do any setup needed for the unlabeled component, including determining the
- * NetLabel Unlabeled Generic NETLINK family ID.  Returns zero on success,
+ * Do any setup needed for the unlbl component, including determining the
+ * NetLabel unlbl Generic Netlink family ID.  Returns zero on success,
  * negative values on error.
  *
  */
-int nlbl_unlabeled_init(void)
+int nlbl_unlbl_init(void)
 {
-  int ret_val;
-  nlbl_socket sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
+  int ret_val = -ENOMEM;
+  nlbl_handle *hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
+  struct nlmsghdr *nl_hdr;
   struct genlmsghdr *genl_hdr;
-  struct nlattr *nla_hdr;
-  nlbl_type nl_type;
+  struct nlattr *nla;
 
-  /* open a socket */
-  ret_val = nlbl_netlink_open(&sock);
-  if (ret_val < 0)
-    return ret_val;
+  /* get a netlabel handle */
+  hndl = nlbl_comm_open();
+  if (hndl == NULL)
+    goto init_failure;
 
-  /* allocate a buffer for the family id request */
-  msg_len = GENL_HDRLEN + NLA_HDRLEN + 
-    strlen(NETLBL_NLTYPE_UNLABELED_NAME) + 1;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
-    goto init_return;
-  }
-  memset(msg, 0, msg_len);
-  msg_iter = msg;
+  /* create a new message */
+  msg = nlbl_msg_new();
+  if (msg == NULL)
+    goto init_failure;
 
-  /* write the genetlink header into the buffer */
-  genl_hdr = (struct genlmsghdr *)msg_iter;
+  /* setup the netlink header */
+  nl_hdr = nlbl_msg_nlhdr(msg);
+  if (nl_hdr == NULL)
+    goto init_failure;
+  nl_hdr->nlmsg_type = GENL_ID_CTRL;
+  
+  /* setup the generic netlink header */
+  genl_hdr = nlbl_msg_genlhdr(msg);
+  if (genl_hdr == NULL)
+    goto init_failure;
   genl_hdr->cmd = CTRL_CMD_GETFAMILY;
   genl_hdr->version = 1;
 
-  /* write the attribute into the buffer */
-  msg_iter += GENL_HDRLEN;
-  nla_hdr = (struct nlattr *)msg_iter;
-  nla_hdr->nla_len = NLA_HDRLEN + strlen(NETLBL_NLTYPE_UNLABELED_NAME) + 1;
-  nla_hdr->nla_type = CTRL_ATTR_FAMILY_NAME;
-  msg_iter += NLA_HDRLEN;
-  strcpy((char *)msg_iter, NETLBL_NLTYPE_UNLABELED_NAME);
+  /* add the netlabel family request attributes */
+  ret_val = nla_put_string(msg,
+			   CTRL_ATTR_FAMILY_NAME,
+			   NETLBL_NLTYPE_UNLABELED_NAME);
+  if (ret_val != 0)
+    goto init_failure;
 
-  /* send the message */
-  ret_val = nlbl_netlink_write(sock, GENL_ID_CTRL, msg, msg_len);
-  if (ret_val < 0)
-    goto init_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
+  /* send the request */
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto init_failure;
+  }
 
   /* read the response */
-  ret_val = nlbl_netlink_read(sock, &nl_type, &msg, &msg_len);
-  if (ret_val < 0)
-    goto init_return;
-  if (nl_type != GENL_ID_CTRL) {
-    ret_val = -ENOMSG;
-    goto init_return;
+  ret_val = nlbl_comm_recv(hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto init_failure;
   }
-  msg_iter = msg + NLMSG_LENGTH(0);
-
-  /* parse the response */
-  genl_hdr = (struct genlmsghdr *) msg_iter;
-  if (genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
-    ret_val = -ENOMSG;
-    goto init_return;
+  
+  /* process the response */
+  genl_hdr = nlbl_msg_genlhdr(ans_msg);
+  if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
+    ret_val = -EBADMSG;
+    goto init_failure;
   }
-  msg_iter += GENL_HDRLEN;
-  do {
-    nla_hdr = (struct nlattr *)msg_iter;
-    msg_iter += NLMSG_ALIGN(nla_hdr->nla_len);
-  } while (msg_iter - msg < msg_len || 
-	   nla_hdr->nla_type != CTRL_ATTR_FAMILY_ID);
-  if (nla_hdr->nla_type != CTRL_ATTR_FAMILY_ID) {
-    ret_val = -ENOMSG;
-    goto init_return;
+  nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
+  if (nla == NULL) {
+    ret_val = -EBADMSG;
+    goto init_failure;
   }
-  nlbl_unlabeled_fid = nlbl_get_u16((unsigned char *)nla_hdr);
-
-  ret_val = 0;
-
- init_return:
-  if (msg)
-    free(msg);
-  nlbl_netlink_close(sock);
-  return ret_val;
-}
-
-/*
- * Low-level communications
- */
-
-
-/**
- * nlbl_unlabeled_write - Send a NetLabel unlabeled message
- * @sock: the socket
- * @msg: the message
- * @msg_len: the message length
- *
- * Description:
- * Write the message in @msg to the NetLabel socket @sock.  Returns zero on
- * success, negative values on failure.
- *
- */
-int nlbl_unlabeled_write(nlbl_socket sock, nlbl_data *msg, size_t msg_len)
-{
-  return nlbl_netlink_write(sock, nlbl_unlabeled_fid, msg, msg_len);
-}
-
-/**
- * nlbl_unlabeled_read - Read a NetLbel unlabled message
- * @sock: the socket
- * @msg: the message
- * @msg_len: the message length
- *
- * Description:
- * Try to read a NetLabel unlabeled message and return the message in @msg.
- * Returns negative values on failure.
- *
- */
-int nlbl_unlabeled_read(nlbl_socket sock, nlbl_data **msg, ssize_t *msg_len)
-{
-  int ret_val;
-  nlbl_type nl_type;
-
-  ret_val = nlbl_netlink_read(sock, &nl_type, msg, msg_len);
-  if (ret_val >= 0 && nl_type != nlbl_unlabeled_fid)
-      return -ENOMSG;
-
+  nlbl_unlbl_fid = nla_get_u16(nla);
+  if (nlbl_unlbl_fid == 0) {
+    ret_val = -EBADMSG;
+    goto init_failure;
+  }
+  
+  return 0;
+  
+ init_failure:
+  nlbl_comm_close(hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
@@ -187,161 +251,146 @@ int nlbl_unlabeled_read(nlbl_socket sock, nlbl_data **msg, ssize_t *msg_len)
  * NetLabel operations
  */
 
-
 /**
- * nlbl_unlabeled_accept - Set the unlabeled accept flag
- * @sock: the NetLabel socket
+ * nlbl_unlbl_accept - Set the unlbl accept flag
+ * @hndl: the NetLabel handle
  * @allow_flag: the desired accept flag setting
  *
  * Description:
- * Set the unlabeled accept flag in the NetLabel system; if @allow_flag is
- * true then set the accept flag, otherwise clear the flag.  If @sock is zero
- * then the function will handle opening and closing it's own NETLINK socket.
+ * Set the unlbl accept flag in the NetLabel system; if @allow_flag is
+ * true then set the accept flag, otherwise clear the flag.  If @hndl is NULL
+ * then the function will handle opening and closing it's own NetLabel handle.
  * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlabeled_accept(nlbl_socket sock, unsigned int allow_flag)
+int nlbl_unlbl_accept(nlbl_handle *hndl, uint8_t allow_flag)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
 
   /* sanity checks */
-  if (sock < 0)
-    return -EINVAL;
+  if (nlbl_unlbl_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto accept_return;
   }
 
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN + NETLBL_LEN_U32;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
+  /* create a new message */
+  msg = nlbl_unlbl_msg_new(NLBL_UNLABEL_C_ACCEPT, 0);
+  if (msg == NULL)
     goto accept_return;
-  }
-  memset(msg, 0, msg_len);
-  msg_iter = msg;
 
-  /* write the message into the buffer */
-  nlbl_putinc_genlhdr(&msg_iter, NLBL_UNLABEL_C_ACCEPT);
+  /* add the required attributes to the message */
   if (allow_flag)
-    nlbl_putinc_u32(&msg_iter, 1, NULL);
+    ret_val = nla_put_u8(msg, NLBL_UNLABEL_A_ACPTFLG, 1);
   else
-    nlbl_putinc_u32(&msg_iter, 0, NULL);
-  
+    ret_val = nla_put_u8(msg, NLBL_UNLABEL_A_ACPTFLG, 0);
+  if (ret_val != 0)
+    goto accept_return;
+
   /* send the request */
-  ret_val = nlbl_unlabeled_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto accept_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
+  }
 
-  /* read the results */
-  ret_val = nlbl_unlabeled_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
+  /* read the response */
+  ret_val = nlbl_unlbl_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto accept_return;
+  }
 
-  /* parse the response */
-  ret_val = nlbl_common_ack_parse(msg + NLMSG_LENGTH(0),
-				  msg_len - NLMSG_LENGTH(0),
-				  NLBL_UNLABEL_C_ACK);
+  /* process the response */
+  ret_val = nlbl_unlbl_parse_ack(ans_msg);
 
  accept_return:
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
-
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
 /**
- * nlbl_unlabeled_list - Query the unlabeled accept flag
- * @sock: the NetLabel socket
+ * nlbl_unlabeled_list - Query the unlbl accept flag
+ * @hndl: the NetLabel handle
  * @allow_flag: the current accept flag setting
  *
  * Description:
- * Query the unlabeled accept flag in the NetLabel system.  If @sock is zero
- * then the function will handle opening and closing it's own NETLINK socket.
+ * Query the unlbl accept flag in the NetLabel system.  If @hndl is NULL then
+ * the function will handle opening and closing it's own NetLabel handle.
  * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlabeled_list(nlbl_socket sock, unsigned int *allow_flag)
+int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
   struct genlmsghdr *genl_hdr;
+  struct nlattr *nla;
 
   /* sanity checks */
-  if (sock < 0 || allow_flag == NULL)
+  if (allow_flag == NULL)
     return -EINVAL;
+  if (nlbl_unlbl_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto list_return;
   }
 
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
+  /* create a new message */
+  msg = nlbl_unlbl_msg_new(NLBL_UNLABEL_C_LIST, 0);
+  if (msg == NULL)
     goto list_return;
-  }
-  memset(msg, 0, msg_len);
 
-  /* write the message into the buffer */
-  nlbl_put_genlhdr(msg, NLBL_UNLABEL_C_LIST);
-  
   /* send the request */
-  ret_val = nlbl_unlabeled_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
-    goto list_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
-
-  /* read the results */
-  ret_val = nlbl_unlabeled_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
-    goto list_return;
-  msg_iter = msg + NLMSG_LENGTH(0);
-  msg_len -= NLMSG_LENGTH(0);
-
-  /* parse the response */
-  genl_hdr = (struct genlmsghdr *)msg_iter;
-  if (genl_hdr->cmd != NLBL_UNLABEL_C_LIST) {
-    ret_val = -ENOMSG;
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto list_return;
   }
-  msg_iter += GENL_HDRLEN;
-  msg_len -= GENL_HDRLEN;
-  if (msg_len != NETLBL_LEN_U32) {
-    ret_val = -ENOMSG;
+
+  /* read the response */
+  ret_val = nlbl_unlbl_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto list_return;
   }
-  *allow_flag = nlbl_get_u32(msg_iter);
+
+  /* process the response */
+  genl_hdr = nlbl_msg_genlhdr(ans_msg);
+  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_UNLABEL_C_LIST)
+    goto list_return;
+  nla = nlbl_attr_find(msg, NLBL_UNLABEL_A_ACPTFLG);
+  if (nla == NULL)
+    goto list_return;
+  *allow_flag = nla_get_u8(nla);
 
   ret_val = 0;
 
  list_return:
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
-
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
+
