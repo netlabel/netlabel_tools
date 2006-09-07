@@ -38,34 +38,46 @@
  * Types
  */
 
-/* communication types */
+/*** communication types */
+
 typedef struct nlbl_handle_s nlbl_handle;
 typedef struct nl_msg nlbl_msg;
 typedef uint16_t nlbl_cmd;
 
-/* protocol type */
+/*** protocol type */
+
 typedef uint32_t nlbl_proto;
 
-/* cipso/ipv4 types */
+/*** cipso/ipv4 types */
+
+/* domain of interpretation (doi) */
 typedef uint32_t nlbl_cv4_doi;
-typedef uint32_t nlbl_cv4_maptype;
+
+typedef uint32_t nlbl_cv4_mtype;
+
+/* tags */
 typedef uint8_t nlbl_cv4_tag;
 typedef struct nlbl_cv4_tag_array_s {
   nlbl_cv4_tag *array;
   ssize_t size;
-} nlbl_cv4_tag_array;
+} nlbl_cv4_tag_a;
+
+/* mls sensitivity levels */
 typedef uint32_t nlbl_cv4_lvl;
 typedef struct nlbl_cv4_lvl_array_s {
   nlbl_cv4_lvl *array;
   ssize_t size;
-} nlbl_cv4_lvl_array;
+} nlbl_cv4_lvl_a;
+
+/* mls categories */
 typedef uint32_t nlbl_cv4_cat;
 typedef struct cv4_cat_array_s {
   nlbl_cv4_cat *array;
   ssize_t size;
-} nlbl_cv4_cat_array;
+} nlbl_cv4_cat_a;
 
-/* management types */
+/*** management types */
+
 typedef struct nlbl_mgmt_domain_s {
   char *domain;
   nlbl_proto proto_type;
@@ -123,5 +135,23 @@ int nlbl_unlbl_accept(nlbl_handle *hndl, uint8_t allow_flag);
 int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag);
 
 /* cipso/ipv4 */
+int nlbl_cipsov4_add_std(nlbl_handle *hndl,
+                         nlbl_cv4_doi doi,
+                         nlbl_cv4_tag_a *tags,
+                         nlbl_cv4_lvl_a *lvls,
+                         nlbl_cv4_cat_a *cats);
+int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
+			  nlbl_cv4_doi doi,
+			  nlbl_cv4_tag_a *tags);
+int nlbl_cipsov4_del(nlbl_handle *hndl, nlbl_cv4_doi doi);
+int nlbl_cipsov4_list(nlbl_handle *hndl,
+                      nlbl_cv4_doi doi,
+		      nlbl_cv4_mtype *mtype,
+                      nlbl_cv4_tag_a *tags,
+                      nlbl_cv4_lvl_a *lvls,
+                      nlbl_cv4_cat_a *cats);
+int nlbl_cipsov4_listall(nlbl_handle *hndl,
+			 nlbl_cv4_doi **dois,
+			 nlbl_cv4_mtype **mtypes);
 
 #endif

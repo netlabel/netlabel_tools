@@ -33,152 +33,217 @@
 #include <sys/socket.h>
 #include <linux/types.h>
 #include <netlink/netlink.h>
+#include <netlink/msg.h>
+#include <netlink/attr.h>
 
 #include <netlabel.h>
 #include <libnetlabel.h>
 
-/* Generic NETLINK family ID */
-static nlbl_type nlbl_cipsov4_fid = -1;
+#include "netlabel_internal.h"
+
+/* Generic Netlink family ID */
+static uint16_t nlbl_cipsov4_fid = 0;
+
+/*
+ * Helper functions
+ */
+
+/**
+ * nlbl_cipsov4_msg_new - Create a new NetLabel CIPSOv4 message
+ * @command: the NetLabel management command
+ *
+ * Description:
+ * This function creates a new NetLabel CIPSOv4 message using @command and
+ * @flags.  Returns a pointer to the new message on success, or NULL on
+ * failure.
+ *
+ */
+static nlbl_msg *nlbl_cipsov4_msg_new(uint16_t command, int flags)
+{
+  nlbl_msg *msg;
+  struct nlmsghdr *nl_hdr;
+  struct genlmsghdr *genl_hdr;
+
+  /* create a new message */
+  msg = nlbl_msg_new();
+  if (msg == NULL)
+    goto msg_new_failure;
+
+  /* setup the netlink header */
+  nl_hdr = nlbl_msg_nlhdr(msg);
+  if (nl_hdr == NULL)
+    goto msg_new_failure;
+  nl_hdr->nlmsg_type = nlbl_cipsov4_fid;
+  nl_hdr->nlmsg_flags = flags;
+
+  /* setup the generic netlink header */
+  genl_hdr = nlbl_msg_genlhdr(msg);
+  if (genl_hdr == NULL)
+    goto msg_new_failure;
+  genl_hdr->cmd = command;
+
+  return msg;
+
+ msg_new_failure:
+  nlbl_msg_free(msg);
+  return NULL;
+}
+
+/**
+ * nlbl_cipsov4_recv - Read a NetLbel CIPSOv4 message
+ * @hndl: the NetLabel handle
+ * @msg: the message
+ *
+ * Description:
+ * Try to read a NetLabel CIPSOv4 message and return the message in @msg.
+ * Returns the number of bytes read on success, zero on EOF, and negative
+ * values on failure.
+ *
+ */
+static int nlbl_cipsov4_recv(nlbl_handle *hndl, nlbl_msg **msg)
+{
+  int ret_val;
+  struct nlmsghdr *nl_hdr;
+
+  /* try to get a message from the handle */
+  ret_val = nlbl_comm_recv(hndl, msg);
+  if (ret_val <= 0)
+    goto recv_failure;
+  
+  /* process the response */
+  nl_hdr = nlbl_msg_nlhdr(*msg);
+  if (nl_hdr == NULL || nl_hdr->nlmsg_type != nlbl_cipsov4_fid) {
+    ret_val = -EBADMSG;
+    goto recv_failure;
+  }
+  
+  return ret_val;
+  
+ recv_failure:
+  if (ret_val > 0)
+    nlbl_msg_free(*msg);
+  return ret_val;
+}
+
+/**
+ * nlbl_cipsov4_parse_ack - Parse an ACK message
+ * @msg: the message
+ *
+ * Description:
+ * Parse the ACK message in @msg and return the error code specified in the
+ * ACK.
+ *
+ */
+static int nlbl_cipsov4_parse_ack(nlbl_msg *msg)
+{
+  struct genlmsghdr *genl_hdr;
+  struct nlattr *nla;
+
+  genl_hdr = nlbl_msg_genlhdr(msg);
+  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_ACK)
+    goto parse_ack_failure;
+  nla = nlbl_attr_find(msg, NLBL_CIPSOV4_A_ERRNO);
+  if (nla == NULL)
+    goto parse_ack_failure;
+
+  return nla_get_u32(nla);
+
+ parse_ack_failure:
+  return -EBADMSG;
+}
 
 /*
  * Init functions
  */
-
 
 /**
  * nlbl_cipsov4_init - Perform any setup needed
  *
  * Description:
  * Do any setup needed for the CIPSOv4 component, including determining the
- * NetLabel CIPSOv4 Generic NETLINK family ID.  Returns zero on success,
+ * NetLabel CIPSOv4 Generic Netlink family ID.  Returns zero on success,
  * negative values on error.
  *
  */
 int nlbl_cipsov4_init(void)
 {
-  int ret_val;
-  nlbl_socket sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
+  int ret_val = -ENOMEM;
+  nlbl_handle *hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
+  struct nlmsghdr *nl_hdr;
   struct genlmsghdr *genl_hdr;
-  struct nlattr *nla_hdr;
-  nlbl_type nl_type;
+  struct nlattr *nla;
 
-  /* open a socket */
-  ret_val = nlbl_netlink_open(&sock);
-  if (ret_val < 0)
-    return ret_val;
+  /* get a netlabel handle */
+  hndl = nlbl_comm_open();
+  if (hndl == NULL)
+    goto init_failure;
 
-  /* allocate a buffer for the family id request */
-  msg_len = GENL_HDRLEN + NLA_HDRLEN + strlen(NETLBL_NLTYPE_CIPSOV4_NAME) + 1;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
-    goto init_return;
-  }
-  memset(msg, 0, msg_len);
-  msg_iter = msg;
+  /* create a new message */
+  msg = nlbl_msg_new();
+  if (msg == NULL)
+    goto init_failure;
 
-  /* write the genetlink header into the buffer */
-  genl_hdr = (struct genlmsghdr *)msg_iter;
+  /* setup the netlink header */
+  nl_hdr = nlbl_msg_nlhdr(msg);
+  if (nl_hdr == NULL)
+    goto init_failure;
+  nl_hdr->nlmsg_type = GENL_ID_CTRL;
+  
+  /* setup the generic netlink header */
+  genl_hdr = nlbl_msg_genlhdr(msg);
+  if (genl_hdr == NULL)
+    goto init_failure;
   genl_hdr->cmd = CTRL_CMD_GETFAMILY;
   genl_hdr->version = 1;
 
-  /* write the attribute into the buffer */
-  msg_iter += GENL_HDRLEN;
-  nla_hdr = (struct nlattr *)msg_iter;
-  nla_hdr->nla_len = NLA_HDRLEN + strlen(NETLBL_NLTYPE_CIPSOV4_NAME) + 1;
-  nla_hdr->nla_type = CTRL_ATTR_FAMILY_NAME;
-  msg_iter += NLA_HDRLEN;
-  strcpy((char *)msg_iter, NETLBL_NLTYPE_CIPSOV4_NAME);
+  /* add the netlabel family request attributes */
+  ret_val = nla_put_string(msg,
+			   CTRL_ATTR_FAMILY_NAME,
+			   NETLBL_NLTYPE_CIPSOV4_NAME);
+  if (ret_val != 0)
+    goto init_failure;
 
-  /* send the message */
-  ret_val = nlbl_netlink_write(sock, GENL_ID_CTRL, msg, msg_len);
-  if (ret_val < 0)
-    goto init_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
+  /* send the request */
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto init_failure;
+  }
 
   /* read the response */
-  ret_val = nlbl_netlink_read(sock, &nl_type, &msg, &msg_len);
-  if (ret_val < 0)
-    goto init_return;
-  if (nl_type != GENL_ID_CTRL) {
-    ret_val = -ENOMSG;
-    goto init_return;
+  ret_val = nlbl_comm_recv(hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto init_failure;
   }
-  msg_iter = msg + NLMSG_LENGTH(0);
-
-  /* parse the response */
-  genl_hdr = (struct genlmsghdr *) msg_iter;
-  if (genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
-    ret_val = -ENOMSG;
-    goto init_return;
+  
+  /* process the response */
+  genl_hdr = nlbl_msg_genlhdr(ans_msg);
+  if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
+    ret_val = -EBADMSG;
+    goto init_failure;
   }
-  msg_iter += GENL_HDRLEN;
-  do {
-    nla_hdr = (struct nlattr *)msg_iter;
-    msg_iter += NLMSG_ALIGN(nla_hdr->nla_len);
-  } while (msg_iter - msg < msg_len || 
-	   nla_hdr->nla_type != CTRL_ATTR_FAMILY_ID);
-  if (nla_hdr->nla_type != CTRL_ATTR_FAMILY_ID) {
-    ret_val = -ENOMSG;
-    goto init_return;
+  nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
+  if (nla == NULL) {
+    ret_val = -EBADMSG;
+    goto init_failure;
   }
-  nlbl_cipsov4_fid = nlbl_get_u16((unsigned char *)nla_hdr);
-
-  ret_val = 0;
-
- init_return:
-  if (msg)
-    free(msg);
-  nlbl_netlink_close(sock);
-  return ret_val;
-}
-
-/*
- * Low-level communications
- */
-
-
-/**
- * nlbl_cipsov4_write - Send a NetLabel CIPSOv4 message
- * @sock: the socket
- * @msg: the message
- * @msg_len: the message length
- *
- * Description:
- * Write the message in @msg to the NetLabel socket @sock.  Returns zero on
- * success, negative values on failure.
- *
- */
-int nlbl_cipsov4_write(nlbl_socket sock, nlbl_data *msg, size_t msg_len)
-{
-  return nlbl_netlink_write(sock, nlbl_cipsov4_fid, msg, msg_len);
-}
-
-/**
- * nlbl_cipsov4_read - Read a NetLbel CIPSOv4 message
- * @sock: the socket
- * @msg: the message
- * @msg_len: the message length
- *
- * Description:
- * Try to read a NetLabel CIPSOv4 message and return the message in @msg.
- * Returns negative values on failure.
- *
- */
-int nlbl_cipsov4_read(nlbl_socket sock, nlbl_data **msg, ssize_t *msg_len)
-{
-  int ret_val;
-  nlbl_type nl_type;
-
-  ret_val = nlbl_netlink_read(sock, &nl_type, msg, msg_len);
-  if (ret_val >= 0 && nl_type != nlbl_cipsov4_fid)
-      return -ENOMSG;
-
+  nlbl_cipsov4_fid = nla_get_u16(nla);
+  if (nlbl_cipsov4_fid == 0) {
+    ret_val = -EBADMSG;
+    goto init_failure;
+  }
+  
+  return 0;
+  
+ init_failure:
+  nlbl_comm_close(hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
@@ -186,519 +251,483 @@ int nlbl_cipsov4_read(nlbl_socket sock, nlbl_data **msg, ssize_t *msg_len)
  * NetLabel operations
  */
 
-
 /**
  * nlbl_cipsov4_add_std - Add a standard CIPSOv4 label mapping
- * @sock: the NetLabel socket
+ * @hndl: the NetLabel handle
  * @doi: the CIPSO DOI number
- * @tags: array of tag numbers
+ * @tags: array of tags
  * @lvls: array of level mappings
- * @cats: array of category mappings
+ * @cats: array of category mappings, may be NULL
  * 
  * Description:
  * Add the specified static CIPSO label mapping information to the NetLabel
- * system.  If @sock is zero then the function will handle opening and closing
- * it's own NETLINK socket.  Returns zero on success, negative values on
+ * system.  If @hndl is NULL then the function will handle opening and closing
+ * it's own NetLabel handle.  Returns zero on success, negative values on
  * failure.
  *
  */
-int nlbl_cipsov4_add_std(nlbl_socket sock,
-                         cv4_doi doi,
-                         cv4_tag_array *tags,
-                         cv4_lvl_array *lvls,
-                         cv4_cat_array *cats)
+int nlbl_cipsov4_add_std(nlbl_handle *hndl,
+                         nlbl_cv4_doi doi,
+                         nlbl_cv4_tag_a *tags,
+                         nlbl_cv4_lvl_a *lvls,
+                         nlbl_cv4_cat_a *cats)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
-  unsigned int iter;
-  unsigned int tmp_val;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
 
   /* sanity checks */
-  if (sock < 0 || tags == NULL || lvls == NULL || cats == NULL ||
-      tags->size == 0 || lvls->size == 0 || cats->size == 0)
+  if (doi == 0 ||
+      tags == NULL || tags->size == 0 ||
+      lvls == NULL || lvls->size == 0)
     return -EINVAL;
+  if (nlbl_cipsov4_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto add_std_return;
   }
 
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN + 7 * NETLBL_LEN_U32 + NETLBL_LEN_U8 + NETLBL_LEN_U16 +
-    tags->size * NETLBL_LEN_U8 +
-    lvls->size * (NETLBL_LEN_U32 + NETLBL_LEN_U8) +
-    cats->size * (NETLBL_LEN_U32 + NETLBL_LEN_U16);
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
+  /* create a new message */
+  msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_ADD, 0);
+  if (msg == NULL)
     goto add_std_return;
-  }
-  memset(msg, 0, msg_len);
-  msg_iter = msg;
 
-  /* write the message into the buffer */
-  nlbl_putinc_genlhdr(&msg_iter, NLBL_CIPSOV4_C_ADD);
-  nlbl_putinc_u32(&msg_iter, doi, NULL);
-  nlbl_putinc_u32(&msg_iter, CIPSO_V4_MAP_STD, NULL);
-  nlbl_putinc_u32(&msg_iter, tags->size, NULL);
-  for (iter = 0; iter < tags->size; iter++)
-    nlbl_putinc_u8(&msg_iter, tags->array[iter], NULL);
-  nlbl_putinc_u32(&msg_iter, lvls->size, NULL);
-  for (iter = 0, tmp_val = 0; iter < lvls->size; iter++)
-    if (lvls->array[iter * 2] > tmp_val)
-      tmp_val = lvls->array[iter * 2];
-  nlbl_putinc_u32(&msg_iter, tmp_val + 1, NULL);
-  for (iter = 0, tmp_val = 0; iter < lvls->size; iter++)
-    if (lvls->array[iter * 2 + 1] > tmp_val)
-      tmp_val = lvls->array[iter * 2 + 1];
-  nlbl_putinc_u8(&msg_iter, tmp_val + 1, NULL);
-  nlbl_putinc_u32(&msg_iter, cats->size, NULL);
-  for (iter = 0, tmp_val = 0; iter < cats->size; iter++)
-    if (cats->array[iter * 2] > tmp_val)
-      tmp_val = cats->array[iter * 2];
-  nlbl_putinc_u32(&msg_iter, tmp_val + 1, NULL);
-  for (iter = 0, tmp_val = 0; iter < cats->size; iter++)
-    if (cats->array[iter * 2 + 1] > tmp_val)
-      tmp_val = cats->array[iter * 2 + 1];
-  nlbl_putinc_u16(&msg_iter, tmp_val + 1, NULL);
-  for (iter = 0; iter < lvls->size; iter++) {
-    nlbl_putinc_u32(&msg_iter, lvls->array[iter * 2], NULL);
-    nlbl_putinc_u8(&msg_iter, lvls->array[iter * 2 + 1], NULL);
-  }
-  for (iter = 0; iter < cats->size; iter++) {
-    nlbl_putinc_u32(&msg_iter, cats->array[iter * 2], NULL);
-    nlbl_putinc_u16(&msg_iter, cats->array[iter * 2 + 1], NULL);
+  /* add the required attributes to the message */
+  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
+  if (ret_val != 0)
+    goto add_std_return;
+  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_STD);
+  if (ret_val != 0)
+    goto add_std_return;
+  ret_val = nla_put(msg, NLBL_CIPSOV4_A_TAGLST, tags->size, tags->array);
+  if (ret_val != 0)
+    goto add_std_return;
+  ret_val = nla_put(msg,
+		    NLBL_CIPSOV4_A_MLSLVLLST,
+		    lvls->size * sizeof(nlbl_cv4_lvl),
+		    lvls->array);
+  if (ret_val != 0)
+    goto add_std_return;
+  if (cats != NULL) {
+    ret_val = nla_put(msg,
+		      NLBL_CIPSOV4_A_MLSCATLST,
+		      cats->size * sizeof(nlbl_cv4_cat),
+		      cats->array);
+    if (ret_val != 0)
+      goto add_std_return;
   }
 
   /* send the request */
-  ret_val = nlbl_cipsov4_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto add_std_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
+  }
 
-  /* read the results */
-  ret_val = nlbl_cipsov4_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
+  /* read the response */
+  ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto add_std_return;
+  }
 
-  /* parse the response */
-  ret_val = nlbl_common_ack_parse(msg + NLMSG_LENGTH(0),
-				  msg_len - NLMSG_LENGTH(0),
-				  NLBL_CIPSOV4_C_ACK);
+  /* process the response */
+  ret_val = nlbl_cipsov4_parse_ack(ans_msg);
 
  add_std_return:
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
-
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
 /**
- * nlbl_cipsov4_add_pass - Add a pass through CIPSOv4 label mapping
- * @sock: the NetLabel socket
+ * nlbl_cipsov4_add_pass - Add a pass-through CIPSOv4 label mapping
+ * @hndl: the NetLabel handle
  * @doi: the CIPSO DOI number
- * @tags: array of tag numbers
+ * @tags: array of tags
  * 
  * Description:
- * Add the specified pass through CIPSO label mapping information to the
- * NetLabel system.  If @sock is zero then the function will handle opening
- * and closing it's own NETLINK socket.  Returns zero on success, negative
- * values on failure.
+ * Add the specified static CIPSO label mapping information to the NetLabel
+ * system.  If @hndl is NULL then the function will handle opening and closing
+ * it's own NetLabel handle.  Returns zero on success, negative values on
+ * failure.
  *
  */
-int nlbl_cipsov4_add_pass(nlbl_socket sock,
-			  cv4_doi doi,
-			  cv4_tag_array *tags)
+int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
+			  nlbl_cv4_doi doi,
+			  nlbl_cv4_tag_a *tags)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
-  unsigned int iter;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
 
   /* sanity checks */
-  if (sock < 0 || tags == NULL || tags->size == 0)
+  if (doi == 0 ||
+      tags == NULL || tags->size == 0)
     return -EINVAL;
+  if (nlbl_cipsov4_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto add_pass_return;
   }
 
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN + 3 * NETLBL_LEN_U32 + tags->size * NETLBL_LEN_U8;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
+  /* create a new message */
+  msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_ADD, 0);
+  if (msg == NULL)
     goto add_pass_return;
-  }
-  memset(msg, 0, msg_len);
-  msg_iter = msg;
 
-  /* write the message into the buffer */
-  nlbl_putinc_genlhdr(&msg_iter, NLBL_CIPSOV4_C_ADD);
-  nlbl_putinc_u32(&msg_iter, doi, NULL);
-  nlbl_putinc_u32(&msg_iter, CIPSO_V4_MAP_PASS, NULL);
-  nlbl_putinc_u32(&msg_iter, tags->size, NULL);
-  for (iter = 0; iter < tags->size; iter++)
-    nlbl_putinc_u8(&msg_iter, tags->array[iter], NULL);
+  /* add the required attributes to the message */
+  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
+  if (ret_val != 0)
+    goto add_pass_return;
+  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_PASS);
+  if (ret_val != 0)
+    goto add_pass_return;
+  ret_val = nla_put(msg, NLBL_CIPSOV4_A_TAGLST, tags->size, tags->array);
+  if (ret_val != 0)
+    goto add_pass_return;
 
   /* send the request */
-  ret_val = nlbl_cipsov4_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto add_pass_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
+  }
 
-  /* read the results */
-  ret_val = nlbl_cipsov4_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
+  /* read the response */
+  ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto add_pass_return;
+  }
 
-  /* parse the response */
-  ret_val = nlbl_common_ack_parse(msg + NLMSG_LENGTH(0),
-				  msg_len - NLMSG_LENGTH(0),
-				  NLBL_CIPSOV4_C_ACK);
+  /* process the response */
+  ret_val = nlbl_cipsov4_parse_ack(ans_msg);
 
  add_pass_return:
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
-
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
 /**
  * nlbl_cipsov4_del - Delete a CIPSOv4 label mapping
- * @sock: the NetLabel socket
+ * @hndl: the NetLabel handle
  * @doi: the CIPSO DOI number
  *
  * Description:
- * Remove the CIPSO label mapping with the DOI value matching @doi.  If @sock
- * is zero then the function will handle opening and closing it's own NETLINK
- * socket.  Returns zero on success, negative values on failure.
+ * Remove the CIPSO label mapping with the DOI value matching @doi.  If @hndl
+ * is NULL then the function will handle opening and closing it's own NetLabel
+ * handle.  Returns zero on success, negative values on failure. 
  *
  */
-int nlbl_cipsov4_del(nlbl_socket sock, cv4_doi doi)
+int nlbl_cipsov4_del(nlbl_handle *hndl, nlbl_cv4_doi doi)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
 
   /* sanity checks */
-  if (sock < 0)
+  if (doi == 0)
     return -EINVAL;
+  if (nlbl_cipsov4_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto del_return;
   }
 
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN + NETLBL_LEN_U32;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
+  /* create a new message */
+  msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_REMOVE, 0);
+  if (msg == NULL)
     goto del_return;
-  }
-  memset(msg, 0, msg_len);
-  msg_iter = msg;
 
-  /* write the message into the buffer */
-  nlbl_putinc_genlhdr(&msg_iter, NLBL_CIPSOV4_C_REMOVE);
-  nlbl_putinc_u32(&msg_iter, doi, NULL);
+  /* add the required attributes to the message */
+  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
+  if (ret_val != 0)
+    goto del_return;
 
   /* send the request */
-  ret_val = nlbl_cipsov4_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto del_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
+  }
 
-  /* read the results */
-  ret_val = nlbl_cipsov4_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
+  /* read the response */
+  ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto del_return;
+  }
 
-  /* parse the response */
-  ret_val = nlbl_common_ack_parse(msg + NLMSG_LENGTH(0),
-				  msg_len - NLMSG_LENGTH(0),
-				  NLBL_CIPSOV4_C_ACK);
+  /* process the response */
+  ret_val = nlbl_cipsov4_parse_ack(ans_msg);
 
  del_return:
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
-
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
 /**
  * nlbl_cipsov4_list - List the details of a specific CIPSOv4 label mapping
- * @sock: the NetLabel socket
+ * @hndl: the NetLabel handle
  * @doi: the CIPSO DOI number
- * @maptype: the DOI mapping type
+ * @mtype: the DOI mapping type
  * @tags: array of tag numbers
  * @lvls: array of level mappings
  * @cats: array of category mappings
  *
  * Description:
  * Query the kernel for the specified CIPSOv4 mapping specified by @doi and
- * return the details of the mapping to the caller.  If @sock is zero then the
- * function will handle opening and closing it's own NETLINK socket.  Returns
- * zero on success, negative values on failure.
+ * return the details of the mapping to the caller.  If @hndl is NULL then the
+ * function will handle opening and closing it's own NetLabel handle.  Returns
+ * zero on success, negative values on failure.   
  *
  */
-int nlbl_cipsov4_list(nlbl_socket sock,
-                      cv4_doi doi,
-		      cv4_maptype *maptype,
-                      cv4_tag_array *tags,
-                      cv4_lvl_array *lvls,
-                      cv4_cat_array *cats)
+int nlbl_cipsov4_list(nlbl_handle *hndl,
+                      nlbl_cv4_doi doi,
+		      nlbl_cv4_mtype *mtype,
+                      nlbl_cv4_tag_a *tags,
+                      nlbl_cv4_lvl_a *lvls,
+                      nlbl_cv4_cat_a *cats)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
   struct genlmsghdr *genl_hdr;
-  unsigned int iter;
+  struct nlattr *nla;
 
   /* sanity checks */
-  if (sock < 0 || tags == NULL || lvls == NULL || cats == NULL)
+  if (doi == 0 ||
+      mtype == NULL || tags == NULL || lvls == NULL || cats == NULL)
     return -EINVAL;
+  if (nlbl_cipsov4_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto list_return;
   }
 
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN + NETLBL_LEN_U32;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
+  /* create a new message */
+  msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_LIST, 0);
+  if (msg == NULL)
     goto list_return;
-  }
-  memset(msg, 0, msg_len);
-  msg_iter = msg;
 
-  /* write the message into the buffer */
-  nlbl_putinc_genlhdr(&msg_iter, NLBL_CIPSOV4_C_LIST);
-  nlbl_putinc_u32(&msg_iter, doi, NULL);
+  /* add the required attributes to the message */
+  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
+  if (ret_val != 0)
+    goto list_return;
 
   /* send the request */
-  ret_val = nlbl_cipsov4_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
-    goto list_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
-
-  /* read the results */
-  ret_val = nlbl_cipsov4_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
-    goto list_return;
-  msg_iter = msg + NLMSG_LENGTH(0);
-  msg_len -= NLMSG_LENGTH(0);
-
-  /* parse the response */
-  genl_hdr = (struct genlmsghdr *)msg_iter;
-  if (genl_hdr->cmd != NLBL_CIPSOV4_C_LIST) {
-    ret_val = -ENOMSG;
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto list_return;
   }
-  msg_iter += GENL_HDRLEN;
-  msg_len -= GENL_HDRLEN;
-  *maptype = nlbl_getinc_u32(&msg_iter, &msg_len);
-  switch (*maptype) {
-  case CIPSO_V4_MAP_STD:
-    tags->size = nlbl_getinc_u32(&msg_iter, &msg_len);
-    lvls->size = nlbl_getinc_u32(&msg_iter, &msg_len);
-    cats->size = nlbl_getinc_u32(&msg_iter, &msg_len);
-    tags->array = malloc(sizeof(cv4_tag) * tags->size);
-    lvls->array = malloc(sizeof(cv4_lvl) * lvls->size * 2);
-    cats->array = malloc(sizeof(cv4_cat) * cats->size * 2);
-    if (tags->array == NULL || lvls->array == NULL || cats->array == NULL) {
-      ret_val = -ENOMEM;
-      goto list_return;
-    }
-    for (iter = 0; iter < tags->size; iter++)
-      tags->array[iter] = nlbl_getinc_u8(&msg_iter, &msg_len);
-    for (iter = 0; iter < lvls->size; iter++) {
-      lvls->array[2 * iter] = nlbl_getinc_u32(&msg_iter, &msg_len);
-      lvls->array[2 * iter + 1] = nlbl_getinc_u8(&msg_iter, &msg_len);
-    }
-    for (iter = 0; iter < cats->size; iter++) {
-      cats->array[2 * iter] = nlbl_getinc_u32(&msg_iter, &msg_len);
-      cats->array[2 * iter + 1] = nlbl_getinc_u16(&msg_iter, &msg_len);
-    }
-    break;
-  case CIPSO_V4_MAP_PASS:
-    tags->size = nlbl_getinc_u32(&msg_iter, &msg_len);
-    tags->array = malloc(sizeof(cv4_tag) * tags->size);
-    if (tags->array == NULL) {
-      ret_val = -ENOMEM;
-      goto list_return;
-    }
-    for (iter = 0; iter < tags->size; iter++)
-      tags->array[iter] = nlbl_getinc_u8(&msg_iter, &msg_len);
-    break;
-  default:
-    ret_val = -ENOMSG;
+
+  /* read the response */
+  ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto list_return;
   }
+
+  /* process the response */
+  genl_hdr = nlbl_msg_genlhdr(ans_msg);
+  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_LIST)
+    goto list_return;
+  nla = nlbl_attr_find(msg, NLBL_CIPSOV4_A_MTYPE);
+  if (nla == NULL)
+    goto list_return;
+  *mtype = nla_get_u32(nla);
+  nla = nlbl_attr_find(msg, NLBL_CIPSOV4_A_TAGLST);
+  if (nla == NULL)
+    goto list_return;
+  tags->size = nla_len(nla);
+  if (tags->size == 0)
+    goto list_return;
+  tags->array = malloc(tags->size);
+  nla_memcpy(tags->array, nla, tags->size);
+  nla = nlbl_attr_find(msg, NLBL_CIPSOV4_A_MLSLVLLST);
+  if (nla == NULL)
+    goto list_return;
+  lvls->size = nla_len(nla) / sizeof(nlbl_cv4_lvl);
+  lvls->array = malloc(nla_len(nla));
+  nla_memcpy(lvls->array, nla, lvls->size * sizeof(nlbl_cv4_lvl));
+  nla = nlbl_attr_find(msg, NLBL_CIPSOV4_A_MLSCATLST);
+  if (nla == NULL)
+    goto list_return;
+  cats->size = nla_len(nla) / sizeof(nlbl_cv4_cat);
+  cats->array = malloc(nla_len(nla));
+  nla_memcpy(cats->array, nla, cats->size * sizeof(nlbl_cv4_cat));
 
   ret_val = 0;
 
  list_return:
-  if (ret_val < 0) {
-    tags->size = 0;
-    if (tags->array)
-      free(tags->array);
-    lvls->size = 0;
-    if (lvls->array)
-      free(lvls->array);
-    cats->size = 0;
-    if (cats->array)
-      free(cats->array);
-  }
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
-
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
 /**
- * nlbl_cipsov4_list_all - List the CIPSOv4 label mappings
- * @sock: the NetLabel socket
- * @doi_list: a list of DOI values
- * @mtype_list: a list of the mapping types
+ * nlbl_cipsov4_listall - List the CIPSOv4 label mappings
+ * @hndl: the NetLabel handle
+ * @dois: an array of DOI values
+ * @mtypes: an array of the mapping types
  *
  * Description:
- * Query the kernel for the configured CIPSOv4 mappings and return two lists;
- * @doi_list which contains the DOI values and @mtype_list which contains the
- * type of mapping.  If @sock is zero then the function will handle opening and
- * closing it's own NETLINK socket.  Returns zero on success, negative values
- * on failure.
+ * Query the kernel for the configured CIPSOv4 mappings and return two arrays;
+ * @dois which contains the DOI values and @mtypes which contains the
+ * type of mapping.  If @hndl is NULL then the function will handle opening
+ * and closing it's own NetLabel handle.  Returns the number of mappings on
+ * success, zero if no mappings exist, and negative values on failure.   
  *
  */
-int nlbl_cipsov4_list_all(nlbl_socket sock, 
-                          cv4_doi **doi_list,
-                          cv4_maptype **mtype_list,
-                          size_t *count)
+int nlbl_cipsov4_listall(nlbl_handle *hndl,
+			 nlbl_cv4_doi **dois,
+			 nlbl_cv4_mtype **mtypes)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
+  struct nlmsghdr *nl_hdr;
   struct genlmsghdr *genl_hdr;
-  size_t doi_count;
-  cv4_doi *list_doi = NULL;
-  cv4_maptype *list_mtype = NULL;
-  unsigned int iter;
+  struct nlattr *nla_head;
+  struct nlattr *nla;
+  int ans_msg_len;
+  int ans_msg_attrlen;
+  nlbl_cv4_doi *doi_a = NULL;
+  nlbl_cv4_mtype *mtype_a = NULL;
+  uint32_t count = 0;
 
   /* sanity checks */
-  if (sock < 0)
+  if (dois == NULL || mtypes == NULL)
     return -EINVAL;
+  if (nlbl_cipsov4_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      ret_val = -ENOMEM;
+      goto listall_return;
   }
 
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN;
-  msg = malloc(msg_len);
+  /* create a new message */
+  msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_LISTALL, NLM_F_DUMP);
   if (msg == NULL) {
     ret_val = -ENOMEM;
-    goto list_all_return;
+    goto listall_return;
   }
-  memset(msg, 0, msg_len);
-
-  /* write the message into the buffer */
-  nlbl_put_genlhdr(msg, NLBL_CIPSOV4_C_LISTALL);
 
   /* send the request */
-  ret_val = nlbl_cipsov4_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
-    goto list_all_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
-
-  /* read the results */
-  ret_val = nlbl_cipsov4_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
-    goto list_all_return;
-  msg_iter = msg + NLMSG_LENGTH(0);
-  msg_len -= NLMSG_LENGTH(0);
-
-  /* parse the response */
-  genl_hdr = (struct genlmsghdr *)msg_iter;
-  if (genl_hdr->cmd != NLBL_CIPSOV4_C_LISTALL) {
-    ret_val = -ENOMSG;
-    goto list_all_return;
-  }
-  msg_iter += GENL_HDRLEN;
-  msg_len -= GENL_HDRLEN;
-  doi_count = nlbl_getinc_u32(&msg_iter, &msg_len);
-  list_doi = malloc(sizeof(cv4_doi) * doi_count);
-  list_mtype = malloc(sizeof(cv4_maptype) * doi_count);
-  if (list_doi == NULL || list_mtype == NULL) {
-    ret_val = -ENOMEM;
-    goto list_all_return;
-  }
-  for (iter = 0; iter < doi_count; iter++) {
-    list_doi[iter] = nlbl_getinc_u32(&msg_iter, &msg_len);
-    list_mtype[iter] = nlbl_getinc_u32(&msg_iter, &msg_len);
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto listall_return;
   }
 
-  *count = doi_count;
-  *doi_list = list_doi;
-  *mtype_list = list_mtype;
+  /* read all of the messages (multi-message response) */
+  do {
+    nlbl_msg_free(ans_msg);
 
-  ret_val = 0;
+    /* get the next set of messages */
+    ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+    if (ret_val <= 0) {
+      if (ret_val == 0)
+	ret_val = -ENODATA;
+      goto listall_return;
+    }
 
- list_all_return:
+    /* loop through the messages */
+    ans_msg_len = ret_val;
+    nl_hdr = nlbl_msg_nlhdr(msg);
+    while (nlmsg_ok(nl_hdr, ans_msg_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
+      /* get the header pointers */
+      genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
+      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_LISTALL)
+	goto listall_return;
+      nla_head = (struct nlattr *)(&genl_hdr[1]);
+      ans_msg_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+
+      /* resize the arrays */
+      doi_a = realloc(doi_a, sizeof(nlbl_cv4_doi) * (count + 1));
+      if (doi_a == NULL)
+	goto listall_return;
+      mtype_a = realloc(mtype_a, sizeof(nlbl_cv4_mtype) * (count + 1));
+      if (mtype_a == NULL)
+	goto listall_return;
+
+      /* get the attribute information */
+      nla = nla_find(nla_head, ans_msg_attrlen, NLBL_CIPSOV4_A_DOI);
+      if (nla == NULL)
+	goto listall_return;
+      doi_a[count] = nla_get_u32(nla);
+      nla = nla_find(nla_head, ans_msg_attrlen, NLBL_CIPSOV4_A_MTYPE);
+      if (nla == NULL)
+	goto listall_return;
+      mtype_a[count] = nla_get_u32(nla);
+
+      count++;
+
+      /* next message */
+      nl_hdr = nlmsg_next(nl_hdr, &ans_msg_len);
+    }
+  } while (ans_msg != NULL && nl_hdr->nlmsg_type != NLMSG_DONE);
+
+  *dois = doi_a;
+  *mtypes = mtype_a;
+  ret_val = count;
+
+ listall_return:
   if (ret_val < 0) {
-    if (list_doi)
-      free(list_doi);
-    if (list_mtype)
-      free(list_mtype);
+    if (doi_a)
+      free(doi_a);
+    if (mtype_a)
+      free(mtype_a);
   }
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
-
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
-
