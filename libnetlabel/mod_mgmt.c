@@ -33,152 +33,217 @@
 #include <sys/socket.h>
 #include <linux/types.h>
 #include <netlink/netlink.h>
+#include <netlink/msg.h>
+#include <netlink/attr.h>
 
 #include <netlabel.h>
 #include <libnetlabel.h>
 
-/* Generic NETLINK family ID */
-static nlbl_type nlbl_mgmt_fid = -1;
+#include "netlabel_internal.h"
+
+/* Generic Netlink family ID */
+static uint16_t nlbl_mgmt_fid = 0;
+
+/*
+ * Helper functions
+ */
+
+/**
+ * nlbl_mgmt_msg_new - Create a new NetLabel management message
+ * @command: the NetLabel management command
+ *
+ * Description:
+ * This function creates a new NetLabel management message using @command and
+ * @flags.  Returns a pointer to the new message on success, or NULL on
+ * failure.
+ *
+ */
+static nlbl_msg *nlbl_mgmt_msg_new(uint16_t command, int flags)
+{
+  nlbl_msg *msg;
+  struct nlmsghdr *nl_hdr;
+  struct genlmsghdr *genl_hdr;
+
+  /* create a new message */
+  msg = nlbl_msg_new();
+  if (msg == NULL)
+    goto msg_new_failure;
+
+  /* setup the netlink header */
+  nl_hdr = nlbl_msg_nlhdr(msg);
+  if (nl_hdr == NULL)
+    goto msg_new_failure;
+  nl_hdr->nlmsg_type = nlbl_mgmt_fid;
+  nl_hdr->nlmsg_flags = flags;
+
+  /* setup the generic netlink header */
+  genl_hdr = nlbl_msg_genlhdr(msg);
+  if (genl_hdr == NULL)
+    goto msg_new_failure;
+  genl_hdr->cmd = command;
+
+  return msg;
+
+ msg_new_failure:
+  nlbl_msg_free(msg);
+  return NULL;
+}
+
+/**
+ * nlbl_mgmt_read - Read a NetLbel management message
+ * @hndl: the NetLabel handle
+ * @msg: the message
+ *
+ * Description:
+ * Try to read a NetLabel management message and return the message in @msg.
+ * Returns the number of bytes read on success, zero on EOF, and negative
+ * values on failure.
+ *
+ */
+static int nlbl_mgmt_recv(nlbl_handle *hndl, nlbl_msg **msg)
+{
+  int ret_val;
+  struct nlmsghdr *nl_hdr;
+
+  /* try to get a message from the handle */
+  ret_val = nlbl_comm_recv(hndl, msg);
+  if (ret_val <= 0)
+    goto recv_failure;
+  
+  /* process the response */
+  nl_hdr = nlbl_msg_nlhdr(*msg);
+  if (nl_hdr == NULL || nl_hdr->nlmsg_type != nlbl_mgmt_fid) {
+    ret_val = -EBADMSG;
+    goto recv_failure;
+  }
+  
+  return ret_val;
+  
+ recv_failure:
+  if (ret_val > 0)
+    nlbl_msg_free(*msg);
+  return ret_val;
+}
+
+/**
+ * nlbl_mgmt_parse_ack - Parse an ACK message
+ * @msg: the message
+ *
+ * Description:
+ * Parse the ACK message in @msg and return the error code specified in the
+ * ACK.
+ *
+ */
+static int nlbl_mgmt_parse_ack(nlbl_msg *msg)
+{
+  struct genlmsghdr *genl_hdr;
+  struct nlattr *nla;
+
+  genl_hdr = nlbl_msg_genlhdr(msg);
+  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_ACK)
+    goto parse_ack_failure;
+  nla = nlbl_attr_find(msg, NLBL_MGMT_A_ERRNO);
+  if (nla == NULL)
+    goto parse_ack_failure;
+
+  return nla_get_u32(nla);
+
+ parse_ack_failure:
+  return -EBADMSG;
+}
 
 /*
  * Init functions
  */
-
 
 /**
  * nlbl_mgmt_init - Perform any setup needed
  *
  * Description:
  * Do any setup needed for the management component, including determining the
- * NetLabel Mangement Generic NETLINK family ID.  Returns zero on success,
+ * NetLabel Mangement Generic Netlink family ID.  Returns zero on success,
  * negative values on error.
  *
  */
 int nlbl_mgmt_init(void)
 {
-  int ret_val;
-  nlbl_socket sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
+  int ret_val = -ENOMEM;
+  nlbl_handle *hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
+  struct nlmsghdr *nl_hdr;
   struct genlmsghdr *genl_hdr;
-  struct nlattr *nla_hdr;
-  nlbl_type nl_type;
+  struct nlattr *nla;
 
-  /* open a socket */
-  ret_val = nlbl_netlink_open(&sock);
-  if (ret_val < 0)
-    return ret_val;
+  /* get a netlabel handle */
+  hndl = nlbl_comm_open();
+  if (hndl == NULL)
+    goto init_failure;
 
-  /* allocate a buffer for the family id request */
-  msg_len = GENL_HDRLEN + NLA_HDRLEN + strlen(NETLBL_NLTYPE_MGMT_NAME) + 1;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
-    goto init_return;
-  }
-  memset(msg, 0, msg_len);
-  msg_iter = msg;
+  /* create a new message */
+  msg = nlbl_msg_new();
+  if (msg == NULL)
+    goto init_failure;
 
-  /* write the genetlink header into the buffer */
-  genl_hdr = (struct genlmsghdr *)msg_iter;
+  /* setup the netlink header */
+  nl_hdr = nlbl_msg_nlhdr(msg);
+  if (nl_hdr == NULL)
+    goto init_failure;
+  nl_hdr->nlmsg_type = GENL_ID_CTRL;
+  
+  /* setup the generic netlink header */
+  genl_hdr = nlbl_msg_genlhdr(msg);
+  if (genl_hdr == NULL)
+    goto init_failure;
   genl_hdr->cmd = CTRL_CMD_GETFAMILY;
   genl_hdr->version = 1;
 
-  /* write the attribute into the buffer */
-  msg_iter += GENL_HDRLEN;
-  nla_hdr = (struct nlattr *)msg_iter;
-  nla_hdr->nla_len = NLA_HDRLEN + strlen(NETLBL_NLTYPE_MGMT_NAME) + 1;
-  nla_hdr->nla_type = CTRL_ATTR_FAMILY_NAME;
-  msg_iter += NLA_HDRLEN;
-  strcpy((char *)msg_iter, NETLBL_NLTYPE_MGMT_NAME);
+  /* add the netlabel family request attributes */
+  ret_val = nla_put_string(msg,
+			   CTRL_ATTR_FAMILY_NAME,
+			   NETLBL_NLTYPE_MGMT_NAME);
+  if (ret_val != 0)
+    goto init_failure;
 
-  /* send the message */
-  ret_val = nlbl_netlink_write(sock, GENL_ID_CTRL, msg, msg_len);
-  if (ret_val < 0)
-    goto init_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
+  /* send the request */
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto init_failure;
+  }
 
   /* read the response */
-  ret_val = nlbl_netlink_read(sock, &nl_type, &msg, &msg_len);
-  if (ret_val < 0)
-    goto init_return;
-  if (nl_type != GENL_ID_CTRL) {
-    ret_val = -ENOMSG;
-    goto init_return;
+  ret_val = nlbl_comm_recv(hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto init_failure;
   }
-  msg_iter = msg + NLMSG_LENGTH(0);
-
-  /* parse the response */
-  genl_hdr = (struct genlmsghdr *) msg_iter;
-  if (genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
-    ret_val = -ENOMSG;
-    goto init_return;
+  
+  /* process the response */
+  genl_hdr = nlbl_msg_genlhdr(ans_msg);
+  if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
+    ret_val = -EBADMSG;
+    goto init_failure;
   }
-  msg_iter += GENL_HDRLEN;
-  do {
-    nla_hdr = (struct nlattr *)msg_iter;
-    msg_iter += NLMSG_ALIGN(nla_hdr->nla_len);
-  } while (msg_iter - msg < msg_len || 
-	   nla_hdr->nla_type != CTRL_ATTR_FAMILY_ID);
-  if (nla_hdr->nla_type != CTRL_ATTR_FAMILY_ID) {
-    ret_val = -ENOMSG;
-    goto init_return;
+  nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
+  if (nla == NULL) {
+    ret_val = -EBADMSG;
+    goto init_failure;
   }
-  nlbl_mgmt_fid = nlbl_get_u16((unsigned char *)nla_hdr);
-
-  ret_val = 0;
-
- init_return:
-  if (msg)
-    free(msg);
-  nlbl_netlink_close(sock);
-  return ret_val;
-}
-
-/*
- * Low-level communications
- */
-
-
-/**
- * nlbl_mgmt_write - Send a NetLabel management message
- * @sock: the socket
- * @msg: the message
- * @msg_len: the message length
- *
- * Description:
- * Write the message in @msg to the NetLabel socket @sock.  Returns zero on
- * success, negative values on failure.
- *
- */
-int nlbl_mgmt_write(nlbl_socket sock, nlbl_data *msg, size_t msg_len)
-{
-  return nlbl_netlink_write(sock, nlbl_mgmt_fid, msg, msg_len);
-}
-
-/**
- * nlbl_mgmt_read - Read a NetLbel management message
- * @sock: the socket
- * @msg: the message
- * @msg_len: the message length
- *
- * Description:
- * Try to read a NetLabel management message and return the message in @msg.
- * Returns negative values on failure.
- *
- */
-int nlbl_mgmt_read(nlbl_socket sock, nlbl_data **msg, ssize_t *msg_len)
-{
-  int ret_val;
-  nlbl_type nl_type;
-
-  ret_val = nlbl_netlink_read(sock, &nl_type, msg, msg_len);
-  if (ret_val >= 0 && nl_type != nlbl_mgmt_fid)
-      return -ENOMSG;
-
+  nlbl_mgmt_fid = nla_get_u16(nla);
+  if (nlbl_mgmt_fid == 0) {
+    ret_val = -EBADMSG;
+    goto init_failure;
+  }
+  
+  return 0;
+  
+ init_failure:
+  nlbl_comm_close(hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
@@ -186,7 +251,7 @@ int nlbl_mgmt_read(nlbl_socket sock, nlbl_data **msg, ssize_t *msg_len)
  * NetLabel operations
  */
 
-
+#if 0
 /**
  * nlbl_mgmt_modules - Determine the supported list of NetLabel modules
  * @sock: the NetLabel socket
@@ -196,7 +261,7 @@ int nlbl_mgmt_read(nlbl_socket sock, nlbl_data **msg, ssize_t *msg_len)
  * Description:
  * Request a list of supported NetLabel modules from the kernel and return the
  * result to the caller.  If @sock is zero then the function will handle
- * opening and closing it's own NETLINK socket.  Returns zero on success,
+ * opening and closing it's own Netlink socket.  Returns zero on success,
  * negative values on failure.
  *
  */
@@ -291,437 +356,569 @@ int nlbl_mgmt_modules(nlbl_socket sock,
 
   return ret_val;
 }
+#endif
 
 /**
- * nlbl_mgmt_version - Determine the kernel's NetLabel version
- * @sock: the NetLabel socket
- * @ver: the version string buffer
- * @ver_len: the length of the version string in bytes
+ * nlbl_mgmt_version - Determine the kernel's NetLabel protocol version
+ * @hndl: the NetLabel handle
+ * @version: the protocol version
  *
  * Description:
- * Request the NetLabel version string from the kernel and return the result
- * to the caller.  If @sock is zero then the function will handle opening and
- * closing it's own NETLINK socket.  Returns zero on success, negative values
+ * Request the NetLabel protocol version from the kernel and return the result
+ * to the caller.  If @hndl is NULL then the function will handle opening and
+ * closing it's own NetLabel handle.  Returns zero on success, negative values
  * on failure.
  *
  */
-int nlbl_mgmt_version(nlbl_socket sock, unsigned int *version)
+int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
   struct genlmsghdr *genl_hdr;
+  struct nlattr *nla;
 
   /* sanity checks */
-  if (sock < 0 || version == NULL)
+  if (version == NULL)
     return -EINVAL;
+  if (nlbl_mgmt_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto version_return;
   }
 
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
+  /* create a new message */
+  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_VERSION, 0);
+  if (msg == NULL)
     goto version_return;
-  }
-  memset(msg, 0, msg_len);
 
-  /* write the message into the buffer */
-  nlbl_put_genlhdr(msg, NLBL_MGMT_C_VERSION);
-  
   /* send the request */
-  ret_val = nlbl_mgmt_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
-    goto version_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
-
-  /* read the results */
-  ret_val = nlbl_mgmt_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
-    goto version_return;
-  msg_iter = msg + NLMSG_LENGTH(0);
-  msg_len -= NLMSG_LENGTH(0);
-
-  /* parse the response */
-  genl_hdr = (struct genlmsghdr *)msg_iter;
-  if (genl_hdr->cmd != NLBL_MGMT_C_VERSION) {
-    ret_val = -ENOMSG;
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto version_return;
   }
-  msg_iter += GENL_HDRLEN;
-  msg_len -= GENL_HDRLEN;
-  if (msg_len != NETLBL_LEN_U32) {
-    ret_val = -ENOMSG;
+
+  /* read the response */
+  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto version_return;
   }
-  *version = nlbl_get_u32(msg_iter);
+
+  /* process the response */
+  genl_hdr = nlbl_msg_genlhdr(ans_msg);
+  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_VERSION) {
+    ret_val = -EBADMSG;
+    goto version_return;
+  }
+  nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_VERSION);
+  if (nla == NULL) {
+    ret_val = -EBADMSG;
+    goto version_return;
+  }
+  *version = nla_get_u32(nla);
 
   ret_val = 0;
 
  version_return:
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
-
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
 /**
  * nlbl_mgmt_add - Add a domain mapping to the NetLabel system
- * @sock: the NetLabel socket
- * @domain_list: list of domain mappings
- * @domain_count: number of entries in the domain mapping list
- * @def_flag: default mapping flag 
+ * @hndl: the NetLabel handle
+ * @domain: the NetLabel domain map
  *
  * Description:
- * Add the domain mappings in @domain_list to the NetLabel system.  If @sock is
- * zero then the function will handle opening and closing it's own NETLINK
- * socket.  Returns zero on success, negative values on failure.
+ * Add the domain mapping in @domain to the NetLabel system.  If @hndl is NULL
+ * then the function will handle opening and closing it's own NetLabel handle.
+ * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_mgmt_add(nlbl_socket sock,
-                  mgmt_domain *domain_list,
-                  size_t domain_count,
-                  unsigned int def_flag)
+int nlbl_mgmt_add(nlbl_handle *hndl, nlbl_mgmt_domain *domain)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
-  unsigned int iter;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
 
   /* sanity checks */
-  if (sock < 0 || domain_list == NULL || domain_count < 1 || 
-      (def_flag && domain_count != 1))
+  if (domain == NULL || domain->domain == NULL)
     return -EINVAL;
+  if (nlbl_mgmt_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
-  }
-
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN + (def_flag ? 0 : NETLBL_LEN_U32);
-  for (iter = 0; iter < domain_count; iter++) {
-    msg_len += NETLBL_LEN_U32;
-    if (!def_flag)
-      msg_len += nlbl_len_payload(domain_list[iter].domain_len);
-    switch (domain_list[iter].proto_type)
-      {
-      case NETLBL_NLTYPE_UNLABELED:
-        break;
-      case NETLBL_NLTYPE_CIPSOV4:
-        msg_len += NETLBL_LEN_U32;
-        break;
-      default:
-        ret_val = -EINVAL;
-        goto add_return;
-      }
-  }
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
-    goto add_return;
-  }
-  memset(msg, 0, msg_len);
-  msg_iter = msg;
-
-  /* write the message into the buffer */
-  if (!def_flag) {
-    nlbl_putinc_genlhdr(&msg_iter, NLBL_MGMT_C_ADD);
-    nlbl_putinc_u32(&msg_iter, domain_count, NULL);
-  } else
-    nlbl_putinc_genlhdr(&msg_iter, NLBL_MGMT_C_ADDDEF);
-  for (iter = 0; iter < domain_count; iter++) {
-    if (!def_flag)
-      nlbl_putinc_str(&msg_iter, domain_list[iter].domain, NULL);
-    nlbl_putinc_u32(&msg_iter, domain_list[iter].proto_type, NULL);
-    switch (domain_list[iter].proto_type) {
-    case NETLBL_NLTYPE_UNLABELED:
-      break;
-    case NETLBL_NLTYPE_CIPSOV4:
-      nlbl_putinc_u32(&msg_iter, domain_list[iter].proto.cipsov4.doi, NULL);
-      break;
-    default:
-      ret_val = -EINVAL;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
       goto add_return;
-    }
+  }
+
+  /* create a new message */
+  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_ADD, 0);
+  if (msg == NULL)
+    goto add_return;
+
+  /* add the required attributes to the message */
+  ret_val = nla_put_string(msg, NLBL_MGMT_A_DOMAIN, domain->domain);
+  if (ret_val != 0)
+    goto add_return;
+  ret_val = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
+  if (ret_val != 0)
+    goto add_return;
+  switch (domain->proto_type) {
+  case NETLBL_NLTYPE_CIPSOV4:
+    ret_val = nla_put_u32(msg, NLBL_MGMT_A_CV4DOI, domain->proto.cv4.doi);
+    if (ret_val != 0)
+      goto add_return;
+    break;
   }
 
   /* send the request */
-  ret_val = nlbl_mgmt_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto add_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
+  }
 
-  /* read the results */
-  ret_val = nlbl_mgmt_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
+  /* read the response */
+  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto add_return;
+  }
 
-  /* parse the response */
-  ret_val = nlbl_common_ack_parse(msg + NLMSG_LENGTH(0),
-				  msg_len - NLMSG_LENGTH(0),
-				  NLBL_MGMT_C_ACK);
+  /* process the response */
+  ret_val = nlbl_mgmt_parse_ack(ans_msg);
 
  add_return:
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
+  return ret_val;
+}
 
+/**
+ * nlbl_mgmt_adddef - Add the default domain mapping to the NetLabel system
+ * @hndl: the NetLabel handle
+ * @domain: the NetLabel domain map
+ *
+ * Description:
+ * Add the domain mapping in @domain to the NetLabel system as the default
+ * mapping.  If @hndl is NULL then the function will handle opening and
+ * closing it's own NetLabel handle.  Returns zero on success, negative values
+ * on failure.
+ *
+ */
+int nlbl_mgmt_adddef(nlbl_handle *hndl, nlbl_mgmt_domain *domain)
+{
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
+
+  /* sanity checks */
+  if (domain == NULL)
+    return -EINVAL;
+  if (nlbl_mgmt_fid == 0)
+    return -ENOPROTOOPT;
+
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto adddef_return;
+  }
+
+  /* create a new message */
+  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_ADDDEF, 0);
+  if (msg == NULL)
+    goto adddef_return;
+
+  /* add the required attributes to the message */
+  ret_val = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
+  if (ret_val != 0)
+    goto adddef_return;
+  switch (domain->proto_type) {
+  case NETLBL_NLTYPE_CIPSOV4:
+    ret_val = nla_put_u32(msg, NLBL_MGMT_A_CV4DOI, domain->proto.cv4.doi);
+    if (ret_val != 0)
+      goto adddef_return;
+    break;
+  }
+
+  /* send the request */
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto adddef_return;
+  }
+
+  /* read the response */
+  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto adddef_return;
+  }
+
+  /* process the response */
+  ret_val = nlbl_mgmt_parse_ack(ans_msg);
+
+ adddef_return:
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
 /**
  * nlbl_mgmt_del - Remove a domain mapping from the NetLabel system
- * @sock: the NetLabel socket
- * @domains: list of domain strings
- * @domain_len: list of domain string lengths
- * @domain_count: the number of domain strings
- * @def_flag: default mapping flag 
+ * @hndl: the NetLabel handle
+ * @domain: the domain
  *
  * Description:
- * Remove the domain mappings in @domains from the NetLabel system.  If @sock
- * is zero then the function will handle opening and closing it's own NETLINK
- * socket.  Returns zero on success, negative values on failure.
+ * Remove the domain mapping specified by @domain from the NetLabel system.
+ * If @hndl is NULL then the function will handle opening and closing it's own
+ * NetLabel handle.  Returns zero on success, negative values on failure.
  *
  */
-int nlbl_mgmt_del(nlbl_socket sock,
-		  char **domains,
-		  size_t *domain_len,
-		  size_t domain_count,
-		  unsigned int def_flag)
+int nlbl_mgmt_del(nlbl_handle *hndl, char *domain)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
-  unsigned int iter;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
 
   /* sanity checks */
-  if (sock < 0 || (!def_flag && (domains == NULL || domain_len == NULL || 
-				 domain_count < 1)))
+  if (domain == NULL)
     return -EINVAL;
+  if (nlbl_mgmt_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto del_return;
   }
 
-  /* allocate a buffer for the message */
-  if (!def_flag) {
-    msg_len = GENL_HDRLEN + NETLBL_LEN_U32;
-    for (iter = 0; iter < domain_count; iter++)
-      msg_len += nlbl_len_payload(domain_len[iter]);
-  } else
-    msg_len = GENL_HDRLEN;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
+  /* create a new message */
+  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_REMOVE, 0);
+  if (msg == NULL)
     goto del_return;
-  }
-  memset(msg, 0, msg_len);
-  msg_iter = msg;
 
-  /* write the message into the buffer */
-  if (!def_flag) {
-    nlbl_putinc_genlhdr(&msg_iter, NLBL_MGMT_C_REMOVE);
-    nlbl_putinc_u32(&msg_iter, domain_count, NULL);
-    for (iter = 0; iter < domain_count; iter++)
-      nlbl_putinc_str(&msg_iter, domains[iter], NULL);
-  } else
-    nlbl_putinc_genlhdr(&msg_iter, NLBL_MGMT_C_REMOVEDEF);
+  /* add the required attributes to the message */
+  ret_val = nla_put_string(msg, NLBL_MGMT_A_DOMAIN, domain);
+  if (ret_val != 0)
+    goto del_return;
 
   /* send the request */
-  ret_val = nlbl_mgmt_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto del_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
+  }
 
-  /* read the results */
-  ret_val = nlbl_mgmt_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
+  /* read the response */
+  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
     goto del_return;
+  }
 
-  /* parse the response */
-  ret_val = nlbl_common_ack_parse(msg + NLMSG_LENGTH(0),
-				  msg_len - NLMSG_LENGTH(0),
-				  NLBL_MGMT_C_ACK);
+  /* process the response */
+  ret_val = nlbl_mgmt_parse_ack(ans_msg);
 
  del_return:
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
-    
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
 /**
- * nlbl_mgmt_list - List the NetLabel domain mappings
- * @sock: the NetLabel socket
- * @domain_list: list of domain mappings
- * @domain_count: number of domains in the list
- * @def_flag: default mapping flag
+ * nlbl_mgmt_deldef - Remove the default domain mapping from NetLabel
+ * @hndl: the NetLabel handle
  *
  * Description:
- * List the configured domain mappings in the NetLabel system.  If @sock is
- * zero then the function will handle opening and closing it's own NETLINK
- * socket.  Returns zero on success, negative values on failure.
+ * Remove the default domain mapping from the NetLabel system.  If @hndl is
+ * NULL then the function will handle opening and closing it's own NetLabel
+ *  handle.  Returns zero on success, negative values on failure.
  *
  */
-int nlbl_mgmt_list(nlbl_socket sock, 
-		   mgmt_domain **domain_list,
-		   size_t *domain_count,
-		   unsigned int def_flag)
+int nlbl_mgmt_deldef(nlbl_handle *hndl)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
-  struct genlmsghdr *genl_hdr;
-  unsigned int iter;
-  mgmt_domain *domains = NULL;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
 
   /* sanity checks */
-  if (sock < 0 || domain_list == NULL || domain_count == NULL)
-    return -EINVAL;
+  if (nlbl_mgmt_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto deldef_return;
   }
 
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN;
-  msg = malloc(msg_len);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
-    goto list_return;
-  }
-  memset(msg, 0, msg_len);
-
-  /* write the message into the buffer */
-  if (!def_flag)
-    nlbl_put_genlhdr(msg, NLBL_MGMT_C_LIST);
-  else
-    nlbl_put_genlhdr(msg, NLBL_MGMT_C_LISTDEF);
+  /* create a new message */
+  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_REMOVEDEF, 0);
+  if (msg == NULL)
+    goto deldef_return;
 
   /* send the request */
-  ret_val = nlbl_mgmt_write(local_sock, msg, msg_len);
-  if (ret_val < 0)
-    goto list_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
-
-  /* read the results */
-  ret_val = nlbl_mgmt_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
-    goto list_return;
-  msg_iter = msg + NLMSG_LENGTH(0);
-  msg_len -= NLMSG_LENGTH(0);
-
-  /* parse the response */
-  genl_hdr = (struct genlmsghdr *)msg_iter;
-  if (!def_flag) {
-    if (genl_hdr->cmd != NLBL_MGMT_C_LIST) {
-      ret_val = -ENOMSG;
-      goto list_return;
-    }
-  } else {
-    if (genl_hdr->cmd != NLBL_MGMT_C_LISTDEF) {
-      ret_val = -ENOMSG;
-      goto list_return;
-    }
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto deldef_return;
   }
-  msg_iter += GENL_HDRLEN;
-  msg_len -= GENL_HDRLEN;
-  if (!def_flag)
-    *domain_count = nlbl_getinc_u32(&msg_iter, &msg_len);
-  else
-    *domain_count = 1;
-  for (iter = 0; iter < *domain_count; iter++) {
-    domains = realloc(domains, sizeof(mgmt_domain) * (iter + 1));
-    if (domains == NULL) {
-      ret_val = -ENOMEM;
-      goto list_return;
-    }
-    if (!def_flag) {
-      domains[iter].domain_len = nlbl_get_len(msg_iter);
-      domains[iter].domain = nlbl_getinc_str(&msg_iter, &msg_len);
-      if (domains[iter].domain == NULL) {
-	ret_val = -ENOMEM;
-	goto list_return;
-      }
-    } else {
-      domains[iter].domain = NULL;
-      domains[iter].domain_len = 0;
-    }
-    domains[iter].proto_type = nlbl_getinc_u32(&msg_iter, &msg_len);
-    switch (domains[iter].proto_type) {
-    case NETLBL_NLTYPE_UNLABELED:
-      break;
-    case NETLBL_NLTYPE_CIPSOV4:
-      domains[iter].proto.cipsov4.maptype = nlbl_getinc_u32(&msg_iter,
-							      &msg_len);
-      domains[iter].proto.cipsov4.doi = nlbl_getinc_u32(&msg_iter,
-							  &msg_len);
-      break;
-    default:
-      if (def_flag) {
-	free(domains);
-	*domain_count = 0;
-	domains = NULL;
-	ret_val = 0;
-      } else
-	ret_val = -EBADMSG;
-      goto list_return;
-    }
+
+  /* read the response */
+  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto deldef_return;
   }
-  *domain_list = domains;
- 
+
+  /* process the response */
+  ret_val = nlbl_mgmt_parse_ack(ans_msg);
+
+ deldef_return:
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
+  return ret_val;
+}
+
+/**
+ * nlbl_mgmt_listdef - List the default NetLabel domain mapping
+ * @hndl: the NetLabel handle
+ * @domain: the default domain map
+ *
+ * Description:
+ * Query the NetLabel subsystem and return the default domain mapping in
+ * @domain.  If @hndl is NULL then the function will handle opening and
+ * closing it's own NetLabel handle.  Returns zero on success, negative values
+ * on failure.
+ *
+ */
+int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_mgmt_domain *domain)
+{
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
+  struct genlmsghdr *genl_hdr;
+  struct nlattr *nla;
+
+  /* sanity checks */
+  if (domain == NULL)
+    return -EINVAL;
+  if (nlbl_mgmt_fid == 0)
+    return -ENOPROTOOPT;
+
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      goto listdef_return;
+  }
+
+  /* create a new message */
+  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_LISTDEF, 0);
+  if (msg == NULL)
+    goto listdef_return;
+
+  /* send the request */
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto listdef_return;
+  }
+
+  /* read the response */
+  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto listdef_return;
+  }
+
+  /* process the response */
+  genl_hdr = nlbl_msg_genlhdr(ans_msg);
+  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTDEF)
+    goto listdef_return;
+  nla = nlbl_attr_find(msg, NLBL_MGMT_A_PROTOCOL);
+  if (nla == NULL)
+    goto listdef_return;
+  domain->proto_type = nla_get_u32(nla);
+  switch (domain->proto_type) {
+  case NETLBL_NLTYPE_CIPSOV4:
+    nla = nlbl_attr_find(msg, NLBL_MGMT_A_CV4DOI);
+    if (nla == NULL)
+      goto listdef_return;
+    domain->proto.cv4.doi = nla_get_u32(nla);
+    break;
+  }
+
   ret_val = 0;
- 
- list_return:
-  if (msg)
-    free(msg);
-  if (ret_val < 0) {
-    if (domains) {
-      for (iter = 0; iter < *domain_count; iter++) {
-	if (domains[iter].domain)
-	  free(domains[iter].domain);
-      }
-      free(domains);
-    }
+
+ listdef_return:
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
+  return ret_val;
+}
+
+/**
+ * nlbl_mgmt_listall - List all of the configured NetLabel domain mappings
+ * @hndl: the NetLabel handle
+ * @domains: domain mapping array
+ * @domain_cnt: the number of mappings
+ *
+ * Description:
+ * Query the NetLabel subsystem and return the configured domain mappings in
+ * @domains.  If @hndl is NULL then the function will handle opening and
+ * closing it's own NetLabel handle.  Returns the number of domains on success,
+ * zero if no domains are specified, and negative values on failure.
+ *
+ */
+int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
+{
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
+  struct nlmsghdr *nl_hdr;
+  struct genlmsghdr *genl_hdr;
+  struct nlattr *nla_head;
+  struct nlattr *nla;
+  int ans_msg_len;
+  int ans_msg_attrlen;
+  nlbl_mgmt_domain *dmns = NULL;
+  uint32_t dmns_count = 0;
+
+  /* sanity checks */
+  if (domains == NULL)
+    return -EINVAL;
+  if (nlbl_mgmt_fid == 0)
+    return -ENOPROTOOPT;
+
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      ret_val = -ENOMEM;
+      goto listall_return;
   }
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
- 
+
+  /* create a new message */
+  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_LISTALL, 0);
+  if (msg == NULL) {
+    ret_val = -ENOMEM;
+    goto listall_return;
+  }
+
+  /* send the request */
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto listall_return;
+  }
+
+  /* read all of the messages (multi-message response) */
+  do {
+    nlbl_msg_free(ans_msg);
+
+    /* get the next set of messages */
+    ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+    if (ret_val <= 0) {
+      if (ret_val == 0)
+	ret_val = -ENODATA;
+      goto listall_return;
+    }
+
+    /* loop through the messages */
+    ans_msg_len = ret_val;
+    nl_hdr = nlbl_msg_nlhdr(msg);
+    while (nlmsg_ok(nl_hdr, ans_msg_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
+      /* get the header pointers */
+      genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
+      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTALL)
+	goto listall_return;
+      nla_head = (struct nlattr *)(&genl_hdr[1]);
+      ans_msg_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+
+      /* resize the array */
+      dmns = realloc(dmns, sizeof(nlbl_mgmt_domain) * (dmns_count + 1));
+      memset(&dmns[dmns_count], 0, sizeof(nlbl_mgmt_domain));
+
+      /* get the attribute information */
+      nla = nla_find(nla_head, ans_msg_attrlen, NLBL_MGMT_A_DOMAIN);
+      if (nla == NULL)
+	goto listall_return;
+      dmns[dmns_count].domain = malloc(nla_len(nla));
+      strncpy(dmns[dmns_count].domain, nla_data(nla), nla_len(nla));
+      nla = nla_find(nla_head, ans_msg_attrlen, NLBL_MGMT_A_PROTOCOL);
+      if (nla == NULL)
+	goto listall_return;
+      dmns[dmns_count].proto_type = nla_get_u32(nla);
+      switch (dmns[dmns_count].proto_type) {
+      case NETLBL_NLTYPE_CIPSOV4:
+	nla = nla_find(nla_head, ans_msg_attrlen, NLBL_MGMT_A_CV4DOI);
+	if (nla == NULL)
+	  goto listall_return;
+	dmns[dmns_count].proto.cv4.doi = nla_get_u32(nla);
+	break;
+      }
+
+      dmns_count++;
+
+      /* next message */
+      nl_hdr = nlmsg_next(nl_hdr, &ans_msg_len);
+    }
+  } while (ans_msg != NULL && nl_hdr->nlmsg_type != NLMSG_DONE);
+
+  *domains = dmns;
+  ret_val = dmns_count;
+
+ listall_return:
+  if (ret_val < 0)
+    free(dmns);
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }

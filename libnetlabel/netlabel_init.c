@@ -29,26 +29,24 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <asm/types.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/select.h>
 #include <linux/types.h>
-#include <linux/netlabel.h>
+#include <netlink/netlink.h>
 
+#include <netlabel.h>
 #include <libnetlabel.h>
 
 #include "mod_mgmt.h"
-#include "mod_cipsov4.h"
 #include "mod_unlabeled.h"
+#include "mod_cipsov4.h"
 
 /**
- * nlbl_netlink_init - Handle any NETLINK setup needed
+ * nlbl_init - Handle any NetLabel setup needed
  *
  * Description:
- * Initialize the NETLINK communication link, but do not open any general use
- * sockets.  Returns zero on success, negative values on failure.
+ * Initialize the NetLabel communication link, but do not open any general use
+ * NetLabel handles.  Returns zero on success, negative values on failure.
  *
  */
 int nlbl_netlink_init(void)
@@ -74,10 +72,11 @@ int nlbl_netlink_init(void)
 }
 
 /**
- * nlbl_netlink_exit - Handle any NETLINK cleanup
+ * nlbl_exit - Handle any NetLabel cleanup
  *
  * Description:
- * Perform any cleanup duties for the NETLINK communication link.
+ * Perform any cleanup duties for the NetLabel communication link, does not
+ * close any handles.
  *
  */
 void nlbl_netlink_exit(void)
