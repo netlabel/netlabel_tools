@@ -843,7 +843,7 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
   }
 
   /* create a new message */
-  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_LISTALL, 0);
+  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_LISTALL, NLM_F_DUMP);
   if (msg == NULL) {
     ret_val = -ENOMEM;
     goto listall_return;
