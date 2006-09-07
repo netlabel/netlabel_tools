@@ -251,112 +251,113 @@ int nlbl_mgmt_init(void)
  * NetLabel operations
  */
 
-#if 0
 /**
- * nlbl_mgmt_modules - Determine the supported list of NetLabel modules
- * @sock: the NetLabel socket
- * @module_list: the module list
- * @module_count: the number of modules in the list
+ * nlbl_mgmt_protocols - Determine the supported list of NetLabel protocols
+ * @hndl: the NetLabel handle
+ * @protocols: protocol array
  *
  * Description:
- * Request a list of supported NetLabel modules from the kernel and return the
- * result to the caller.  If @sock is zero then the function will handle
- * opening and closing it's own Netlink socket.  Returns zero on success,
- * negative values on failure.
+ * Query the NetLabel subsystem and return the supported protocols in
+ * @protocols.  If @hndl is NULL then the function will handle opening and
+ * closing it's own NetLabel handle.  Returns the number of protocols on
+ * success, zero if no protocols are supported, and negative values on failure.
  *
  */
-int nlbl_mgmt_modules(nlbl_socket sock,
-                      unsigned int **module_list,
-                      size_t *module_count)
+int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
 {
-  int ret_val = -EPERM;
-  nlbl_socket local_sock = sock;
-  nlbl_data *msg = NULL;
-  nlbl_data *msg_iter;
-  ssize_t msg_len;
+  int ret_val = -ENOMEM;
+  nlbl_handle *p_hndl = hndl;
+  nlbl_msg *msg = NULL;
+  nlbl_msg *ans_msg = NULL;
+  struct nlmsghdr *nl_hdr;
   struct genlmsghdr *genl_hdr;
-  unsigned int *list;
-  unsigned int mod_count;
-  int iter;
+  struct nlattr *nla_head;
+  struct nlattr *nla;
+  int ans_msg_len;
+  int ans_msg_attrlen;
+  nlbl_proto *protos = NULL;
+  uint32_t protos_count = 0;
 
   /* sanity checks */
-  if (sock < 0 || module_list == NULL || module_count == NULL)
+  if (protocols == NULL)
     return -EINVAL;
+  if (nlbl_mgmt_fid == 0)
+    return -ENOPROTOOPT;
 
-  /* open a socket if we need one */
-  if (sock == 0) {
-    ret_val = nlbl_netlink_open(&local_sock);
-    if (ret_val < 0)
-      return ret_val;
+  /* open a handle if we need one */
+  if (p_hndl == NULL) {
+    p_hndl = nlbl_comm_open();
+    if (p_hndl == NULL)
+      ret_val = -ENOMEM;
+      goto protocols_return;
   }
 
-  /* allocate a buffer for the message */
-  msg_len = GENL_HDRLEN;
-  msg = malloc(msg_len);
+  /* create a new message */
+  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_PROTOCOLS, NLM_F_DUMP);
   if (msg == NULL) {
     ret_val = -ENOMEM;
-    goto modules_return;
+    goto protocols_return;
   }
-  memset(msg, 0, msg_len);
 
-  /* write the message into the buffer */
-  nlbl_put_genlhdr(msg, NLBL_MGMT_C_MODULES);
-  
   /* send the request */
-  ret_val = nlbl_mgmt_write(local_sock, msg, msg_len);
+  ret_val = nlbl_comm_send(hndl, msg);
+  if (ret_val <= 0) {
+    if (ret_val == 0)
+      ret_val = -ENODATA;
+    goto protocols_return;
+  }
+
+  /* read all of the messages (multi-message response) */
+  do {
+    nlbl_msg_free(ans_msg);
+
+    /* get the next set of messages */
+    ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+    if (ret_val <= 0) {
+      if (ret_val == 0)
+	ret_val = -ENODATA;
+      goto protocols_return;
+    }
+
+    /* loop through the messages */
+    ans_msg_len = ret_val;
+    nl_hdr = nlbl_msg_nlhdr(msg);
+    while (nlmsg_ok(nl_hdr, ans_msg_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
+      /* get the header pointers */
+      genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
+      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_PROTOCOLS)
+	goto protocols_return;
+      nla_head = (struct nlattr *)(&genl_hdr[1]);
+      ans_msg_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+
+      /* resize the array */
+      protos = realloc(protos, sizeof(nlbl_proto) * (protos_count + 1));
+
+      /* get the attribute information */
+      nla = nla_find(nla_head, ans_msg_attrlen, NLBL_MGMT_A_PROTOCOL);
+      if (nla == NULL)
+	goto protocols_return;
+      protos[protos_count] = nla_get_u32(nla);
+
+      protos_count++;
+
+      /* next message */
+      nl_hdr = nlmsg_next(nl_hdr, &ans_msg_len);
+    }
+  } while (ans_msg != NULL && nl_hdr->nlmsg_type != NLMSG_DONE);
+
+  *protocols = protos;
+  ret_val = protos_count;
+
+ protocols_return:
   if (ret_val < 0)
-    goto modules_return;
-  free(msg);
-  msg = NULL;
-  msg_len = 0;
-
-  /* read the results */
-  ret_val = nlbl_mgmt_read(local_sock, &msg, &msg_len);
-  if (ret_val < 0)
-    goto modules_return;
-  msg_iter = msg + NLMSG_LENGTH(0);
-  msg_len -= NLMSG_LENGTH(0);
-
-  /* parse the response */
-  genl_hdr = (struct genlmsghdr *)msg_iter;
-  if (genl_hdr->cmd != NLBL_MGMT_C_MODULES) {
-    ret_val = -ENOMSG;
-    goto modules_return;
-  }
-  msg_iter += GENL_HDRLEN;
-  msg_len -= GENL_HDRLEN;
-  if (msg_len < NETLBL_LEN_U32) {
-    ret_val = -ENOMSG;
-    goto modules_return;
-  }
-  mod_count = nlbl_getinc_u32(&msg_iter, &msg_len);
-  if (mod_count == 0 || msg_len < mod_count * NETLBL_LEN_U32) {
-    ret_val = -ENOMSG;
-    goto modules_return;
-  }
-  
-  /* return the list of modules */
-  list = malloc(mod_count * NETLBL_LEN_U32);
-  if (list == NULL) {
-    ret_val = -ENOMEM;
-    goto modules_return;
-  }
-  for (iter = 0; iter < mod_count; iter++)
-    list[iter] = nlbl_getinc_u32(&msg_iter, &msg_len);
-  *module_count = mod_count;
-  *module_list = list;
-
-  ret_val = 0;
-
- modules_return:
-  if (msg)
-    free(msg);
-  if (sock == 0)
-    nlbl_netlink_close(local_sock);
-
+    free(protos);
+  if (hndl == NULL)
+    nlbl_comm_close(p_hndl);
+  nlbl_msg_free(msg);
+  nlbl_msg_free(ans_msg);
   return ret_val;
 }
-#endif
 
 /**
  * nlbl_mgmt_version - Determine the kernel's NetLabel protocol version
@@ -804,7 +805,6 @@ int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_mgmt_domain *domain)
  * nlbl_mgmt_listall - List all of the configured NetLabel domain mappings
  * @hndl: the NetLabel handle
  * @domains: domain mapping array
- * @domain_cnt: the number of mappings
  *
  * Description:
  * Query the NetLabel subsystem and return the configured domain mappings in
