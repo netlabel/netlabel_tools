@@ -28,9 +28,9 @@
 #define _NETLABELCTL_H
 
 /* option variables */
-extern unsigned int opt_verbose;
-extern unsigned int opt_timeout;
-extern unsigned int opt_pretty;
+extern uint32_t opt_verbose;
+extern uint32_t opt_timeout;
+extern uint32_t opt_pretty;
 
 /* module entry points */
 typedef int main_function_t(int argc, char *argv[]);
