@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <linux/netlabel.h>
 
 #include <libnetlabel.h>
 
@@ -48,12 +47,15 @@
 int cipsov4_add(int argc, char *argv[])
 {
   int ret_val;
-  unsigned int arg_iter;
-  unsigned int cipso_type = 0;
-  cv4_doi doi = 0;
-  cv4_tag_array tags = { NULL, 0 };
-  cv4_lvl_array lvls = { NULL, 0 };
-  cv4_cat_array cats = { NULL, 0 };
+  uint32_t arg_iter;
+  uint32_t cipso_type = CIPSO_V4_MAP_UNKNOWN;
+  nlbl_cv4_doi doi = 0;
+  nlbl_cv4_tag_a tags = { .array = NULL,
+			  .size = 0 };
+  nlbl_cv4_lvl_a lvls = { .array = NULL,
+			  .size = 0 };
+  nlbl_cv4_cat_a cats = { .array = NULL,
+			  .size = 0 };
   char *token_ptr;
 
   /* sanity checks */
@@ -64,22 +66,23 @@ int cipsov4_add(int argc, char *argv[])
   arg_iter = 0;
   while (arg_iter < argc && argv[arg_iter] != NULL) {
     if (strcmp(argv[arg_iter], "std") == 0) {
-      cipso_type = 1;
+      cipso_type = CIPSO_V4_MAP_STD;
     } else if (strcmp(argv[arg_iter], "pass") == 0) {
-      cipso_type = 2;
+      cipso_type = CIPSO_V4_MAP_PASS;
     } else if (strncmp(argv[arg_iter], "doi:", 4) == 0) {
       /* doi */
-      doi = (cv4_doi)atoi(argv[arg_iter] + 4);
+      doi = (nlbl_cv4_doi)atoi(argv[arg_iter] + 4);
     } else if (strncmp(argv[arg_iter], "tags:", 5) == 0) {
       /* tags */
       token_ptr = strtok(argv[arg_iter] + 5, ",");
       while (token_ptr != NULL) {
-        tags.array = realloc(tags.array, sizeof(cv4_tag) * (tags.size + 1));
+        tags.array = realloc(tags.array,
+			     sizeof(nlbl_cv4_tag) * (tags.size + 1));
         if (tags.array == NULL) {
           ret_val = -ENOMEM;
           goto add_return;
         }
-        tags.array[tags.size++] = (cv4_tag)atoi(token_ptr);
+        tags.array[tags.size++] = (nlbl_cv4_tag)atoi(token_ptr);
         token_ptr = strtok(NULL, ",");
       }
     } else if (strncmp(argv[arg_iter], "levels:", 7) == 0) {
@@ -87,14 +90,14 @@ int cipsov4_add(int argc, char *argv[])
       token_ptr = strtok(argv[arg_iter] + 7, "=");
       while (token_ptr != NULL) {
         lvls.array = realloc(lvls.array,
-			     sizeof(cv4_lvl) * 2 * (lvls.size + 1));
+			     sizeof(nlbl_cv4_lvl) * 2 * (lvls.size + 1));
         if (lvls.array == NULL) {
           ret_val = -ENOMEM;
           goto add_return;
         }
-        lvls.array[lvls.size * 2] = (cv4_lvl)atoi(token_ptr);
+        lvls.array[lvls.size * 2] = (nlbl_cv4_lvl)atoi(token_ptr);
         token_ptr = strtok(NULL, ",");
-        lvls.array[lvls.size * 2 + 1] = (cv4_lvl)atoi(token_ptr);
+        lvls.array[lvls.size * 2 + 1] = (nlbl_cv4_lvl)atoi(token_ptr);
         token_ptr = strtok(NULL, "=");
         lvls.size++;
       }
@@ -103,14 +106,14 @@ int cipsov4_add(int argc, char *argv[])
       token_ptr = strtok(argv[arg_iter] + 11, "=");
       while (token_ptr != NULL) {
         cats.array = realloc(cats.array,
-			     sizeof(cv4_cat) * 2 * (cats.size + 1));
+			     sizeof(nlbl_cv4_cat) * 2 * (cats.size + 1));
         if (cats.array == NULL) {
           ret_val = -ENOMEM;
           goto add_return;
         }
-        cats.array[cats.size * 2] = (cv4_cat)atoi(token_ptr);
+        cats.array[cats.size * 2] = (nlbl_cv4_cat)atoi(token_ptr);
         token_ptr = strtok(NULL, ",");
-        cats.array[cats.size * 2 + 1] = (cv4_cat)atoi(token_ptr);
+        cats.array[cats.size * 2 + 1] = (nlbl_cv4_cat)atoi(token_ptr);
         token_ptr = strtok(NULL, "=");
         cats.size++;
       }
@@ -121,13 +124,13 @@ int cipsov4_add(int argc, char *argv[])
 
   /* push the mapping into the kernel */
   switch (cipso_type) {
-  case 1:
+  case CIPSO_V4_MAP_STD:
     /* standard mapping */
-    ret_val = nlbl_cipsov4_add_std(0, doi, &tags, &lvls, &cats);
+    ret_val = nlbl_cipsov4_add_std(NULL, doi, &tags, &lvls, &cats);
     break;
-  case 2:
+  case CIPSO_V4_MAP_PASS:
     /* pass through mapping */
-    ret_val = nlbl_cipsov4_add_pass(0, doi, &tags);
+    ret_val = nlbl_cipsov4_add_pass(NULL, doi, &tags);
     break;
   default:
     ret_val = -EINVAL;
@@ -147,7 +150,6 @@ int cipsov4_add(int argc, char *argv[])
     free(lvls.array);
   if (cats.array)
     free(cats.array);
-
   return ret_val;
 }
 
@@ -164,8 +166,8 @@ int cipsov4_add(int argc, char *argv[])
 int cipsov4_del(int argc, char *argv[])
 {
   int ret_val;
-  unsigned int arg_iter;
-  cv4_doi doi = 0;
+  uint32_t arg_iter;
+  nlbl_cv4_doi doi = 0;
 
   /* sanity checks */
   if (argc <= 0 || argv == NULL || argv[0] == NULL)
@@ -176,14 +178,14 @@ int cipsov4_del(int argc, char *argv[])
   while (arg_iter < argc && argv[arg_iter] != NULL) {
     if (strncmp(argv[arg_iter], "doi:", 4) == 0) {
       /* doi */
-      doi = (cv4_doi)atoi(argv[arg_iter] + 4);
+      doi = (nlbl_cv4_doi)atoi(argv[arg_iter] + 4);
     } else
       return -EINVAL;
     arg_iter++;
   }
 
   /* delete the mapping */
-  ret_val = nlbl_cipsov4_del(0, doi);
+  ret_val = nlbl_cipsov4_del(NULL, doi);
   if (opt_pretty) {
     if (ret_val < 0)
       printf("Failed to remove the CIPSOv4 mapping\n");
@@ -207,23 +209,26 @@ int cipsov4_del(int argc, char *argv[])
 int cipsov4_list(int argc, char *argv[])
 {
   int ret_val;
-  unsigned int iter;
-  unsigned int doi_set = 0;
-  cv4_doi doi = 0;
-  cv4_doi *doi_list = NULL;
-  cv4_maptype *mtype_list = NULL;
-  cv4_maptype maptype;
+  uint32_t iter;
+  uint32_t doi_set = 0;
+  nlbl_cv4_doi doi = 0;
+  nlbl_cv4_doi *doi_list = NULL;
+  nlbl_cv4_mtype *mtype_list = NULL;
+  nlbl_cv4_mtype maptype;
   size_t count;
-  cv4_tag_array tags = { NULL, 0 };
-  cv4_lvl_array lvls = { NULL, 0 };
-  cv4_cat_array cats = { NULL, 0 };
+  nlbl_cv4_tag_a tags = { .array = NULL,
+			  .size = 0 };
+  nlbl_cv4_lvl_a lvls = { .array = NULL,
+			  .size = 0 };
+  nlbl_cv4_cat_a cats = { .array = NULL,
+			  .size = 0 };
 
   /* parse the arguments */
   iter = 0;
   while (iter < argc && argv[iter] != NULL) {
     if (strncmp(argv[iter], "doi:", 4) == 0) {
       /* doi */
-      doi = (cv4_doi)atoi(argv[iter] + 4);
+      doi = (nlbl_cv4_doi)atoi(argv[iter] + 4);
       doi_set = 1;
     } else
       return -EINVAL;
@@ -233,9 +238,10 @@ int cipsov4_list(int argc, char *argv[])
   /* fetch the information from the kernel and display the results */
   if (doi_set == 0) {
     /* list all the mappings */
-    ret_val = nlbl_cipsov4_list_all(0, &doi_list, &mtype_list, &count);
+    ret_val = nlbl_cipsov4_listall(NULL, &doi_list, &mtype_list);
     if (ret_val < 0)
       goto list_return;
+    count = ret_val;
 
     if (opt_pretty) {
       printf("Configured CIPSOv4 mappings (%u)\n", count);
@@ -279,7 +285,7 @@ int cipsov4_list(int argc, char *argv[])
     }
   } else {
     /* list a specific mapping */
-    ret_val = nlbl_cipsov4_list(0, doi, &maptype, &tags, &lvls, &cats);
+    ret_val = nlbl_cipsov4_list(NULL, doi, &maptype, &tags, &lvls, &cats);
     if (ret_val < 0)
       goto list_return;
 
@@ -401,7 +407,6 @@ int cipsov4_list(int argc, char *argv[])
     free(doi_list);
   if (mtype_list)
     free(mtype_list);
-
   return ret_val;
 }
 

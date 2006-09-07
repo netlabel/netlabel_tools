@@ -24,12 +24,10 @@
  *
  */
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <linux/netlabel.h>
 
 #include <libnetlabel.h>
 
@@ -48,31 +46,31 @@
 int map_add(int argc, char *argv[])
 {
   int ret_val;
-  unsigned int iter;
-  unsigned int def_flag = 0;
-  char *domain_str = NULL;
-  nlbl_type domain_proto = NETLBL_NLTYPE_NONE;
+  uint32_t iter;
+  uint8_t def_flag = 0;
+  nlbl_mgmt_domain domain;
   char *domain_proto_extra = NULL;
-  mgmt_domain domain;
 
   /* sanity checks */
   if (argc <= 0 || argv == NULL || argv[0] == NULL)
     return -EINVAL;
+
+  memset(&domain, 0, sizeof(domain));
 
   /* parse the arguments */
   iter = 0;
   while (iter < argc && argv[iter] != NULL) {
     if (strncmp(argv[iter], "domain:", 7) == 0) {
       /* domain string */
-      domain_str = argv[iter] + 7;
+      domain.domain = argv[iter] + 7;
     } else if (strncmp(argv[iter], "protocol:", 9) == 0) {
       /* protocol specifics */
       if (strncmp(argv[iter] + 9, "cipsov4", 7) == 0)
-        domain_proto = NETLBL_NLTYPE_CIPSOV4;
+        domain.proto_type = NETLBL_NLTYPE_CIPSOV4;
       else if (strncmp(argv[iter] + 9, "unlbl", 5) == 0)
-        domain_proto = NETLBL_NLTYPE_UNLABELED;
+        domain.proto_type = NETLBL_NLTYPE_UNLABELED;
       else
-        domain_proto = NETLBL_NLTYPE_NONE;
+	return -EINVAL;
       domain_proto_extra = strstr(argv[iter] + 9, ",");
       if (domain_proto_extra)
         domain_proto_extra++;
@@ -83,31 +81,23 @@ int map_add(int argc, char *argv[])
       return -EINVAL;
     iter++;
   }
-  if ((domain_str == NULL && def_flag == 0) || 
-      domain_proto == NETLBL_NLTYPE_NONE)
+  if (domain.domain == NULL && def_flag == 0)
     return -EINVAL;
 
-  /* generate the domain paramter */
-  if (def_flag == 0) {
-    domain.domain = domain_str;
-    domain.domain_len = strlen(domain_str) + 1;
-  } else {
-    domain.domain = NULL;
-    domain.domain_len = 0;
-  }
-  domain.proto_type = domain_proto;
-  switch (domain_proto) {
+  /* handle the protocol "extra" field */
+  switch (domain.proto_type) {
   case NETLBL_NLTYPE_CIPSOV4:
-    domain.proto.cipsov4.doi = (cv4_doi)atoi(domain_proto_extra);
+    if (domain_proto_extra == NULL)
+      return -EINVAL;
+    domain.proto.cv4.doi = (nlbl_cv4_doi)atoi(domain_proto_extra);
     break;
-  case NETLBL_NLTYPE_UNLABELED:
-    break;
-  default:
-    return -EINVAL;
   }
 
   /* push the mapping into the kernel */
-  ret_val = nlbl_mgmt_add(0, &domain, 1, def_flag);
+  if (def_flag)
+    ret_val = nlbl_mgmt_adddef(NULL, &domain);
+  else
+    ret_val = nlbl_mgmt_add(NULL, &domain);
   if (opt_pretty) {
     if (ret_val < 0)
       printf("Failed adding the domain mapping\n");
@@ -131,10 +121,9 @@ int map_add(int argc, char *argv[])
 int map_del(int argc, char *argv[])
 {
   int ret_val;
-  unsigned int iter;
-  unsigned int def_flag = 0;
+  uint32_t iter;
+  uint32_t def_flag = 0;
   char *domain = NULL;
-  size_t domain_len;
 
   /* sanity checks */
   if (argc <= 0 || argv == NULL || argv[0] == NULL)
@@ -146,7 +135,6 @@ int map_del(int argc, char *argv[])
     if (strncmp(argv[iter], "domain:", 7) == 0) {
       /* domain string */
       domain = argv[iter] + 7;
-      domain_len = strlen(domain) + 1;
     } else if (strncmp(argv[iter], "default", 7) == 0) {
       /* default flag */
       def_flag = 1;
@@ -158,7 +146,10 @@ int map_del(int argc, char *argv[])
     return -EINVAL;
 
   /* remove the mapping from the kernel */
-  ret_val = nlbl_mgmt_del(0, &domain, &domain_len, 1, def_flag);
+  if (def_flag)
+    ret_val = nlbl_mgmt_deldef(NULL);
+  else
+    ret_val = nlbl_mgmt_del(NULL, domain);
   if (opt_pretty) {
     if (ret_val < 0)
       printf("Failed deleting the domain mapping\n");
@@ -182,49 +173,51 @@ int map_del(int argc, char *argv[])
 int map_list(int argc, char *argv[])
 {
   int ret_val;
-  mgmt_domain *domains = NULL;
+  nlbl_mgmt_domain domain;
+  nlbl_mgmt_domain *domain_p = NULL;
   size_t count;
-  unsigned int iter;
+  uint32_t iter;
 
   /* get the mappings from the kernel */
-  ret_val = nlbl_mgmt_list(0, &domains, &count, 0);
+  ret_val = nlbl_mgmt_listall(NULL, &domain_p);
   if (ret_val < 0)
     goto list_return;
+  count = ret_val;
 
   /* display the results */
   if (opt_pretty) {
     printf("Configured NetLabel domain mappings (%u, not including DEFAULT)\n", count);
     for (iter = 0; iter < count; iter++) {
       /* domain string */
-      printf(" domain: \"%s\"\n", domains[iter].domain);
+      printf(" domain: \"%s\"\n", domain_p[iter].domain);
       /* protocol */
       printf("   protocol: ");
-      switch (domains[iter].proto_type) {
+      switch (domain_p[iter].proto_type) {
       case NETLBL_NLTYPE_UNLABELED:
         printf("UNLABELED\n");
         break;
       case NETLBL_NLTYPE_CIPSOV4:
-        printf("CIPSOv4, DOI = %u\n", domains[iter].proto.cipsov4.doi);
+        printf("CIPSOv4, DOI = %u\n", domain_p[iter].proto.cv4.doi);
         break;
       default:
-        printf("UNKNOWN(%u)\n", domains[iter].proto_type);
+        printf("UNKNOWN(%u)\n", domain_p[iter].proto_type);
         break;
       }
     }
   } else {
     for (iter = 0; iter < count; iter++) {
       /* domain string */
-      printf("domain:\"%s\",", domains[iter].domain);
+      printf("domain:\"%s\",", domain_p[iter].domain);
       /* protocol */
-      switch (domains[iter].proto_type) {
+      switch (domain_p[iter].proto_type) {
       case NETLBL_NLTYPE_UNLABELED:
         printf("UNLABELED");
         break;
       case NETLBL_NLTYPE_CIPSOV4:
-        printf("CIPSOv4,%u", domains[iter].proto.cipsov4.doi);
+        printf("CIPSOv4,%u", domain_p[iter].proto.cv4.doi);
         break;
       default:
-        printf("UNKNOWN(%u)", domains[iter].proto_type);
+        printf("UNKNOWN(%u)", domain_p[iter].proto_type);
         break;
       }
       printf(" ");
@@ -233,13 +226,13 @@ int map_list(int argc, char *argv[])
 
   /* release the mapping memory */
   for (iter = 0; iter < count; iter++)
-    if (domains[iter].domain)
-      free(domains[iter].domain);
-  free(domains);
-  domains = NULL;
+    if (domain_p[iter].domain)
+      free(domain_p[iter].domain);
+  free(domain_p);
+  domain_p = NULL;
 
   /* get the default mapping from the kernel */
-  ret_val = nlbl_mgmt_list(0, &domains, &count, 1);
+  ret_val = nlbl_mgmt_listdef(NULL, &domain);
   if (ret_val < 0)
     goto list_return;
 
@@ -250,30 +243,30 @@ int map_list(int argc, char *argv[])
       printf(" domain: DEFAULT\n");
       /* protocol */
       printf("   protocol: ");
-      switch (domains[0].proto_type) {
+      switch (domain.proto_type) {
       case NETLBL_NLTYPE_UNLABELED:
 	printf("UNLABELED\n");
 	break;
       case NETLBL_NLTYPE_CIPSOV4:
-	printf("CIPSOv4, DOI = %u\n", domains[0].proto.cipsov4.doi);
+	printf("CIPSOv4, DOI = %u\n", domain.proto.cv4.doi);
 	break;
       default:
-	printf("UNKNOWN(%u)\n", domains[0].proto_type);
+	printf("UNKNOWN(%u)\n", domain.proto_type);
 	break;
       }
     } else {
       /* domain string */
       printf("domain:DEFAULT,");
       /* protocol */
-      switch (domains[0].proto_type) {
+      switch (domain.proto_type) {
       case NETLBL_NLTYPE_UNLABELED:
 	printf("UNLABELED");
 	break;
       case NETLBL_NLTYPE_CIPSOV4:
-	printf("CIPSOv4,%u", domains[0].proto.cipsov4.doi);
+	printf("CIPSOv4,%u", domain.proto.cv4.doi);
 	break;
       default:
-	printf("UNKNOWN(%u)", domains[0].proto_type);
+	printf("UNKNOWN(%u)", domain.proto_type);
 	break;
       }
       printf("\n");
@@ -281,13 +274,12 @@ int map_list(int argc, char *argv[])
   }
 
  list_return:
-  if (domains) {
+  if (domain_p) {
     for (iter = 0; iter < count; iter++)
-      if (domains[iter].domain)
-        free(domains[iter].domain);
-    free(domains);
+      if (domain_p[iter].domain)
+        free(domain_p[iter].domain);
+    free(domain_p);
   }
-
   return ret_val;
 }
 

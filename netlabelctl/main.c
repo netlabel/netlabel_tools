@@ -41,9 +41,9 @@
 #define RET_USAGE     2
 
 /* option variables */
-unsigned int opt_verbose = 0;
-unsigned int opt_timeout = 10;
-unsigned int opt_pretty = 0;
+uint32_t opt_verbose = 0;
+uint32_t opt_timeout = 10;
+uint32_t opt_pretty = 0;
 
 
 /**
@@ -167,13 +167,13 @@ int main(int argc, char *argv[])
   } while (arg_iter > 0);
 
   /* perform any setup we have to do */
-  ret_val = nlbl_netlink_init();
+  ret_val = nlbl_init();
   if (ret_val < 0) {
     fprintf(stderr, "%s: error: failed to initialize the NetLabel library\n",
 	    argv[0]);
     goto exit;
   }
-  nlbl_netlink_timeout(opt_timeout);
+  nlbl_comm_timeout(opt_timeout);
 
   module_name = argv[optind];
   if (!module_name) goto exit;
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
     ret_val = RET_OK;
   }
 
-  nlbl_netlink_exit();
+  nlbl_exit();
 
 exit:
   return ret_val;

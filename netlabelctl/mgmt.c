@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <linux/netlabel.h>
 
 #include <libnetlabel.h>
 
@@ -46,13 +45,14 @@
 int mgmt_protocols(void)
 {
   int ret_val;
-  unsigned int *list;
+  nlbl_proto *list = NULL;
   size_t count;
-  unsigned int iter;
+  uint32_t iter;
 
-  ret_val = nlbl_mgmt_modules(0, &list, &count);
+  ret_val = nlbl_mgmt_protocols(NULL, &list);
   if (ret_val < 0)
     return ret_val;
+  count = ret_val;
 
   if (opt_pretty)
     printf("Kernel NetLabel protocols : "); 
@@ -94,9 +94,9 @@ int mgmt_protocols(void)
 int mgmt_version(void)
 {
   int ret_val;
-  unsigned int version;
+  uint32_t version;
 
-  ret_val = nlbl_mgmt_version(0, &version);
+  ret_val = nlbl_mgmt_version(NULL, &version);
   if (ret_val < 0)
     return ret_val;
 

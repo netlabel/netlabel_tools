@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <linux/netlabel.h>
 
 #include <libnetlabel.h>
 
@@ -48,7 +47,7 @@
 int unlbl_accept(int argc, char *argv[])
 {
   int ret_val;
-  unsigned int flag;
+  uint8_t flag;
 
   /* sanity check */
   if (argc != 1 || argv == NULL || argv[0] == NULL)
@@ -62,7 +61,7 @@ int unlbl_accept(int argc, char *argv[])
   else
     return -EINVAL;
 
-  ret_val = nlbl_unlabeled_accept(0, flag);
+  ret_val = nlbl_unlbl_accept(NULL, flag);
   if (ret_val < 0)
     return ret_val;
 
@@ -88,9 +87,9 @@ int unlbl_accept(int argc, char *argv[])
 int unlbl_list(void)
 {
   int ret_val;
-  unsigned int flag;
+  uint8_t flag;
 
-  ret_val = nlbl_unlabeled_list(0, &flag);
+  ret_val = nlbl_unlbl_list(NULL, &flag);
   if (ret_val < 0)
     return ret_val;
 
