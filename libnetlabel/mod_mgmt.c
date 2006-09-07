@@ -920,8 +920,12 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
   ret_val = dmns_count;
 
  listall_return:
-  if (ret_val < 0)
+  if (ret_val < 0 && dmns) {
+    do {
+      free(dmns[dmns_count].domain);
+    } while (dmns_count-- > 0);
     free(dmns);
+  }
   if (hndl == NULL)
     nlbl_comm_close(p_hndl);
   nlbl_msg_free(msg);
