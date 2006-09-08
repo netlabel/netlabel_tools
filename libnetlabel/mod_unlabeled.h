@@ -27,6 +27,6 @@
 #ifndef _MOD_UNLABELED_H_
 #define _MOD_UNLABELED_H_
 
-int nlbl_unlabeled_init(void);
+int nlbl_unlbl_init(void);
 
 #endif

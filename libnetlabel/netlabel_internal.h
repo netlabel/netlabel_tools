@@ -34,6 +34,11 @@ struct nlbl_handle_s {
   struct nl_handle *nl_hndl;
 };
 
+/* Specify which version of libnl we are using */
+/*  1.0-pre5 => 1005 */
+/*  1.0-pre6 => 1006 */
+#define LIBNL_VERSION           1005
+
 /* XXX - this whole block will most likely go away once libnl supports Generic
  * Netlink */
 #if 1 /* Generic Netlink types */

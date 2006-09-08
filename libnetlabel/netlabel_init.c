@@ -45,7 +45,7 @@
  * NetLabel handles.  Returns zero on success, negative values on failure.
  *
  */
-int nlbl_netlink_init(void)
+int nlbl_init(void)
 {
   int ret_val;
 
@@ -57,7 +57,7 @@ int nlbl_netlink_init(void)
   if (ret_val < 0)
     goto init_failure;
 
-  ret_val = nlbl_unlabeled_init();
+  ret_val = nlbl_unlbl_init();
   if (ret_val < 0)
     goto init_failure;
 
@@ -75,7 +75,7 @@ int nlbl_netlink_init(void)
  * close any handles.
  *
  */
-void nlbl_netlink_exit(void)
+void nlbl_exit(void)
 {
   return;
 }

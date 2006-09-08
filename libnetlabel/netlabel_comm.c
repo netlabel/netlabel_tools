@@ -100,9 +100,11 @@ nlbl_handle *nlbl_comm_open(void)
     goto open_failure;
 
   /* set the netlink handle properties */
+#if LIBNL_VERSION >= 1006
   nl_handle_set_peer_pid(hndl->nl_hndl, 0);
-  nl_disable_sequence_check(hndl->nl_hndl);
   nl_set_passcred(hndl->nl_hndl, 1);
+#endif
+  nl_disable_sequence_check(hndl->nl_hndl);
 
   /* connect to the generic netlink subsystem in the kernel */
   if (nl_connect(hndl->nl_hndl, NETLINK_GENERIC) != 0)
@@ -186,9 +188,17 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
     return -EAGAIN;
 
   /* perform the read operation */
+#if LIBNL_VERSION == 1005
+  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data);
+  if (ret_val < 0)
+    return ret_val;
+  /* XXX - avoid a compiler warning about unused variables */
+  creds = NULL;
+#elif LIBNL_VERSION >= 1006
   ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data, &creds);
   if (ret_val < 0)
     return ret_val;
+#endif
 
   /* if we are setup to receive credentials, only accept messages from the
    * kernel (ignore all others and send an -EAGAIN) */
@@ -242,8 +252,14 @@ int nlbl_comm_send(nlbl_handle *hndl, nlbl_msg *msg)
   creds.gid = getegid();
 
   /* set the message properties */
+#if LIBNL_VERSION >= 1006
   nlmsg_set_creds(msg, &creds);
+#endif
 
   /* send the message */
+#if LIBNL_VERSION == 1005
+  return nl_send_auto_complete(hndl->nl_hndl, nlbl_msg_nlhdr(msg));
+#elif LIBNL_VERSION >= 1006
   return nl_send_auto_complete(hndl->nl_hndl, msg);
+#endif
 }
