@@ -114,6 +114,7 @@ void nlbl_comm_timeout(uint32_t seconds);
 nlbl_handle *nlbl_comm_open(void);
 int nlbl_comm_close(nlbl_handle *hndl);
 int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg);
+int nlbl_comm_recv_raw(nlbl_handle *hndl, unsigned char **data);
 int nlbl_comm_send(nlbl_handle *hndl, nlbl_msg *msg);
 
 /* netlabel message handling */

@@ -149,6 +149,71 @@ int nlbl_comm_close(nlbl_handle *hndl)
 }
 
 /**
+ * nlbl_comm_recv_raw - Read a message from a NetLabel handle
+ * @hndl: the NetLabel handle
+ * @data: the message buffer
+ *
+ * Description:
+ * Reads a message from the NetLabel handle and stores it the pointer returned
+ * in @msg.  This function allocates space for @msg, making the caller
+ * responsibile for freeing @msg later.  Returns the number of bytes read on
+ * success, zero on EOF, and negative values on failure.
+ *
+ */
+int nlbl_comm_recv_raw(nlbl_handle *hndl, unsigned char **data)
+{
+  int ret_val;
+  struct sockaddr_nl peer_nladdr;
+  struct ucred *creds = NULL;
+  int nl_fd;
+  fd_set read_fds;
+  struct timeval timeout;
+
+  /* sanity checks */
+  if (!nlbl_comm_hndl_valid(hndl) || data == NULL)
+    return -EINVAL;
+
+  /* we use blocking sockets so do enforce a timeout using select() if no data
+   * is waiting to be read from the handle */
+  timeout.tv_sec = nlcomm_read_timeout;
+  timeout.tv_usec = 0;
+  nl_fd = nl_handle_get_fd(hndl->nl_hndl);
+  FD_ZERO(&read_fds);
+  FD_SET(nl_fd, &read_fds);
+  ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
+  if (ret_val < 0)
+    return -errno;
+  else if (ret_val == 0)
+    return -EAGAIN;
+
+  /* perform the read operation */
+#if LIBNL_VERSION == 1005
+  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
+  if (ret_val < 0)
+    return ret_val;
+  /* XXX - avoid a compiler warning about unused variables */
+  creds = NULL;
+#elif LIBNL_VERSION >= 1006
+  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
+  if (ret_val < 0)
+    return ret_val;
+#endif
+
+  /* if we are setup to receive credentials, only accept messages from the
+   * kernel (ignore all others and send an -EAGAIN) */
+  if (creds != NULL && creds->pid != 0) {
+    ret_val = -EAGAIN;
+    goto recv_raw_failure;
+  }
+
+  return ret_val;
+
+ recv_raw_failure:
+  free(data);
+  return ret_val;
+}
+
+/**
  * nlbl_comm_recv - Read a message from a NetLabel handle
  * @hndl: the NetLabel handle
  * @msg: the message buffer

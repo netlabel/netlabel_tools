@@ -619,14 +619,14 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
 {
   int ret_val = -ENOMEM;
   nlbl_handle *p_hndl = hndl;
+  unsigned char *data = NULL;
   nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
   struct nlmsghdr *nl_hdr;
   struct genlmsghdr *genl_hdr;
   struct nlattr *nla_head;
   struct nlattr *nla;
-  int ans_msg_len;
-  int ans_msg_attrlen;
+  int data_len;
+  int data_attrlen;
   nlbl_cv4_doi *doi_a = NULL;
   nlbl_cv4_mtype *mtype_a = NULL;
   uint32_t count = 0;
@@ -661,10 +661,13 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
 
   /* read all of the messages (multi-message response) */
   do {
-    nlbl_msg_free(ans_msg);
+    if (data) {
+      free(data);
+      data = NULL;
+    }
 
     /* get the next set of messages */
-    ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+    ret_val = nlbl_comm_recv_raw(p_hndl, &data);
     if (ret_val <= 0) {
       if (ret_val == 0)
 	ret_val = -ENODATA;
@@ -672,15 +675,15 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
     }
 
     /* loop through the messages */
-    ans_msg_len = ret_val;
-    nl_hdr = nlbl_msg_nlhdr(ans_msg);
-    while (nlmsg_ok(nl_hdr, ans_msg_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
+    data_len = ret_val;
+    nl_hdr = (struct nlmsghdr *)data;
+    while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
       /* get the header pointers */
       genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
       if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_LISTALL)
 	goto listall_return;
       nla_head = (struct nlattr *)(&genl_hdr[1]);
-      ans_msg_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+      data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 
       /* resize the arrays */
       doi_a = realloc(doi_a, sizeof(nlbl_cv4_doi) * (count + 1));
@@ -691,11 +694,11 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
 	goto listall_return;
 
       /* get the attribute information */
-      nla = nla_find(nla_head, ans_msg_attrlen, NLBL_CIPSOV4_A_DOI);
+      nla = nla_find(nla_head, data_attrlen, NLBL_CIPSOV4_A_DOI);
       if (nla == NULL)
 	goto listall_return;
       doi_a[count] = nla_get_u32(nla);
-      nla = nla_find(nla_head, ans_msg_attrlen, NLBL_CIPSOV4_A_MTYPE);
+      nla = nla_find(nla_head, data_attrlen, NLBL_CIPSOV4_A_MTYPE);
       if (nla == NULL)
 	goto listall_return;
       mtype_a[count] = nla_get_u32(nla);
@@ -703,9 +706,9 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
       count++;
 
       /* next message */
-      nl_hdr = nlmsg_next(nl_hdr, &ans_msg_len);
+      nl_hdr = nlmsg_next(nl_hdr, &data_len);
     }
-  } while (ans_msg != NULL && nl_hdr->nlmsg_type != NLMSG_DONE);
+  } while (data > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
 
   *dois = doi_a;
   *mtypes = mtype_a;
@@ -721,6 +724,7 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
   if (hndl == NULL)
     nlbl_comm_close(p_hndl);
   nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
+  if (data)
+    free(data);
   return ret_val;
 }

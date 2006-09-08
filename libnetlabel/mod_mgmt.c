@@ -261,14 +261,14 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
 {
   int ret_val = -ENOMEM;
   nlbl_handle *p_hndl = hndl;
+  unsigned char *data = NULL;
   nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
   struct nlmsghdr *nl_hdr;
   struct genlmsghdr *genl_hdr;
   struct nlattr *nla_head;
   struct nlattr *nla;
-  int ans_msg_len;
-  int ans_msg_attrlen;
+  int data_len;
+  int data_attrlen;
   nlbl_proto *protos = NULL;
   uint32_t protos_count = 0;
 
@@ -302,26 +302,29 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
 
   /* read all of the messages (multi-message response) */
   do {
-    nlbl_msg_free(ans_msg);
+    if (data) {
+      free(data);
+      data = NULL;
+    }
 
     /* get the next set of messages */
-    ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+    ret_val = nlbl_comm_recv_raw(p_hndl, &data);
     if (ret_val <= 0) {
       if (ret_val == 0)
 	ret_val = -ENODATA;
       goto protocols_return;
     }
+    data_len = ret_val;
 
     /* loop through the messages */
-    ans_msg_len = ret_val;
-    nl_hdr = nlbl_msg_nlhdr(ans_msg);
-    while (nlmsg_ok(nl_hdr, ans_msg_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
+    nl_hdr = (struct nlmsghdr *)data;
+    while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
       /* get the header pointers */
       genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
       if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_PROTOCOLS)
 	goto protocols_return;
       nla_head = (struct nlattr *)(&genl_hdr[1]);
-      ans_msg_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+      data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 
       /* resize the array */
       protos = realloc(protos, sizeof(nlbl_proto) * (protos_count + 1));
@@ -329,7 +332,7 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
 	goto protocols_return;
 
       /* get the attribute information */
-      nla = nla_find(nla_head, ans_msg_attrlen, NLBL_MGMT_A_PROTOCOL);
+      nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_PROTOCOL);
       if (nla == NULL)
 	goto protocols_return;
       protos[protos_count] = nla_get_u32(nla);
@@ -337,9 +340,9 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
       protos_count++;
 
       /* next message */
-      nl_hdr = nlmsg_next(nl_hdr, &ans_msg_len);
+      nl_hdr = nlmsg_next(nl_hdr, &data_len);
     }
-  } while (ans_msg != NULL && nl_hdr->nlmsg_type != NLMSG_DONE);
+  } while (data_len > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
 
   *protocols = protos;
   ret_val = protos_count;
@@ -349,8 +352,9 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
     free(protos);
   if (hndl == NULL)
     nlbl_comm_close(p_hndl);
+  if (data)
+    free(data);
   nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
   return ret_val;
 }
 
@@ -812,14 +816,14 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
 {
   int ret_val = -ENOMEM;
   nlbl_handle *p_hndl = hndl;
+  unsigned char *data = NULL;
   nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
   struct nlmsghdr *nl_hdr;
   struct genlmsghdr *genl_hdr;
   struct nlattr *nla_head;
   struct nlattr *nla;
-  int ans_msg_len;
-  int ans_msg_attrlen;
+  int data_len;
+  int data_attrlen;
   nlbl_mgmt_domain *dmns = NULL;
   uint32_t dmns_count = 0;
 
@@ -853,10 +857,13 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
 
   /* read all of the messages (multi-message response) */
   do {
-    nlbl_msg_free(ans_msg);
+    if (data) {
+      free(data);
+      data = NULL;
+    }
 
     /* get the next set of messages */
-    ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+    ret_val = nlbl_comm_recv_raw(p_hndl, &data);
     if (ret_val <= 0) {
       if (ret_val == 0)
 	ret_val = -ENODATA;
@@ -864,15 +871,15 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
     }
 
     /* loop through the messages */
-    ans_msg_len = ret_val;
-    nl_hdr = nlbl_msg_nlhdr(ans_msg);
-    while (nlmsg_ok(nl_hdr, ans_msg_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
+    data_len = ret_val;
+    nl_hdr = (struct nlmsghdr *)data;
+    while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
       /* get the header pointers */
       genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
       if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTALL)
 	goto listall_return;
       nla_head = (struct nlattr *)(&genl_hdr[1]);
-      ans_msg_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+      data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 
       /* resize the array */
       dmns = realloc(dmns, sizeof(nlbl_mgmt_domain) * (dmns_count + 1));
@@ -881,20 +888,20 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
       memset(&dmns[dmns_count], 0, sizeof(nlbl_mgmt_domain));
 
       /* get the attribute information */
-      nla = nla_find(nla_head, ans_msg_attrlen, NLBL_MGMT_A_DOMAIN);
+      nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_DOMAIN);
       if (nla == NULL)
 	goto listall_return;
       dmns[dmns_count].domain = malloc(nla_len(nla));
       if (dmns[dmns_count].domain == NULL)
 	goto listall_return;
       strncpy(dmns[dmns_count].domain, nla_data(nla), nla_len(nla));
-      nla = nla_find(nla_head, ans_msg_attrlen, NLBL_MGMT_A_PROTOCOL);
+      nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_PROTOCOL);
       if (nla == NULL)
 	goto listall_return;
       dmns[dmns_count].proto_type = nla_get_u32(nla);
       switch (dmns[dmns_count].proto_type) {
       case NETLBL_NLTYPE_CIPSOV4:
-	nla = nla_find(nla_head, ans_msg_attrlen, NLBL_MGMT_A_CV4DOI);
+	nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_CV4DOI);
 	if (nla == NULL)
 	  goto listall_return;
 	dmns[dmns_count].proto.cv4.doi = nla_get_u32(nla);
@@ -904,9 +911,9 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
       dmns_count++;
 
       /* next message */
-      nl_hdr = nlmsg_next(nl_hdr, &ans_msg_len);
+      nl_hdr = nlmsg_next(nl_hdr, &data_len);
     }
-  } while (ans_msg != NULL && nl_hdr->nlmsg_type != NLMSG_DONE);
+  } while (data_len > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
 
   *domains = dmns;
   ret_val = dmns_count;
@@ -921,6 +928,7 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
   if (hndl == NULL)
     nlbl_comm_close(p_hndl);
   nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
+  if (data)
+    free(data);
   return ret_val;
 }
