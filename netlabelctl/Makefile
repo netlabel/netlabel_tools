@@ -39,7 +39,7 @@ include ../macros.mk
 
 OBJS = main.o mgmt.o map.o unlabeled.o cipsov4.o
 
-LIBFLAGS = $(TOPDIR)/libnetlabel/libnetlabel.a -Lnl
+LIBFLAGS = $(TOPDIR)/libnetlabel/libnetlabel.a -lnl
 
 #
 # targets
@@ -53,6 +53,6 @@ netlabelctl: $(OBJS)
 	$(LINK)
 
 clean:
-	$(RM) -f $(OBJS)
+	$(RM) -f $(OBJS) netlabelctl
 
 
