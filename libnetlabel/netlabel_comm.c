@@ -239,6 +239,7 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
  */
 int nlbl_comm_send(nlbl_handle *hndl, nlbl_msg *msg)
 {
+  struct nlmsghdr *nl_hdr;
   struct ucred creds;
 
   /* sanity checks */
@@ -256,10 +257,16 @@ int nlbl_comm_send(nlbl_handle *hndl, nlbl_msg *msg)
   nlmsg_set_creds(msg, &creds);
 #endif
 
+  /* request a netlink ack message */
+  nl_hdr = nlbl_msg_nlhdr(msg);
+  if (nl_hdr == NULL)
+    return -EBADMSG;
+  nl_hdr->nlmsg_flags |= NLM_F_ACK;
+
   /* send the message */
 #if LIBNL_VERSION == 1005
   return nl_send_auto_complete(hndl->nl_hndl, nlbl_msg_nlhdr(msg));
 #elif LIBNL_VERSION >= 1006
-  return nl_send_auto_complete(hndl->nl_hndl, msg);
+  return = nl_send_auto_complete(hndl->nl_hndl, msg);
 #endif
 }

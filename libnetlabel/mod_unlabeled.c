@@ -105,7 +105,8 @@ static int nlbl_unlbl_recv(nlbl_handle *hndl, nlbl_msg **msg)
   
   /* process the response */
   nl_hdr = nlbl_msg_nlhdr(*msg);
-  if (nl_hdr == NULL || nl_hdr->nlmsg_type != nlbl_unlbl_fid) {
+  if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_unlbl_fid &&
+			 nl_hdr->nlmsg_type != NLMSG_DONE)) {
     ret_val = -EBADMSG;
     goto recv_failure;
   }
@@ -171,23 +172,23 @@ int nlbl_unlbl_init(void)
   /* get a netlabel handle */
   hndl = nlbl_comm_open();
   if (hndl == NULL)
-    goto init_failure;
+    goto init_return;
 
   /* create a new message */
   msg = nlbl_msg_new();
   if (msg == NULL)
-    goto init_failure;
+    goto init_return;
 
   /* setup the netlink header */
   nl_hdr = nlbl_msg_nlhdr(msg);
   if (nl_hdr == NULL)
-    goto init_failure;
+    goto init_return;
   nl_hdr->nlmsg_type = GENL_ID_CTRL;
   
   /* setup the generic netlink header */
   genl_hdr = nlbl_msg_genlhdr(msg);
   if (genl_hdr == NULL)
-    goto init_failure;
+    goto init_return;
   genl_hdr->cmd = CTRL_CMD_GETFAMILY;
   genl_hdr->version = 1;
 
@@ -196,14 +197,14 @@ int nlbl_unlbl_init(void)
 			   CTRL_ATTR_FAMILY_NAME,
 			   NETLBL_NLTYPE_UNLABELED_NAME);
   if (ret_val != 0)
-    goto init_failure;
+    goto init_return;
 
   /* send the request */
   ret_val = nlbl_comm_send(hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
-    goto init_failure;
+    goto init_return;
   }
 
   /* read the response */
@@ -211,29 +212,29 @@ int nlbl_unlbl_init(void)
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
-    goto init_failure;
+    goto init_return;
   }
   
   /* process the response */
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
   if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
     ret_val = -EBADMSG;
-    goto init_failure;
+    goto init_return;
   }
   nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
   if (nla == NULL) {
     ret_val = -EBADMSG;
-    goto init_failure;
+    goto init_return;
   }
   nlbl_unlbl_fid = nla_get_u16(nla);
   if (nlbl_unlbl_fid == 0) {
     ret_val = -EBADMSG;
-    goto init_failure;
+    goto init_return;
   }
   
-  return 0;
+  ret_val = 0;
   
- init_failure:
+ init_return:
   nlbl_comm_close(hndl);
   nlbl_msg_free(msg);
   nlbl_msg_free(ans_msg);
@@ -288,7 +289,7 @@ int nlbl_unlbl_accept(nlbl_handle *hndl, uint8_t allow_flag)
     goto accept_return;
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -353,7 +354,7 @@ int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag)
     goto list_return;
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -372,7 +373,7 @@ int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag)
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
   if (genl_hdr == NULL || genl_hdr->cmd != NLBL_UNLABEL_C_LIST)
     goto list_return;
-  nla = nlbl_attr_find(msg, NLBL_UNLABEL_A_ACPTFLG);
+  nla = nlbl_attr_find(ans_msg, NLBL_UNLABEL_A_ACPTFLG);
   if (nla == NULL)
     goto list_return;
   *allow_flag = nla_get_u8(nla);

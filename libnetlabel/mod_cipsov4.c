@@ -105,7 +105,8 @@ static int nlbl_cipsov4_recv(nlbl_handle *hndl, nlbl_msg **msg)
   
   /* process the response */
   nl_hdr = nlbl_msg_nlhdr(*msg);
-  if (nl_hdr == NULL || nl_hdr->nlmsg_type != nlbl_cipsov4_fid) {
+  if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_cipsov4_fid &&
+			 nl_hdr->nlmsg_type != NLMSG_DONE)) {
     ret_val = -EBADMSG;
     goto recv_failure;
   }
@@ -171,23 +172,23 @@ int nlbl_cipsov4_init(void)
   /* get a netlabel handle */
   hndl = nlbl_comm_open();
   if (hndl == NULL)
-    goto init_failure;
+    goto init_return;
 
   /* create a new message */
   msg = nlbl_msg_new();
   if (msg == NULL)
-    goto init_failure;
+    goto init_return;
 
   /* setup the netlink header */
   nl_hdr = nlbl_msg_nlhdr(msg);
   if (nl_hdr == NULL)
-    goto init_failure;
+    goto init_return;
   nl_hdr->nlmsg_type = GENL_ID_CTRL;
   
   /* setup the generic netlink header */
   genl_hdr = nlbl_msg_genlhdr(msg);
   if (genl_hdr == NULL)
-    goto init_failure;
+    goto init_return;
   genl_hdr->cmd = CTRL_CMD_GETFAMILY;
   genl_hdr->version = 1;
 
@@ -196,14 +197,14 @@ int nlbl_cipsov4_init(void)
 			   CTRL_ATTR_FAMILY_NAME,
 			   NETLBL_NLTYPE_CIPSOV4_NAME);
   if (ret_val != 0)
-    goto init_failure;
+    goto init_return;
 
   /* send the request */
   ret_val = nlbl_comm_send(hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
-    goto init_failure;
+    goto init_return;
   }
 
   /* read the response */
@@ -211,29 +212,29 @@ int nlbl_cipsov4_init(void)
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
-    goto init_failure;
+    goto init_return;
   }
   
   /* process the response */
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
   if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
     ret_val = -EBADMSG;
-    goto init_failure;
+    goto init_return;
   }
   nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
   if (nla == NULL) {
     ret_val = -EBADMSG;
-    goto init_failure;
+    goto init_return;
   }
   nlbl_cipsov4_fid = nla_get_u16(nla);
   if (nlbl_cipsov4_fid == 0) {
     ret_val = -EBADMSG;
-    goto init_failure;
+    goto init_return;
   }
   
-  return 0;
+  ret_val = 0;
   
- init_failure:
+ init_return:
   nlbl_comm_close(hndl);
   nlbl_msg_free(msg);
   nlbl_msg_free(ans_msg);
@@ -316,7 +317,7 @@ int nlbl_cipsov4_add_std(nlbl_handle *hndl,
   }
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -395,7 +396,7 @@ int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
     goto add_pass_return;
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -463,7 +464,7 @@ int nlbl_cipsov4_del(nlbl_handle *hndl, nlbl_cv4_doi doi)
     goto del_return;
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -544,7 +545,7 @@ int nlbl_cipsov4_list(nlbl_handle *hndl,
     goto list_return;
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -563,11 +564,11 @@ int nlbl_cipsov4_list(nlbl_handle *hndl,
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
   if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_LIST)
     goto list_return;
-  nla = nlbl_attr_find(msg, NLBL_CIPSOV4_A_MTYPE);
+  nla = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MTYPE);
   if (nla == NULL)
     goto list_return;
   *mtype = nla_get_u32(nla);
-  nla = nlbl_attr_find(msg, NLBL_CIPSOV4_A_TAGLST);
+  nla = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_TAGLST);
   if (nla == NULL)
     goto list_return;
   tags->size = nla_len(nla);
@@ -575,13 +576,13 @@ int nlbl_cipsov4_list(nlbl_handle *hndl,
     goto list_return;
   tags->array = malloc(tags->size);
   nla_memcpy(tags->array, nla, tags->size);
-  nla = nlbl_attr_find(msg, NLBL_CIPSOV4_A_MLSLVLLST);
+  nla = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSLVLLST);
   if (nla == NULL)
     goto list_return;
   lvls->size = nla_len(nla) / sizeof(nlbl_cv4_lvl);
   lvls->array = malloc(nla_len(nla));
   nla_memcpy(lvls->array, nla, lvls->size * sizeof(nlbl_cv4_lvl));
-  nla = nlbl_attr_find(msg, NLBL_CIPSOV4_A_MLSCATLST);
+  nla = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSCATLST);
   if (nla == NULL)
     goto list_return;
   cats->size = nla_len(nla) / sizeof(nlbl_cv4_cat);
@@ -640,7 +641,6 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
   if (p_hndl == NULL) {
     p_hndl = nlbl_comm_open();
     if (p_hndl == NULL)
-      ret_val = -ENOMEM;
       goto listall_return;
   }
 
@@ -652,7 +652,7 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
   }
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -673,7 +673,7 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
 
     /* loop through the messages */
     ans_msg_len = ret_val;
-    nl_hdr = nlbl_msg_nlhdr(msg);
+    nl_hdr = nlbl_msg_nlhdr(ans_msg);
     while (nlmsg_ok(nl_hdr, ans_msg_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
       /* get the header pointers */
       genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);

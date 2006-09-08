@@ -236,41 +236,39 @@ int map_list(int argc, char *argv[])
   if (ret_val < 0)
     goto list_return;
 
-  if (count > 0) {
-    /* display the results */
-    if (opt_pretty) {
-      /* domain string */
-      printf(" domain: DEFAULT\n");
-      /* protocol */
-      printf("   protocol: ");
-      switch (domain.proto_type) {
-      case NETLBL_NLTYPE_UNLABELED:
-	printf("UNLABELED\n");
-	break;
-      case NETLBL_NLTYPE_CIPSOV4:
-	printf("CIPSOv4, DOI = %u\n", domain.proto.cv4.doi);
-	break;
-      default:
-	printf("UNKNOWN(%u)\n", domain.proto_type);
-	break;
-      }
-    } else {
-      /* domain string */
-      printf("domain:DEFAULT,");
-      /* protocol */
-      switch (domain.proto_type) {
-      case NETLBL_NLTYPE_UNLABELED:
-	printf("UNLABELED");
-	break;
-      case NETLBL_NLTYPE_CIPSOV4:
-	printf("CIPSOv4,%u", domain.proto.cv4.doi);
-	break;
-      default:
-	printf("UNKNOWN(%u)", domain.proto_type);
-	break;
-      }
-      printf("\n");
+  /* display the results */
+  if (opt_pretty) {
+    /* domain string */
+    printf(" domain: DEFAULT\n");
+    /* protocol */
+    printf("   protocol: ");
+    switch (domain.proto_type) {
+    case NETLBL_NLTYPE_UNLABELED:
+      printf("UNLABELED\n");
+      break;
+    case NETLBL_NLTYPE_CIPSOV4:
+      printf("CIPSOv4, DOI = %u\n", domain.proto.cv4.doi);
+      break;
+    default:
+      printf("UNKNOWN(%u)\n", domain.proto_type);
+      break;
     }
+  } else {
+    /* domain string */
+    printf("domain:DEFAULT,");
+    /* protocol */
+    switch (domain.proto_type) {
+    case NETLBL_NLTYPE_UNLABELED:
+      printf("UNLABELED");
+      break;
+    case NETLBL_NLTYPE_CIPSOV4:
+      printf("CIPSOv4,%u", domain.proto.cv4.doi);
+      break;
+    default:
+      printf("UNKNOWN(%u)", domain.proto_type);
+      break;
+    }
+    printf("\n");
   }
 
  list_return:

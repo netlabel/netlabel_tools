@@ -105,7 +105,8 @@ static int nlbl_mgmt_recv(nlbl_handle *hndl, nlbl_msg **msg)
   
   /* process the response */
   nl_hdr = nlbl_msg_nlhdr(*msg);
-  if (nl_hdr == NULL || nl_hdr->nlmsg_type != nlbl_mgmt_fid) {
+  if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_mgmt_fid &&
+			 nl_hdr->nlmsg_type != NLMSG_DONE)) {
     ret_val = -EBADMSG;
     goto recv_failure;
   }
@@ -171,23 +172,23 @@ int nlbl_mgmt_init(void)
   /* get a netlabel handle */
   hndl = nlbl_comm_open();
   if (hndl == NULL)
-    goto init_failure;
+    goto init_return;
 
   /* create a new message */
   msg = nlbl_msg_new();
   if (msg == NULL)
-    goto init_failure;
+    goto init_return;
 
   /* setup the netlink header */
   nl_hdr = nlbl_msg_nlhdr(msg);
   if (nl_hdr == NULL)
-    goto init_failure;
+    goto init_return;
   nl_hdr->nlmsg_type = GENL_ID_CTRL;
   
   /* setup the generic netlink header */
   genl_hdr = nlbl_msg_genlhdr(msg);
   if (genl_hdr == NULL)
-    goto init_failure;
+    goto init_return;
   genl_hdr->cmd = CTRL_CMD_GETFAMILY;
   genl_hdr->version = 1;
 
@@ -196,14 +197,14 @@ int nlbl_mgmt_init(void)
 			   CTRL_ATTR_FAMILY_NAME,
 			   NETLBL_NLTYPE_MGMT_NAME);
   if (ret_val != 0)
-    goto init_failure;
+    goto init_return;
 
   /* send the request */
   ret_val = nlbl_comm_send(hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
-    goto init_failure;
+    goto init_return;
   }
 
   /* read the response */
@@ -211,29 +212,29 @@ int nlbl_mgmt_init(void)
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
-    goto init_failure;
+    goto init_return;
   }
   
   /* process the response */
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
   if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
     ret_val = -EBADMSG;
-    goto init_failure;
+    goto init_return;
   }
   nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
   if (nla == NULL) {
     ret_val = -EBADMSG;
-    goto init_failure;
+    goto init_return;
   }
   nlbl_mgmt_fid = nla_get_u16(nla);
   if (nlbl_mgmt_fid == 0) {
     ret_val = -EBADMSG;
-    goto init_failure;
+    goto init_return;
   }
   
-  return 0;
+  ret_val = 0;
   
- init_failure:
+ init_return:
   nlbl_comm_close(hndl);
   nlbl_msg_free(msg);
   nlbl_msg_free(ans_msg);
@@ -281,7 +282,6 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
   if (p_hndl == NULL) {
     p_hndl = nlbl_comm_open();
     if (p_hndl == NULL)
-      ret_val = -ENOMEM;
       goto protocols_return;
   }
 
@@ -293,7 +293,7 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
   }
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -314,7 +314,7 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
 
     /* loop through the messages */
     ans_msg_len = ret_val;
-    nl_hdr = nlbl_msg_nlhdr(msg);
+    nl_hdr = nlbl_msg_nlhdr(ans_msg);
     while (nlmsg_ok(nl_hdr, ans_msg_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
       /* get the header pointers */
       genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
@@ -394,7 +394,7 @@ int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version)
     goto version_return;
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -484,7 +484,7 @@ int nlbl_mgmt_add(nlbl_handle *hndl, nlbl_mgmt_domain *domain)
   }
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -560,7 +560,7 @@ int nlbl_mgmt_adddef(nlbl_handle *hndl, nlbl_mgmt_domain *domain)
   }
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -628,7 +628,7 @@ int nlbl_mgmt_del(nlbl_handle *hndl, char *domain)
     goto del_return;
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -688,7 +688,7 @@ int nlbl_mgmt_deldef(nlbl_handle *hndl)
     goto deldef_return;
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -754,7 +754,7 @@ int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_mgmt_domain *domain)
     goto listdef_return;
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -773,13 +773,13 @@ int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_mgmt_domain *domain)
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
   if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTDEF)
     goto listdef_return;
-  nla = nlbl_attr_find(msg, NLBL_MGMT_A_PROTOCOL);
+  nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_PROTOCOL);
   if (nla == NULL)
     goto listdef_return;
   domain->proto_type = nla_get_u32(nla);
   switch (domain->proto_type) {
   case NETLBL_NLTYPE_CIPSOV4:
-    nla = nlbl_attr_find(msg, NLBL_MGMT_A_CV4DOI);
+    nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_CV4DOI);
     if (nla == NULL)
       goto listdef_return;
     domain->proto.cv4.doi = nla_get_u32(nla);
@@ -833,7 +833,6 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
   if (p_hndl == NULL) {
     p_hndl = nlbl_comm_open();
     if (p_hndl == NULL)
-      ret_val = -ENOMEM;
       goto listall_return;
   }
 
@@ -845,7 +844,7 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
   }
 
   /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
+  ret_val = nlbl_comm_send(p_hndl, msg);
   if (ret_val <= 0) {
     if (ret_val == 0)
       ret_val = -ENODATA;
@@ -866,7 +865,7 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
 
     /* loop through the messages */
     ans_msg_len = ret_val;
-    nl_hdr = nlbl_msg_nlhdr(msg);
+    nl_hdr = nlbl_msg_nlhdr(ans_msg);
     while (nlmsg_ok(nl_hdr, ans_msg_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
       /* get the header pointers */
       genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
