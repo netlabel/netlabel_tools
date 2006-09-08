@@ -3,8 +3,8 @@ NetLabel Tools CHANGELOG
 
 * Version X.XX (XXXXXX)
 ------------------------------------------------------------------------------
-o Converted to the new method of using NETLINK attributes
-o Use libnl for the NETLINK heavy lifting
+o Changed to support the updated use of Netlink attributes by NetLabel
+o Ported to use the libnl (version 1.0-pre6) library
 
 * Version 0.16 (August 3, 2006)
 ------------------------------------------------------------------------------
@@ -13,17 +13,17 @@ o Moved the mapping commands to the new "map" class
 o Added support for the unlabeled list command
 o Updated the documentation to bring it up to date with the current options
 o Cleanup the libnetlabel interfaces a little bit
-o Shift to using NETLINK attributes, at some point we should use libnetlink
+o Shift to using Netlink attributes, at some point we should use libnetlink
 
 * Version 0.15 (July 6, 2006)
 ------------------------------------------------------------------------------
-o Modified the NETLINK communication bits to support the newly aligned fields
+o Modified the Netlink communication bits to support the newly aligned fields
 
 * Version 0.14 (June 27, 2006)
 ------------------------------------------------------------------------------
 o Added a RPM specfile based on a version from Steve Grubb <sgrubb@redhat.com>
 o Minor Makefile changes to ease tarball and RPM creation
-o Modified the NETLINK communication bits to support the new Generic NETLINK
+o Modified the Netlink communication bits to support the new Generic Netlink
   communication mechanism
 
 * Version 0.13 (June 23, 2006)
