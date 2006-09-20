@@ -140,7 +140,7 @@ static int nlbl_cipsov4_parse_ack(nlbl_msg *msg)
   if (nla == NULL)
     goto parse_ack_failure;
 
-  return nla_get_u32(nla);
+  return -nla_get_u32(nla);
 
  parse_ack_failure:
   return -EBADMSG;
@@ -270,6 +270,9 @@ int nlbl_cipsov4_add_std(nlbl_handle *hndl,
   nlbl_handle *p_hndl = hndl;
   nlbl_msg *msg = NULL;
   nlbl_msg *ans_msg = NULL;
+  struct nlattr *nla_a;
+  struct nlattr *nla_b;
+  uint32_t iter;
 
   /* sanity checks */
   if (doi == 0 ||
@@ -292,29 +295,72 @@ int nlbl_cipsov4_add_std(nlbl_handle *hndl,
     goto add_std_return;
 
   /* add the required attributes to the message */
+
   ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
   if (ret_val != 0)
     goto add_std_return;
+
   ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_STD);
   if (ret_val != 0)
     goto add_std_return;
-  ret_val = nla_put(msg, NLBL_CIPSOV4_A_TAGLST, tags->size, tags->array);
-  if (ret_val != 0)
+
+  nla_a = nla_nest_start(msg, NLBL_CIPSOV4_A_TAGLST);
+  if (nla_a == NULL) {
+    ret_val = -ENOMEM;
     goto add_std_return;
-  ret_val = nla_put(msg,
-		    NLBL_CIPSOV4_A_MLSLVLLST,
-		    lvls->size * sizeof(nlbl_cv4_lvl),
-		    lvls->array);
-  if (ret_val != 0)
-    goto add_std_return;
-  if (cats != NULL) {
-    ret_val = nla_put(msg,
-		      NLBL_CIPSOV4_A_MLSCATLST,
-		      cats->size * sizeof(nlbl_cv4_cat),
-		      cats->array);
+  }
+  for (iter = 0; iter < tags->size; iter++) {
+    ret_val = nla_put_u8(msg, NLBL_CIPSOV4_A_TAG, tags->array[iter]);
     if (ret_val != 0)
       goto add_std_return;
   }
+  nla_nest_end(msg, nla_a);
+
+  nla_a = nla_nest_start(msg, NLBL_CIPSOV4_A_MLSLVLLST);
+  if (nla_a == NULL) {
+    ret_val = -ENOMEM;
+    goto add_std_return;
+  }
+  for (iter = 0; iter < lvls->size; iter+= 2) {
+    nla_b = nla_nest_start(msg, NLBL_CIPSOV4_A_MLSLVL);
+    if (nla_b == NULL) {
+      ret_val = -ENOMEM;
+      goto add_std_return;
+    }
+    ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MLSLVLLOC, lvls->array[iter]);
+    if (ret_val != 0)
+      goto add_std_return;
+    ret_val = nla_put_u32(msg,
+			  NLBL_CIPSOV4_A_MLSLVLREM,
+			  lvls->array[iter + 1]);
+    if (ret_val != 0)
+      goto add_std_return;
+    nla_nest_end(msg, nla_b);
+  }
+  nla_nest_end(msg, nla_a);
+
+  nla_a = nla_nest_start(msg, NLBL_CIPSOV4_A_MLSCATLST);
+  if (nla_a == NULL) {
+    ret_val = -ENOMEM;
+    goto add_std_return;
+  }
+  for (iter = 0; iter < cats->size; iter+= 2) {
+    nla_b = nla_nest_start(msg, NLBL_CIPSOV4_A_MLSCAT);
+    if (nla_b == NULL) {
+      ret_val = -ENOMEM;
+      goto add_std_return;
+    }
+    ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MLSCATLOC, cats->array[iter]);
+    if (ret_val != 0)
+      goto add_std_return;
+    ret_val = nla_put_u32(msg,
+			  NLBL_CIPSOV4_A_MLSCATREM,
+			  cats->array[iter + 1]);
+    if (ret_val != 0)
+      goto add_std_return;
+    nla_nest_end(msg, nla_b);
+  }
+  nla_nest_end(msg, nla_a);
 
   /* send the request */
   ret_val = nlbl_comm_send(p_hndl, msg);
@@ -364,6 +410,8 @@ int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
   nlbl_handle *p_hndl = hndl;
   nlbl_msg *msg = NULL;
   nlbl_msg *ans_msg = NULL;
+  struct nlattr *nla;
+  uint32_t iter;
 
   /* sanity checks */
   if (doi == 0 ||
@@ -391,9 +439,17 @@ int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
   ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_PASS);
   if (ret_val != 0)
     goto add_pass_return;
-  ret_val = nla_put(msg, NLBL_CIPSOV4_A_TAGLST, tags->size, tags->array);
-  if (ret_val != 0)
+  nla = nla_nest_start(msg, NLBL_CIPSOV4_A_TAGLST);
+  if (nla == NULL) {
+    ret_val = -ENOMEM;
     goto add_pass_return;
+  }
+  for (iter = 0; iter < tags->size; iter++) {
+    ret_val = nla_put_u8(msg, NLBL_CIPSOV4_A_TAG, tags->array[iter]);
+    if (ret_val != 0)
+      goto add_pass_return;
+  }
+  nla_nest_end(msg, nla);
 
   /* send the request */
   ret_val = nlbl_comm_send(p_hndl, msg);
@@ -518,7 +574,11 @@ int nlbl_cipsov4_list(nlbl_handle *hndl,
   nlbl_msg *msg = NULL;
   nlbl_msg *ans_msg = NULL;
   struct genlmsghdr *genl_hdr;
-  struct nlattr *nla;
+  struct nlattr *nla_a;
+  struct nlattr *nla_b;
+  struct nlattr *nla_c;
+  struct nlattr *nla_d;
+  int nla_b_rem;
 
   /* sanity checks */
   if (doi == 0 ||
@@ -560,34 +620,94 @@ int nlbl_cipsov4_list(nlbl_handle *hndl,
     goto list_return;
   }
 
-  /* process the response */
+  /* check the response */
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
-  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_LIST)
+  if (genl_hdr == NULL) {
+    ret_val = -EBADMSG;
     goto list_return;
-  nla = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MTYPE);
-  if (nla == NULL)
+  } else if (genl_hdr->cmd == NLBL_CIPSOV4_C_ACK) {
+    ret_val = nlbl_cipsov4_parse_ack(ans_msg);
     goto list_return;
-  *mtype = nla_get_u32(nla);
-  nla = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_TAGLST);
-  if (nla == NULL)
+  } else if (genl_hdr->cmd != NLBL_CIPSOV4_C_LIST) {
+    ret_val = -EBADMSG;
     goto list_return;
-  tags->size = nla_len(nla);
-  if (tags->size == 0)
+  }
+
+  /* process the response */
+
+  nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MTYPE);
+  if (nla_a == NULL)
     goto list_return;
-  tags->array = malloc(tags->size);
-  nla_memcpy(tags->array, nla, tags->size);
-  nla = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSLVLLST);
-  if (nla == NULL)
+  *mtype = nla_get_u32(nla_a);
+
+  nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_TAGLST);
+  if (nla_a == NULL)
     goto list_return;
-  lvls->size = nla_len(nla) / sizeof(nlbl_cv4_lvl);
-  lvls->array = malloc(nla_len(nla));
-  nla_memcpy(lvls->array, nla, lvls->size * sizeof(nlbl_cv4_lvl));
-  nla = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSCATLST);
-  if (nla == NULL)
+  tags->size = 0;
+  tags->array = NULL;
+  nla_for_each_attr(nla_b, nla_data(nla_a), nla_len(nla_a), nla_b_rem)
+    if (nla_b->nla_type == NLBL_CIPSOV4_A_TAG) {
+      tags->array = realloc(tags->array, tags->size + 1);
+      if (tags->array == NULL) {
+	ret_val = -ENOMEM;
+	goto list_return;
+      }
+      tags->array[tags->size++] = nla_get_u8(nla_b);
+    }
+
+  nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSLVLLST);
+  if (nla_a == NULL)
     goto list_return;
-  cats->size = nla_len(nla) / sizeof(nlbl_cv4_cat);
-  cats->array = malloc(nla_len(nla));
-  nla_memcpy(cats->array, nla, cats->size * sizeof(nlbl_cv4_cat));
+  lvls->size = 0;
+  lvls->array = NULL;
+  nla_for_each_attr(nla_b, nla_data(nla_a), nla_len(nla_a), nla_b_rem)
+    if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSLVL) {
+      lvls->array = realloc(lvls->array,
+			    (lvls->size + 2) * sizeof(nlbl_cv4_lvl));
+      if (lvls->array == NULL) {
+	ret_val = -ENOMEM;
+	goto list_return;
+      }
+      nla_c = nla_find(nla_data(nla_b),
+		       nla_len(nla_b),
+		       NLBL_CIPSOV4_A_MLSLVLLOC);
+      if (nla_c == NULL)
+	goto list_return;
+      nla_d = nla_find(nla_data(nla_b),
+		       nla_len(nla_b),
+		       NLBL_CIPSOV4_A_MLSLVLREM);
+      if (nla_d == NULL)
+	goto list_return;
+      lvls->array[lvls->size++] = nla_get_u32(nla_c);
+      lvls->array[lvls->size++] = nla_get_u32(nla_d);
+    }
+
+  nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSCATLST);
+  if (nla_a == NULL)
+    goto list_return;
+  cats->size = 0;
+  cats->array = NULL;
+  nla_for_each_attr(nla_b, nla_data(nla_a), nla_len(nla_a), nla_b_rem)
+    if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSCAT) {
+      cats->array = realloc(cats->array,
+			    (cats->size + 2) * sizeof(nlbl_cv4_cat));
+      if (cats->array == NULL) {
+	ret_val = -ENOMEM;
+	goto list_return;
+      }
+      nla_c = nla_find(nla_data(nla_b),
+		       nla_len(nla_b),
+		       NLBL_CIPSOV4_A_MLSCATLOC);
+      if (nla_c == NULL)
+	goto list_return;
+      nla_d = nla_find(nla_data(nla_b),
+		       nla_len(nla_b),
+		       NLBL_CIPSOV4_A_MLSCATREM);
+      if (nla_d == NULL)
+	goto list_return;
+      cats->array[cats->size++] = nla_get_u32(nla_c);
+      cats->array[cats->size++] = nla_get_u32(nla_d);
+    }
 
   ret_val = 0;
 
@@ -673,15 +793,25 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
 	ret_val = -ENODATA;
       goto listall_return;
     }
-
-    /* loop through the messages */
     data_len = ret_val;
     nl_hdr = (struct nlmsghdr *)data;
+
+    /* check to see if this is a netlink control message we don't care about */
+    if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
+	nl_hdr->nlmsg_type == NLMSG_ERROR ||
+	nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
+      ret_val = -EBADMSG;
+      goto listall_return;
+    }
+
+    /* loop through the messages */
     while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
       /* get the header pointers */
       genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
-      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_LISTALL)
+      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_LISTALL) {
+	ret_val = -EBADMSG;
 	goto listall_return;
+      }
       nla_head = (struct nlattr *)(&genl_hdr[1]);
       data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 

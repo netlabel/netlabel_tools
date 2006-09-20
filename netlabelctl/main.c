@@ -45,30 +45,32 @@ uint32_t opt_verbose = 0;
 uint32_t opt_timeout = 10;
 uint32_t opt_pretty = 0;
 
+/* program name */
+char *name_nlctl = NULL;
 
 /**
- * usage_print - Display usage information
+ * nlctl_usage_print - Display usage information
  * @fp: the output file pointer
  *
  * Description:
  * Display brief usage information.
  * 
  */
-static void usage_print(FILE *fp)
+static void nlctl_usage_print(FILE *fp)
 {
   fprintf(fp, 
           "usage: netlabelctl [<flags>] <module> [<commands>]\n");
 }
 
 /**
- * version_print - Display version information
+ * nlctl_ver_print - Display version information
  * @fp: the output file pointer
  *
  * Description:
  * Display the version string.
  *
  */
-static void version_print(FILE *fp)
+static void nlctl_ver_print(FILE *fp)
 {
   fprintf(fp,
 	  "NetLabel Control Utility, version %s (%s)\n",
@@ -77,16 +79,16 @@ static void version_print(FILE *fp)
 }
 
 /**
- * help_print - Display help information
+ * nlctl_help_print - Display help information
  * @fp: the output file pointer
  *
  * Description:
  * Display help and usage information.
  * 
  */
-static void help_print(FILE *fp)
+static void nlctl_help_print(FILE *fp)
 {
-  version_print(fp);
+  nlctl_ver_print(fp);
   fprintf(fp,
           " Usage: netlabelctl [<flags>] <module> [<commands>]\n"
           "\n"
@@ -129,9 +131,14 @@ int main(int argc, char *argv[])
 
   /* sanity checks */
   if (argc < 2) {
-    usage_print(stderr);
+    nlctl_usage_print(stderr);
     return RET_USAGE;
   }
+
+  /* save of the invoked program name */
+  name_nlctl = strrchr(argv[0], '/') + 1;
+  if (name_nlctl == NULL || name_nlctl[0] == '\0')
+    name_nlctl = strdup("unknown");
 
   /* get the command line arguments */
   do {
@@ -139,7 +146,7 @@ int main(int argc, char *argv[])
     switch (arg_iter) {
     case 'h':
       /* help */
-      help_print(stdout);
+      nlctl_help_print(stdout);
       return RET_OK;
       break;
     case 'v':
@@ -153,14 +160,14 @@ int main(int argc, char *argv[])
     case 't':
       /* timeout */
       if (atoi(optarg) < 0) {
-        usage_print(stderr);
+        nlctl_usage_print(stderr);
         return RET_USAGE;
       }
       opt_timeout = atoi(optarg);
       break;
     case 'V':
       /* version */
-      version_print(stdout);
+      nlctl_ver_print(stdout);
       return RET_OK;
       break;
     }
@@ -169,16 +176,16 @@ int main(int argc, char *argv[])
   /* perform any setup we have to do */
   ret_val = nlbl_init();
   if (ret_val < 0) {
-    fprintf(stderr, "%s: error: failed to initialize the NetLabel library\n",
-	    argv[0]);
+    fprintf(stderr, MSG_ERR("failed to initialize the NetLabel library\n"));
     goto exit;
   }
   nlbl_comm_timeout(opt_timeout);
 
   module_name = argv[optind];
-  if (!module_name) goto exit;
+  if (!module_name)
+    goto exit;
 
-  /* transfer control to the modules */
+  /* transfer control to the module */
   if (!strcmp(module_name, "mgmt")) {
     module_main = mgmt_main;
   } else if (!strcmp(module_name, "map")) {
@@ -188,23 +195,15 @@ int main(int argc, char *argv[])
   } else if (!strcmp(module_name, "cipsov4")) {
     module_main = cipsov4_main;
   } else {
-    fprintf(stderr, 
-	    "%s: error: unknown or missing module '%s'\n",
-	    argv[0],
-	    module_name);
+    fprintf(stderr, MSG_ERR("unknown or missing module '%s'\n"), module_name);
     goto exit;
   }
   ret_val = module_main(argc - optind - 1, argv + optind + 1);
   if (ret_val < 0) {
-    fprintf(stderr, 
-	    "%s: %s: error: %s\n", 
-	    argv[0], 
-	    module_name, 
-	    strerror(-ret_val));
+    fprintf(stderr, MSG_ERR("%s\n"), strerror(-ret_val));
     ret_val = RET_ERR;
-  } else {
+  } else
     ret_val = RET_OK;
-  }
 
   nlbl_exit();
 

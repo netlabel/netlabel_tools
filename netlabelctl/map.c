@@ -176,7 +176,15 @@ int map_list(int argc, char *argv[])
   nlbl_mgmt_domain domain;
   nlbl_mgmt_domain *domain_p = NULL;
   size_t count;
+  size_t def_count = 0;
   uint32_t iter;
+
+  /* get the default mapping from the kernel */
+  ret_val = nlbl_mgmt_listdef(NULL, &domain);
+  if (ret_val < 0 && ret_val != -ENOENT)
+    goto list_return;
+  else if (ret_val == 0)
+    def_count = 1;
 
   /* get the mappings from the kernel */
   ret_val = nlbl_mgmt_listall(NULL, &domain_p);
@@ -186,7 +194,7 @@ int map_list(int argc, char *argv[])
 
   /* display the results */
   if (opt_pretty) {
-    printf("Configured NetLabel domain mappings (%u, not including DEFAULT)\n", count);
+    printf("Configured NetLabel domain mappings (%u)\n", count + def_count);
     for (iter = 0; iter < count; iter++) {
       /* domain string */
       printf(" domain: \"%s\"\n", domain_p[iter].domain);
@@ -202,6 +210,23 @@ int map_list(int argc, char *argv[])
       default:
         printf("UNKNOWN(%u)\n", domain_p[iter].proto_type);
         break;
+      }
+    }
+    if (def_count > 0) {
+      /* domain string */
+      printf(" domain: DEFAULT\n");
+      /* protocol */
+      printf("   protocol: ");
+      switch (domain.proto_type) {
+      case NETLBL_NLTYPE_UNLABELED:
+	printf("UNLABELED\n");
+	break;
+      case NETLBL_NLTYPE_CIPSOV4:
+	printf("CIPSOv4, DOI = %u\n", domain.proto.cv4.doi);
+	break;
+      default:
+	printf("UNKNOWN(%u)\n", domain.proto_type);
+	break;
       }
     }
   } else {
@@ -222,53 +247,23 @@ int map_list(int argc, char *argv[])
       }
       printf(" ");
     }
-  }
-
-  /* release the mapping memory */
-  for (iter = 0; iter < count; iter++)
-    if (domain_p[iter].domain)
-      free(domain_p[iter].domain);
-  free(domain_p);
-  domain_p = NULL;
-
-  /* get the default mapping from the kernel */
-  ret_val = nlbl_mgmt_listdef(NULL, &domain);
-  if (ret_val < 0)
-    goto list_return;
-
-  /* display the results */
-  if (opt_pretty) {
-    /* domain string */
-    printf(" domain: DEFAULT\n");
-    /* protocol */
-    printf("   protocol: ");
-    switch (domain.proto_type) {
-    case NETLBL_NLTYPE_UNLABELED:
-      printf("UNLABELED\n");
-      break;
-    case NETLBL_NLTYPE_CIPSOV4:
-      printf("CIPSOv4, DOI = %u\n", domain.proto.cv4.doi);
-      break;
-    default:
-      printf("UNKNOWN(%u)\n", domain.proto_type);
-      break;
+    if (def_count > 0) {
+      /* domain string */
+      printf("domain:DEFAULT,");
+      /* protocol */
+      switch (domain.proto_type) {
+      case NETLBL_NLTYPE_UNLABELED:
+	printf("UNLABELED");
+	break;
+      case NETLBL_NLTYPE_CIPSOV4:
+	printf("CIPSOv4,%u", domain.proto.cv4.doi);
+	break;
+      default:
+	printf("UNKNOWN(%u)", domain.proto_type);
+	break;
+      }
+      printf("\n");
     }
-  } else {
-    /* domain string */
-    printf("domain:DEFAULT,");
-    /* protocol */
-    switch (domain.proto_type) {
-    case NETLBL_NLTYPE_UNLABELED:
-      printf("UNLABELED");
-      break;
-    case NETLBL_NLTYPE_CIPSOV4:
-      printf("CIPSOv4,%u", domain.proto.cv4.doi);
-      break;
-    default:
-      printf("UNKNOWN(%u)", domain.proto_type);
-      break;
-    }
-    printf("\n");
   }
 
  list_return:
@@ -311,7 +306,7 @@ int map_main(int argc, char *argv[])
     ret_val = map_list(argc - 1, argv + 1);
   } else {
     /* unknown request */
-    fprintf(stderr, "error[map]: unknown command\n");
+    fprintf(stderr, MSG_ERR_MOD("map", "unknown command\n"));
     ret_val = -EINVAL;
   }
 

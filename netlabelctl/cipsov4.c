@@ -135,12 +135,10 @@ int cipsov4_add(int argc, char *argv[])
   default:
     ret_val = -EINVAL;
   }
-  if (opt_pretty) {
-    if (ret_val < 0)
-      printf("Failed adding the CIPSOv4 mapping\n");
-    else
-      printf("Added the CIPSOv4 mapping\n");
-  }
+  if (ret_val < 0)
+    printf(MSG("Failed adding the CIPSOv4 mapping\n"));
+  else
+    printf(MSG("Added the CIPSOv4 mapping\n"));
 
   /* cleanup and return */
  add_return:
@@ -186,12 +184,10 @@ int cipsov4_del(int argc, char *argv[])
 
   /* delete the mapping */
   ret_val = nlbl_cipsov4_del(NULL, doi);
-  if (opt_pretty) {
-    if (ret_val < 0)
-      printf("Failed to remove the CIPSOv4 mapping\n");
-    else
-      printf("Removed the CIPSOv4 mapping\n");
-  }
+  if (ret_val < 0)
+    printf(MSG("Failed to remove the CIPSOv4 mapping\n"));
+  else
+    printf(MSG("Removed the CIPSOv4 mapping\n"));
 
   return 0;
 }
@@ -440,7 +436,7 @@ int cipsov4_main(int argc, char *argv[])
     ret_val = cipsov4_list(argc - 1, argv + 1);
   } else {
     /* unknown request */
-    fprintf(stderr, "error[cipsov4]: unknown command\n");
+    fprintf(stderr, MSG_ERR_MOD("cipsov4", "unknown command\n"));
     ret_val = -EINVAL;
   }
 

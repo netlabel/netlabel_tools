@@ -140,7 +140,7 @@ static int nlbl_unlbl_parse_ack(nlbl_msg *msg)
   if (nla == NULL)
     goto parse_ack_failure;
 
-  return nla_get_u32(nla);
+  return -nla_get_u32(nla);
 
  parse_ack_failure:
   return -EBADMSG;
@@ -369,10 +369,20 @@ int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag)
     goto list_return;
   }
 
-  /* process the response */
+  /* check the response */
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
-  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_UNLABEL_C_LIST)
+  if (genl_hdr == NULL) {
+    ret_val = -EBADMSG;
     goto list_return;
+  } else if (genl_hdr->cmd == NLBL_UNLABEL_C_ACK) {
+    ret_val = nlbl_unlbl_parse_ack(ans_msg);
+    goto list_return;
+  } else if (genl_hdr->cmd != NLBL_UNLABEL_C_LIST) {
+    ret_val = -EBADMSG;
+    goto list_return;
+  }
+
+  /* process the response */
   nla = nlbl_attr_find(ans_msg, NLBL_UNLABEL_A_ACPTFLG);
   if (nla == NULL)
     goto list_return;

@@ -140,7 +140,7 @@ static int nlbl_mgmt_parse_ack(nlbl_msg *msg)
   if (nla == NULL)
     goto parse_ack_failure;
 
-  return nla_get_u32(nla);
+  return -nla_get_u32(nla);
 
  parse_ack_failure:
   return -EBADMSG;
@@ -315,14 +315,24 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
       goto protocols_return;
     }
     data_len = ret_val;
+    nl_hdr = (struct nlmsghdr *)data;
+
+    /* check to see if this is a netlink control message we don't care about */
+    if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
+	nl_hdr->nlmsg_type == NLMSG_ERROR ||
+	nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
+      ret_val = -EBADMSG;
+      goto protocols_return;
+    }
 
     /* loop through the messages */
-    nl_hdr = (struct nlmsghdr *)data;
     while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
       /* get the header pointers */
       genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
-      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_PROTOCOLS)
+      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_PROTOCOLS) {
+	ret_val = -EBADMSG;
 	goto protocols_return;
+      }
       nla_head = (struct nlattr *)(&genl_hdr[1]);
       data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 
@@ -413,12 +423,20 @@ int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version)
     goto version_return;
   }
 
-  /* process the response */
+  /* check the response */
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
-  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_VERSION) {
+  if (genl_hdr == NULL) {
+    ret_val = -EBADMSG;
+    goto version_return;
+  } else if (genl_hdr->cmd == NLBL_MGMT_C_ACK) {
+    ret_val = nlbl_mgmt_parse_ack(ans_msg);
+    goto version_return;
+  } else if (genl_hdr->cmd != NLBL_MGMT_C_VERSION) {
     ret_val = -EBADMSG;
     goto version_return;
   }
+
+  /* process the response */
   nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_VERSION);
   if (nla == NULL) {
     ret_val = -EBADMSG;
@@ -773,6 +791,19 @@ int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_mgmt_domain *domain)
     goto listdef_return;
   }
 
+  /* check the response */
+  genl_hdr = nlbl_msg_genlhdr(ans_msg);
+  if (genl_hdr == NULL) {
+    ret_val = -EBADMSG;
+    goto listdef_return;
+  } else if (genl_hdr->cmd == NLBL_MGMT_C_ACK) {
+    ret_val = nlbl_mgmt_parse_ack(ans_msg);
+    goto listdef_return;
+  } else if (genl_hdr->cmd != NLBL_MGMT_C_LISTDEF) {
+    ret_val = -EBADMSG;
+    goto listdef_return;
+  }
+
   /* process the response */
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
   if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTDEF)
@@ -869,15 +900,25 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
 	ret_val = -ENODATA;
       goto listall_return;
     }
-
-    /* loop through the messages */
     data_len = ret_val;
     nl_hdr = (struct nlmsghdr *)data;
+
+    /* check to see if this is a netlink control message we don't care about */
+    if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
+	nl_hdr->nlmsg_type == NLMSG_ERROR ||
+	nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
+      ret_val = -EBADMSG;
+      goto listall_return;
+    }
+
+    /* loop through the messages */
     while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
       /* get the header pointers */
       genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
-      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTALL)
+      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTALL) {
+	ret_val = -EBADMSG;
 	goto listall_return;
+      }
       nla_head = (struct nlattr *)(&genl_hdr[1]);
       data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 

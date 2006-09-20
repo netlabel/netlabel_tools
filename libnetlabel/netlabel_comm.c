@@ -234,6 +234,7 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
   fd_set read_fds;
   struct timeval timeout;
   unsigned char *data;
+  struct nlmsghdr *nl_hdr;
 
   /* sanity checks */
   if (!nlbl_comm_hndl_valid(hndl) || msg == NULL)
@@ -272,8 +273,18 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
     goto recv_failure;
   }
 
+  nl_hdr = (struct nlmsghdr *)data;
+
   /* make sure the received buffer is the correct length */
-  if (!nlmsg_ok((struct nlmsghdr *)data, ret_val)) {
+  if (!nlmsg_ok(nl_hdr, ret_val)) {
+    ret_val = -EBADMSG;
+    goto recv_failure;
+  }
+
+  /* check to see if this is a netlink control message we don't care about */
+  if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
+      nl_hdr->nlmsg_type == NLMSG_ERROR ||
+      nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
     ret_val = -EBADMSG;
     goto recv_failure;
   }
