@@ -77,7 +77,8 @@ int mgmt_protocols(void)
   }
   printf("\n");
 
-  free(list);
+  if (list)
+    free(list);
   return 0;
 }
 

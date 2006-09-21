@@ -187,6 +187,7 @@ int nlbl_comm_recv_raw(nlbl_handle *hndl, unsigned char **data)
     return -EAGAIN;
 
   /* perform the read operation */
+  *data = NULL;
 #if LIBNL_VERSION == 1005
   ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
   if (ret_val < 0)
@@ -209,7 +210,10 @@ int nlbl_comm_recv_raw(nlbl_handle *hndl, unsigned char **data)
   return ret_val;
 
  recv_raw_failure:
-  free(data);
+  if (*data) {
+    free(*data);
+    *data = NULL;
+  }
   return ret_val;
 }
 
@@ -233,8 +237,10 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
   int nl_fd;
   fd_set read_fds;
   struct timeval timeout;
-  unsigned char *data;
+  unsigned char *data = NULL;
   struct nlmsghdr *nl_hdr;
+
+  /* XXX - we should make use of nlbl_comm_recv_raw() here */
 
   /* sanity checks */
   if (!nlbl_comm_hndl_valid(hndl) || msg == NULL)
@@ -258,8 +264,6 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
   ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data);
   if (ret_val < 0)
     return ret_val;
-  /* XXX - avoid a compiler warning about unused variables */
-  creds = NULL;
 #elif LIBNL_VERSION >= 1006
   ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data, &creds);
   if (ret_val < 0)
@@ -283,7 +287,6 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
 
   /* check to see if this is a netlink control message we don't care about */
   if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
-      nl_hdr->nlmsg_type == NLMSG_ERROR ||
       nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
     ret_val = -EBADMSG;
     goto recv_failure;
@@ -299,7 +302,10 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
   return ret_val;
 
  recv_failure:
-  free(data);
+  if (data)
+    free(data);
+  if (creds)
+    free(creds);
   return ret_val;
 }
 

@@ -122,6 +122,7 @@ nlbl_msg *nlbl_msg_new(void);
 void nlbl_msg_free(nlbl_msg *msg);
 struct nlmsghdr *nlbl_msg_nlhdr(nlbl_msg *msg);
 struct genlmsghdr *nlbl_msg_genlhdr(nlbl_msg *msg);
+struct nlmsgerr *nlbl_msg_err(nlbl_msg *msg);
 
 /* netlabel attribute handling */
 struct nlattr *nlbl_attr_head(nlbl_msg *msg);

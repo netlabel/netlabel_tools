@@ -106,7 +106,8 @@ static int nlbl_mgmt_recv(nlbl_handle *hndl, nlbl_msg **msg)
   /* process the response */
   nl_hdr = nlbl_msg_nlhdr(*msg);
   if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_mgmt_fid &&
-			 nl_hdr->nlmsg_type != NLMSG_DONE)) {
+			 nl_hdr->nlmsg_type != NLMSG_DONE &&
+			 nl_hdr->nlmsg_type != NLMSG_ERROR)) {
     ret_val = -EBADMSG;
     goto recv_failure;
   }
@@ -130,20 +131,13 @@ static int nlbl_mgmt_recv(nlbl_handle *hndl, nlbl_msg **msg)
  */
 static int nlbl_mgmt_parse_ack(nlbl_msg *msg)
 {
-  struct genlmsghdr *genl_hdr;
-  struct nlattr *nla;
+  struct nlmsgerr *nl_err;
 
-  genl_hdr = nlbl_msg_genlhdr(msg);
-  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_ACK)
-    goto parse_ack_failure;
-  nla = nlbl_attr_find(msg, NLBL_MGMT_A_ERRNO);
-  if (nla == NULL)
-    goto parse_ack_failure;
+  nl_err = nlbl_msg_err(msg);
+  if (nl_err == NULL)
+    return -ENOMSG;
 
-  return -nla_get_u32(nla);
-
- parse_ack_failure:
-  return -EBADMSG;
+  return nl_err->error;
 }
 
 /*
@@ -358,7 +352,7 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
   ret_val = protos_count;
 
  protocols_return:
-  if (ret_val < 0)
+  if (ret_val < 0 && protos)
     free(protos);
   if (hndl == NULL)
     nlbl_comm_close(p_hndl);
@@ -424,12 +418,12 @@ int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version)
   }
 
   /* check the response */
+  ret_val = nlbl_mgmt_parse_ack(ans_msg);
+  if (ret_val < 0 && ret_val != -ENOMSG)
+    goto version_return;
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
   if (genl_hdr == NULL) {
     ret_val = -EBADMSG;
-    goto version_return;
-  } else if (genl_hdr->cmd == NLBL_MGMT_C_ACK) {
-    ret_val = nlbl_mgmt_parse_ack(ans_msg);
     goto version_return;
   } else if (genl_hdr->cmd != NLBL_MGMT_C_VERSION) {
     ret_val = -EBADMSG;
@@ -792,12 +786,12 @@ int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_mgmt_domain *domain)
   }
 
   /* check the response */
+  ret_val = nlbl_mgmt_parse_ack(ans_msg);
+  if (ret_val < 0 && ret_val != -ENOMSG)
+    goto listdef_return;
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
   if (genl_hdr == NULL) {
     ret_val = -EBADMSG;
-    goto listdef_return;
-  } else if (genl_hdr->cmd == NLBL_MGMT_C_ACK) {
-    ret_val = nlbl_mgmt_parse_ack(ans_msg);
     goto listdef_return;
   } else if (genl_hdr->cmd != NLBL_MGMT_C_LISTDEF) {
     ret_val = -EBADMSG;
@@ -962,7 +956,8 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains)
  listall_return:
   if (ret_val < 0 && dmns) {
     do {
-      free(dmns[dmns_count].domain);
+      if (dmns[dmns_count].domain)
+	free(dmns[dmns_count].domain);
     } while (dmns_count-- > 0);
     free(dmns);
   }

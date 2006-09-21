@@ -128,6 +128,29 @@ struct genlmsghdr *nlbl_msg_genlhdr(nlbl_msg *msg)
 }
 
 /*
+ * Netlink Message Functions
+ */
+
+/**
+ * nlbl_msg_err - Return the nlmsgerr struct in the Netlink message
+ * @msg: the NetLabel message
+ *
+ * Description:
+ * Returns a pointer to the nlmsgerr struct in a NLMSG_ERROR Netlink message
+ * or NULL on failure.
+ *
+ */
+struct nlmsgerr *nlbl_msg_err(nlbl_msg *msg)
+{
+  struct nlmsghdr *nl_hdr;
+
+  nl_hdr = nlbl_msg_nlhdr(msg);
+  if (nl_hdr == NULL || nl_hdr->nlmsg_type != NLMSG_ERROR)
+    return NULL;
+  return nlmsg_data(nl_hdr);
+}
+
+/*
  * Netlink Attribute Functions
  */
 

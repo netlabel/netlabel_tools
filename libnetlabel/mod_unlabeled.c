@@ -106,7 +106,8 @@ static int nlbl_unlbl_recv(nlbl_handle *hndl, nlbl_msg **msg)
   /* process the response */
   nl_hdr = nlbl_msg_nlhdr(*msg);
   if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_unlbl_fid &&
-			 nl_hdr->nlmsg_type != NLMSG_DONE)) {
+			 nl_hdr->nlmsg_type != NLMSG_DONE &&
+			 nl_hdr->nlmsg_type != NLMSG_ERROR)) {
     ret_val = -EBADMSG;
     goto recv_failure;
   }
@@ -130,20 +131,13 @@ static int nlbl_unlbl_recv(nlbl_handle *hndl, nlbl_msg **msg)
  */
 static int nlbl_unlbl_parse_ack(nlbl_msg *msg)
 {
-  struct genlmsghdr *genl_hdr;
-  struct nlattr *nla;
+  struct nlmsgerr *nl_err;
 
-  genl_hdr = nlbl_msg_genlhdr(msg);
-  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_UNLABEL_C_ACK)
-    goto parse_ack_failure;
-  nla = nlbl_attr_find(msg, NLBL_UNLABEL_A_ERRNO);
-  if (nla == NULL)
-    goto parse_ack_failure;
+  nl_err = nlbl_msg_err(msg);
+  if (nl_err == NULL)
+    return -ENOMSG;
 
-  return -nla_get_u32(nla);
-
- parse_ack_failure:
-  return -EBADMSG;
+  return nl_err->error;
 }
 
 /*
@@ -370,12 +364,12 @@ int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag)
   }
 
   /* check the response */
+  ret_val = nlbl_unlbl_parse_ack(ans_msg);
+  if (ret_val < 0 && ret_val != -ENOMSG)
+    goto list_return;
   genl_hdr = nlbl_msg_genlhdr(ans_msg);
   if (genl_hdr == NULL) {
     ret_val = -EBADMSG;
-    goto list_return;
-  } else if (genl_hdr->cmd == NLBL_UNLABEL_C_ACK) {
-    ret_val = nlbl_unlbl_parse_ack(ans_msg);
     goto list_return;
   } else if (genl_hdr->cmd != NLBL_UNLABEL_C_LIST) {
     ret_val = -EBADMSG;
