@@ -28,7 +28,7 @@
 #define _NETLABELCTL_H
 
 /* global program name */
-extern char *name_nlctl;
+extern char *nlctl_name;
 
 /* global option variables */
 extern uint32_t opt_verbose;
@@ -36,14 +36,14 @@ extern uint32_t opt_timeout;
 extern uint32_t opt_pretty;
 
 /* warning/error reporting */
-#define MSG_WARN(x) "%s: warning, "x,name_nlctl
-#define MSG_WARN_MOD(m,x) "%s: warning[%s], "x,name_nlctl,m
-#define MSG_ERR(x) "%s: error, "x,name_nlctl
-#define MSG_ERR_MOD(m,x) "%s: error[%s], "x,name_nlctl,m
+#define MSG_WARN(_x) "%s: warning, "_x,nlctl_name
+#define MSG_WARN_MOD(_m,_x) "%s: warning[%s], "_x,nlctl_name,_m
+#define MSG_ERR(_x) "%s: error, "_x,nlctl_name
+#define MSG_ERR_MOD(_m,_x) "%s: error[%s], "_x,nlctl_name,_m
 
 /* message display */
-#define MSG(x) (opt_pretty?x:"")
-#define MSG_V(x) (opt_verbose?x"")
+#define MSG(_x) (opt_pretty?_x:"")
+#define MSG_V(_x) (opt_verbose?_x"")
 
 /* module entry points */
 typedef int main_function_t(int argc, char *argv[]);

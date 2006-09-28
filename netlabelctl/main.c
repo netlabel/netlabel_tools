@@ -46,7 +46,7 @@ uint32_t opt_timeout = 10;
 uint32_t opt_pretty = 0;
 
 /* program name */
-char *name_nlctl = NULL;
+char *nlctl_name = NULL;
 
 /**
  * nlctl_usage_print - Display usage information
@@ -58,8 +58,7 @@ char *name_nlctl = NULL;
  */
 static void nlctl_usage_print(FILE *fp)
 {
-  fprintf(fp, 
-          "usage: netlabelctl [<flags>] <module> [<commands>]\n");
+  fprintf(fp, "usage: %s [<flags>] <module> [<commands>]\n", nlctl_name);
 }
 
 /**
@@ -90,7 +89,7 @@ static void nlctl_help_print(FILE *fp)
 {
   nlctl_ver_print(fp);
   fprintf(fp,
-          " Usage: netlabelctl [<flags>] <module> [<commands>]\n"
+          " Usage: %s [<flags>] <module> [<commands>]\n"
           "\n"
           " Flags:\n"
           "   -h        : help/usage message\n"
@@ -116,7 +115,8 @@ static void nlctl_help_print(FILE *fp)
 	  "    add pass doi:<DOI> tags:<T1>,<Tn>\n"
           "    del doi:<DOI>\n"
           "    list [doi:<DOI>]\n"
-          "\n");
+          "\n",
+	  nlctl_name);
 }
 
 /**
@@ -136,9 +136,13 @@ int main(int argc, char *argv[])
   }
 
   /* save of the invoked program name */
-  name_nlctl = strrchr(argv[0], '/') + 1;
-  if (name_nlctl == NULL || name_nlctl[0] == '\0')
-    name_nlctl = strdup("unknown");
+  nlctl_name = strrchr(argv[0], '/');
+  if (nlctl_name == NULL)
+    nlctl_name = argv[0];
+  else if (nlctl_name[0] == '/')
+    nlctl_name += 1;
+  else
+    nlctl_name = strdup("unknown");
 
   /* get the command line arguments */
   do {
