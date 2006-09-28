@@ -120,6 +120,54 @@ static void nlctl_help_print(FILE *fp)
 }
 
 /**
+ * nlctl_strerror - Convert a errno value into a human readable string
+ * @ret_val: the errno return value
+ *
+ * Description:
+ * Return a pointer to a human readable string describing the error in
+ * @ret_val.
+ *
+ */
+static char *nlctl_strerror(int ret_val)
+{
+  char *str = NULL;
+
+  switch (ret_val) {
+  case 0:
+    str = "operation succeeded";
+    break;
+  case EINVAL:
+    str = "invalid argument or parameter";
+    break;
+  case ENOMEM:
+    str = "out of memory";
+    break;
+  case ENOENT:
+    str = "entry does not exist";
+    break;
+  case ENODATA:
+    str = "no data was available";
+    break;
+  case EBADMSG:
+    str = "bad message";
+    break;
+  case ENOPROTOOPT:
+    str = "not supported";
+    break;
+  case EAGAIN:
+    str = "try again";
+    break;
+  case ENOMSG:
+    str = "no message was received";
+    break;
+  default:
+    str = strerror(ret_val);
+  }
+  
+  return str;
+}
+
+/**
  * main
  */
 int main(int argc, char *argv[])
@@ -204,7 +252,8 @@ int main(int argc, char *argv[])
   }
   ret_val = module_main(argc - optind - 1, argv + optind + 1);
   if (ret_val < 0) {
-    fprintf(stderr, MSG_ERR("%s\n"), strerror(-ret_val));
+    if (opt_pretty)
+      fprintf(stderr, MSG_ERR("%s\n"), nlctl_strerror(-ret_val));
     ret_val = RET_ERR;
   } else
     ret_val = RET_OK;

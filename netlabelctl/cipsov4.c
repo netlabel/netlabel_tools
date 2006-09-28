@@ -122,7 +122,7 @@ int cipsov4_add(int argc, char *argv[])
     arg_iter++;
   }
 
-  /* push the mapping into the kernel */
+  /* add the cipso mapping */
   switch (cipso_type) {
   case CIPSO_V4_MAP_STD:
     /* standard mapping */
@@ -135,10 +135,6 @@ int cipsov4_add(int argc, char *argv[])
   default:
     ret_val = -EINVAL;
   }
-  if (ret_val < 0)
-    printf(MSG("Failed adding the CIPSOv4 mapping\n"));
-  else
-    printf(MSG("Added the CIPSOv4 mapping\n"));
 
   /* cleanup and return */
  add_return:
@@ -184,12 +180,189 @@ int cipsov4_del(int argc, char *argv[])
 
   /* delete the mapping */
   ret_val = nlbl_cipsov4_del(NULL, doi);
-  if (ret_val < 0)
-    printf(MSG("Failed to remove the CIPSOv4 mapping\n"));
-  else
-    printf(MSG("Removed the CIPSOv4 mapping\n"));
 
   return 0;
+}
+
+/**
+ * cipsov4_list_all - List all of the CIPSOv4 label mappings
+ * @argc: the number of arguments
+ * @argv: the argument list
+ *
+ * Description:
+ * List the configured CIPSOv4 label mappings.  Returns zero on success,
+ * negative values on failure.
+ *
+ */
+static int cipsov4_list_all(void)
+{
+  int ret_val;
+  uint32_t iter;
+  nlbl_cv4_doi *doi_list = NULL;
+  nlbl_cv4_mtype *mtype_list = NULL;
+  size_t count;
+
+  ret_val = nlbl_cipsov4_listall(NULL, &doi_list, &mtype_list);
+  if (ret_val < 0)
+    goto list_all_return;
+  count = ret_val;
+
+  if (opt_pretty) {
+    printf("Configured CIPSOv4 mappings (%u)\n", count);
+    for (iter = 0; iter < count; iter++) {
+      /* doi value */
+      printf(" DOI value : %u\n", doi_list[iter]);
+      /* map type */
+      printf("   mapping type : ");
+      switch (mtype_list[iter]) {
+      case CIPSO_V4_MAP_STD:
+	printf("STANDARD\n");
+	break;
+      case CIPSO_V4_MAP_PASS:
+	printf("PASS_THROUGH\n");
+	break;
+      default:
+	printf("UNKNOWN(%u)\n", mtype_list[iter]);
+	break;
+      }
+    }
+  } else {
+    for (iter = 0; iter < count; iter++) {
+      /* doi value */
+      printf("%u,", doi_list[iter]);
+      /* map type */
+      switch (mtype_list[iter]) {
+      case CIPSO_V4_MAP_STD:
+	printf("STANDARD");
+	break;
+      case CIPSO_V4_MAP_PASS:
+	printf("PASS_THROUGH\n");
+	break;
+      default:
+	printf("UNKNOWN(%u)", mtype_list[iter]);
+	break;
+      }
+      if (iter + 1 < count)
+	printf(" ");
+    }
+    printf("\n");
+  }
+
+  ret_val = 0;
+
+ list_all_return:
+  if (doi_list)
+    free(doi_list);
+  if (mtype_list)
+    free(mtype_list);
+  return ret_val;
+}
+
+/**
+ * cipsov4_list_doi - List a specific CIPSOv4 DOI label mapping
+ * @doi: the DOI value
+ *
+ * Description:
+ * List the configured CIPSOv4 label mapping.  Returns zero on success,
+ * negative values on failure.
+ *
+ */
+static int cipsov4_list_doi(uint32_t doi)
+{
+  int ret_val;
+  uint32_t iter;
+  nlbl_cv4_doi *doi_list = NULL;
+  nlbl_cv4_mtype *mtype_list = NULL;
+  nlbl_cv4_mtype maptype;
+  nlbl_cv4_tag_a tags = { .array = NULL,
+			  .size = 0 };
+  nlbl_cv4_lvl_a lvls = { .array = NULL,
+			  .size = 0 };
+  nlbl_cv4_cat_a cats = { .array = NULL,
+			  .size = 0 };
+
+  ret_val = nlbl_cipsov4_list(NULL, doi, &maptype, &tags, &lvls, &cats);
+  if (ret_val < 0)
+    goto list_doi_return;
+
+  if (opt_pretty) {
+    printf("Configured CIPSOv4 mapping (DOI = %u)\n", doi);
+    printf(" tags (%u): \n", tags.size);
+    for (iter = 0; iter < tags.size; iter++) {
+      switch (tags.array[iter]) {
+      case 1:
+	printf("   RESTRICTED BITMAP\n");
+	break;
+      case 2:
+	printf("   ENUMERATED\n");
+	break;
+      case 5:
+	printf("   RANGED\n");
+	break;
+      case 6:
+	printf("   PERMISSIVE_BITMAP\n");
+	break;
+      case 7:
+	printf("   FREEFORM\n");
+	break;
+      default:
+	printf("   UNKNOWN(%u)\n", tags.array[iter]);
+	break;
+      }
+    }
+    switch (maptype) {
+    case CIPSO_V4_MAP_STD:
+      /* levels */
+      printf(" levels (%u): \n", lvls.size);
+      for (iter = 0; iter < lvls.size; iter++)
+	printf("   %u = %u\n", 
+	       lvls.array[iter * 2],
+	       lvls.array[iter * 2 + 1]);
+      /* categories */
+      printf(" categories (%u): \n", cats.size);
+      for (iter = 0; iter < cats.size; iter++)
+	printf("   %u = %u\n",
+	       cats.array[iter * 2],
+	       cats.array[iter * 2 + 1]);
+      break;
+    }
+  } else {
+    /* tags */
+    printf("tags:");
+    for (iter = 0; iter < tags.size; iter++) {
+      printf("%u", tags.array[iter]);
+      if (iter + 1 < tags.size)
+	printf(",");
+    }
+    switch (maptype) {
+    case CIPSO_V4_MAP_STD:
+      /* levels */
+      printf(" levels:");
+      for (iter = 0; iter < lvls.size; iter++) {
+	printf("%u=%u", lvls.array[iter * 2], lvls.array[iter * 2 + 1]);
+	if (iter + 1 < lvls.size)
+	  printf(",");
+      }
+      /* categories */
+      printf(" categories:");
+      for (iter = 0; iter < cats.size; iter++) {
+	printf("%u=%u", cats.array[iter * 2], cats.array[iter * 2 + 1]);
+	if (iter + 1 < cats.size)
+	  printf(",");
+      }
+      break;
+    }
+    printf("\n");
+  }
+
+  ret_val = 0;
+
+ list_doi_return:
+  if (doi_list)
+    free(doi_list);
+  if (mtype_list)
+    free(mtype_list);
+  return ret_val;
 }
 
 /**
@@ -206,18 +379,8 @@ int cipsov4_list(int argc, char *argv[])
 {
   int ret_val;
   uint32_t iter;
-  uint32_t doi_set = 0;
+  uint32_t doi_flag = 0;
   nlbl_cv4_doi doi = 0;
-  nlbl_cv4_doi *doi_list = NULL;
-  nlbl_cv4_mtype *mtype_list = NULL;
-  nlbl_cv4_mtype maptype;
-  size_t count;
-  nlbl_cv4_tag_a tags = { .array = NULL,
-			  .size = 0 };
-  nlbl_cv4_lvl_a lvls = { .array = NULL,
-			  .size = 0 };
-  nlbl_cv4_cat_a cats = { .array = NULL,
-			  .size = 0 };
 
   /* parse the arguments */
   iter = 0;
@@ -225,184 +388,17 @@ int cipsov4_list(int argc, char *argv[])
     if (strncmp(argv[iter], "doi:", 4) == 0) {
       /* doi */
       doi = (nlbl_cv4_doi)atoi(argv[iter] + 4);
-      doi_set = 1;
+      doi_flag = 1;
     } else
       return -EINVAL;
     iter++;
   }
 
-  /* fetch the information from the kernel and display the results */
-  if (doi_set == 0) {
-    /* list all the mappings */
-    ret_val = nlbl_cipsov4_listall(NULL, &doi_list, &mtype_list);
-    if (ret_val < 0)
-      goto list_return;
-    count = ret_val;
+  if (doi_flag)
+    ret_val = cipsov4_list_doi(doi);
+  else
+    ret_val = cipsov4_list_all();
 
-    if (opt_pretty) {
-      printf("Configured CIPSOv4 mappings (%u)\n", count);
-      for (iter = 0; iter < count; iter++) {
-        /* doi value */
-        printf(" DOI value : %u\n", doi_list[iter]);
-        /* map type */
-        printf("   mapping type : ");
-        switch (mtype_list[iter]) {
-        case CIPSO_V4_MAP_STD:
-          printf("STANDARD\n");
-          break;
-        case CIPSO_V4_MAP_PASS:
-          printf("PASS THROUGH\n");
-          break;
-        default:
-          printf("UNKNOWN(%u)\n", mtype_list[iter]);
-          break;
-        }
-      }
-    } else {
-      for (iter = 0; iter < count; iter++) {
-        /* doi value */
-        printf("%u,", doi_list[iter]);
-        /* map type */
-        switch (mtype_list[iter]) {
-        case CIPSO_V4_MAP_STD:
-          printf("STANDARD");
-          break;
-        case CIPSO_V4_MAP_PASS:
-          printf("PASS_THROUGH\n");
-          break;
-        default:
-          printf("UNKNOWN(%u)", mtype_list[iter]);
-          break;
-        }
-        if (iter + 1 < count)
-          printf(" ");
-      }
-      printf("\n");
-    }
-  } else {
-    /* list a specific mapping */
-    ret_val = nlbl_cipsov4_list(NULL, doi, &maptype, &tags, &lvls, &cats);
-    if (ret_val < 0)
-      goto list_return;
-
-    if (opt_pretty) {
-      printf("Configured CIPSOv4 mapping (DOI = %u)\n", doi);
-      switch (maptype) {
-      case CIPSO_V4_MAP_STD:
-	/* tags */
-	printf(" tags (%u): \n", tags.size);
-	for (iter = 0; iter < tags.size; iter++) {
-	  switch (tags.array[iter]) {
-	  case 1:
-	    printf("   RESTRICTED BITMAP\n");
-	    break;
-	  case 2:
-	    printf("   ENUMERATED\n");
-	    break;
-	  case 5:
-	    printf("   RANGED\n");
-	    break;
-	  case 6:
-	    printf("   PERMISSIVE BITMAP\n");
-	    break;
-	  case 7:
-	    printf("   FREEFORM\n");
-	    break;
-	  default:
-	    printf("   UNKNOWN(%u)\n", tags.array[iter]);
-	    break;
-	  }
-	}
-	/* levels */
-	printf(" levels (%u): \n", lvls.size);
-	for (iter = 0; iter < lvls.size; iter++)
-	  printf("   %u = %u\n", 
-		 lvls.array[iter * 2],
-		 lvls.array[iter * 2 + 1]);
-	/* categories */
-	printf(" categories (%u): \n", cats.size);
-	for (iter = 0; iter < cats.size; iter++)
-	  printf("   %u = %u\n",
-		 cats.array[iter * 2],
-		 cats.array[iter * 2 + 1]);
-	break;
-      case CIPSO_V4_MAP_PASS:
-	/* tags */
-	printf(" tags (%u): \n", tags.size);
-	for (iter = 0; iter < tags.size; iter++) {
-	  switch (tags.array[iter]) {
-	  case 1:
-	    printf("   RESTRICTED BITMAP\n");
-	    break;
-	  case 2:
-	    printf("   ENUMERATED\n");
-	    break;
-	  case 5:
-	    printf("   RANGED\n");
-	    break;
-	  case 6:
-	    printf("   PERMISSIVE BITMAP\n");
-	    break;
-	  case 7:
-	    printf("   FREEFORM\n");
-	    break;
-	  default:
-	    printf("   UNKNOWN(%u)\n", tags.array[iter]);
-	    break;
-	  }
-	}
-	break;
-      default:
-	printf(" unknown mapping type\n");
-      }
-    } else {
-      switch (maptype) {
-      case CIPSO_V4_MAP_STD:
-	/* tags */
-	printf("tags:");
-	for (iter = 0; iter < tags.size; iter++) {
-	  printf("%u", tags.array[iter]);
-	  if (iter + 1 < tags.size)
-	    printf(",");
-	}
-	/* levels */
-	printf(" levels:");
-	for (iter = 0; iter < lvls.size; iter++) {
-	  printf("%u=%u", lvls.array[iter * 2], lvls.array[iter * 2 + 1]);
-	  if (iter + 1 < lvls.size)
-	    printf(",");
-	}
-	/* categories */
-	printf(" categories:");
-	for (iter = 0; iter < cats.size; iter++) {
-	  printf("%u=%u", cats.array[iter * 2], cats.array[iter * 2 + 1]);
-	  if (iter + 1 < cats.size)
-	    printf(",");
-	}
-	break;
-      case CIPSO_V4_MAP_PASS:
-	/* tags */
-	printf("tags:");
-	for (iter = 0; iter < tags.size; iter++) {
-	  printf("%u", tags.array[iter]);
-	  if (iter + 1 < tags.size)
-	    printf(",");
-	}
-	break;
-      default:
-	printf("unknown mapping type\n");
-      }
-      printf("\n");
-    }
-  }
-
-  ret_val = 0;
-
- list_return:
-  if (doi_list)
-    free(doi_list);
-  if (mtype_list)
-    free(mtype_list);
   return ret_val;
 }
 
@@ -436,7 +432,6 @@ int cipsov4_main(int argc, char *argv[])
     ret_val = cipsov4_list(argc - 1, argv + 1);
   } else {
     /* unknown request */
-    fprintf(stderr, MSG_ERR_MOD("cipsov4", "unknown command\n"));
     ret_val = -EINVAL;
   }
 

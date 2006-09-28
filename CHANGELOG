@@ -5,6 +5,7 @@ NetLabel Tools CHANGELOG
 ------------------------------------------------------------------------------
 o Changed to support the updated use of Netlink attributes by NetLabel
 o Ported to use the libnl (version 1.0-pre5/6) library
+o Try to cleanup the error reporting a little bit
 
 * Version 0.16 (August 3, 2006)
 ------------------------------------------------------------------------------

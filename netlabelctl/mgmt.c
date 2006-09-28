@@ -53,7 +53,7 @@ int mgmt_protocols(void)
     return ret_val;
   count = ret_val;
 
-  printf(MSG("Kernel NetLabel protocols : ")); 
+  printf(MSG("NetLabel protocols : ")); 
   for (iter = 0; iter < count; iter++) {
     switch (list[iter]) {
     case NETLBL_NLTYPE_UNLABELED:
@@ -73,7 +73,7 @@ int mgmt_protocols(void)
       break;
     }
     if (iter + 1 < count)
-      printf("%s", (opt_pretty?" ":","));
+      printf("%s", (opt_pretty ? " " : ","));
   }
   printf("\n");
 
@@ -99,7 +99,7 @@ int mgmt_version(void)
   if (ret_val < 0)
     return ret_val;
 
-  printf(MSG("Kernel NetLabel version : ")); 
+  printf(MSG("NetLabel protocol version : ")); 
   printf("%u\n", version);
 
   return 0;
@@ -132,7 +132,6 @@ int mgmt_main(int argc, char *argv[])
     ret_val = mgmt_protocols();
   } else {
     /* unknown request */
-    fprintf(stderr, MSG_ERR_MOD("mgmt", "unknown command\n"));
     ret_val = -EINVAL;
   }
 

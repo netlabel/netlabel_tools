@@ -65,8 +65,6 @@ int unlbl_accept(int argc, char *argv[])
   if (ret_val < 0)
     return ret_val;
 
-  printf(MSG("Allow unlabeled packets : %s\n"), (flag?"on":"off"));
-
   return 0;
 }
 
@@ -88,7 +86,7 @@ int unlbl_list(void)
     return ret_val;
 
   printf(MSG("Allow unlabeled packets : "));
-  printf("%s\n", (flag?"on":"off"));
+  printf("%s\n", (flag ? "on" : "off"));
 
   return 0;
 }
@@ -120,7 +118,6 @@ int unlbl_main(int argc, char *argv[])
     ret_val = unlbl_list();
   } else {
     /* unknown request */
-    fprintf(stderr, MSG_ERR_MOD("unlbl", "unknown command\n"));
     ret_val = -EINVAL;
   }
 
