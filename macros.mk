@@ -31,7 +31,7 @@
 # simple /bin/sh script to find the top of the tree
 #
 
-TOPDIR = ` \
+TOPDIR = $$( \
 	ftd() { \
 		cd $$1; \
 		if [ -r "macros.mk" ]; then \
@@ -40,7 +40,7 @@ TOPDIR = ` \
 			ftd "../"; \
 		 fi \
 	}; \
-	ftd .`
+	ftd .)
 
 #
 # build configuration
@@ -51,6 +51,12 @@ LIBFLAGS =
 
 CFLAGS  = -O0 -g -Wall
 LDFLAGS = -g
+
+#
+# build constants
+#
+
+VERSION_HDR = include/version.h
 
 #
 # build macros

@@ -34,13 +34,13 @@
 #include <netlink/attr.h>
 
 #include <netlabel.h>
+#include <version.h>
 
 /*
  * Version
  */
 
-#define NETLBL_VER_STRING               "X.XX"
-#define NETLBL_VER_DATE                 "Development"
+#define NETLBL_VER_STRING               VERSION_LIBNETLABEL
 
 /*
  * Types

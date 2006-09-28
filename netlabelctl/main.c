@@ -32,6 +32,7 @@
 #include <getopt.h>
 
 #include <libnetlabel.h>
+#include <version.h>
 
 #include "netlabelctl.h"
 
@@ -72,9 +73,9 @@ static void nlctl_usage_print(FILE *fp)
 static void nlctl_ver_print(FILE *fp)
 {
   fprintf(fp,
-	  "NetLabel Control Utility, version %s (%s)\n",
-	  NETLBL_VER_STRING,
-	  NETLBL_VER_DATE);
+	  "NetLabel Control Utility, version %s (libnetlabel %s)\n",
+	  VERSION_NETLABELCTL,
+	  NETLBL_VER_STRING);
 }
 
 /**

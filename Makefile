@@ -56,20 +56,15 @@ SUBDIRS = libnetlabel netlabelctl
 
 all: $(SUBDIRS)
 
-$(SUBDIRS):
-	@echo "INFO: entering directory $@/ ..."
-	@$(MAKE) -s -C $@
-
 tarball: clean
-	@name=$$(grep "^Name:" netlabel_tools.spec | awk '{ print $$2 }'); \
-	ver=$$(grep "^Version:" netlabel_tools.spec | awk '{ print $$2 }'); \
-	tarball=$$name-$$ver.tar.gz; \
+	@ver=$$(. version_info; echo $$VERSION_RELEASE); \
+	tarball=netlabel_tools-$$ver.tar.gz; \
 	echo "INFO: creating the tarball ../$$tarball"; \
 	tmp_dir=$$(mktemp -d /tmp/netlabel_tools.XXXXX); \
-	rel_dir=$$tmp_dir/$$name-$$ver; \
+	rel_dir=$$tmp_dir/netlabel_tools-$$ver; \
 	mkdir $$rel_dir; \
 	tar cf - . | (cd $$rel_dir; tar xf -); \
-	(cd $$tmp_dir; tar zcf $$tarball $$name-$$ver); \
+	(cd $$tmp_dir; tar zcf $$tarball netlabel_tools-$$ver); \
 	mv $$tmp_dir/$$tarball ..; \
 	rm -rf $$tmp_dir;
 
@@ -82,7 +77,27 @@ install: $(SUBDIRS)
 	@install -o $(OWNER) -g $(GROUP) -m 644 docs/man/netlabelctl.8 \
 	 $(INSTALL_MAN_DIR)/man8
 
+$(VERSION_HDR): version_info
+	@echo "INFO: creating the version header file"
+	@hdr="$(VERSION_HDR)"; \
+	. version_info; \
+	echo "/* automatically generated - do not edit */" > $$hdr; \
+	echo "#ifndef _VERSION_H" >> $$hdr; \
+	echo "#define _VERSION_H" >> $$hdr; \
+	echo "#define VERSION_RELEASE \"$$VERSION_RELEASE\"" >> $$hdr; \
+	echo "#define VERSION_LIBNETLABEL \"$$VERSION_LIBNETLABEL\"" >> $$hdr;\
+	echo "#define VERSION_NETLABELCTL \"$$VERSION_NETLABELCTL\"" >> $$hdr;\
+	echo "#define VERSION_NETLABELD \"$$VERSION_NETLABELD\"" >> $$hdr; \
+	echo "#endif" >> $$hdr;
+
+
+$(SUBDIRS): $(VERSION_HDR)
+	@echo "INFO: entering directory $@/ ..."
+	@$(MAKE) -s -C $@
+
 clean:
+	@echo "INFO: removing the version header file"; \
+	rm -f $(VERSION_HDR)
 	@for dir in $(SUBDIRS); do \
 		echo "INFO: cleaning in $$dir/"; \
 		$(MAKE) -s -C $$dir clean; \

@@ -37,6 +37,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,root,root) %{_mandir}/man8/*
 
 %changelog
+* Thu Sep 28 2006 Paul Moore <paul.moore@hp.com> X.XX-1
+- This specfile will no longer be updated for individual release numbers,
+  however, it will be kept up to date so that it could be used to build
+  a netlabel_tools RPM once the correct version information has been entered
+
 * Thu Aug  3 2006 Paul Moore <paul.moore@hp.com> 0.16-1
 - Bumped version number.
 
