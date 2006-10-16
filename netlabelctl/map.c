@@ -224,8 +224,10 @@ int map_list(int argc, char *argv[])
         printf("UNKNOWN(%u)", domain_p[iter].proto_type);
         break;
       }
-      printf(" ");
+      if (iter + 1 < count)
+	printf(" ");
     }
+    printf("\n");
   }
 
  list_return:

@@ -236,7 +236,7 @@ static int cipsov4_list_all(void)
 	printf("STANDARD");
 	break;
       case CIPSO_V4_MAP_PASS:
-	printf("PASS_THROUGH\n");
+	printf("PASS_THROUGH");
 	break;
       default:
 	printf("UNKNOWN(%u)", mtype_list[iter]);

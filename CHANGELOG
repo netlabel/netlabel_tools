@@ -3,6 +3,8 @@ NetLabel Tools CHANGELOG
 
 * Release X.XX (XXXXXX)
 ------------------------------------------------------------------------------
+o Fixed some problems when printing CIPSOv4 and map information when not using
+  the '-p' flag
 
 * Release Release 0.17 (September 28, 2006)
 ------------------------------------------------------------------------------
