@@ -5,6 +5,8 @@ NetLabel Tools CHANGELOG
 ------------------------------------------------------------------------------
 o Fixed some problems when printing CIPSOv4 and map information when not using
   the '-p' flag
+o Always display an error message if an error occurred, based on patch from
+  Klaus Weidner <klaus@atsec.com>
 
 * Release Release 0.17 (September 28, 2006)
 ------------------------------------------------------------------------------

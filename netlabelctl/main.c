@@ -253,8 +253,7 @@ int main(int argc, char *argv[])
   }
   ret_val = module_main(argc - optind - 1, argv + optind + 1);
   if (ret_val < 0) {
-    if (opt_pretty)
-      fprintf(stderr, MSG_ERR("%s\n"), nlctl_strerror(-ret_val));
+    fprintf(stderr, MSG_ERR("%s\n"), nlctl_strerror(-ret_val));
     ret_val = RET_ERR;
   } else
     ret_val = RET_OK;
