@@ -349,6 +349,6 @@ int nlbl_comm_send(nlbl_handle *hndl, nlbl_msg *msg)
 #if LIBNL_VERSION == 1005
   return nl_send_auto_complete(hndl->nl_hndl, nlbl_msg_nlhdr(msg));
 #elif LIBNL_VERSION >= 1006
-  return = nl_send_auto_complete(hndl->nl_hndl, msg);
+  return nl_send_auto_complete(hndl->nl_hndl, msg);
 #endif
 }

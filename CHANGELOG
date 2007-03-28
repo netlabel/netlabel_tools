@@ -7,6 +7,8 @@ o Fixed some problems when printing CIPSOv4 and map information when not using
   the '-p' flag
 o Always display an error message if an error occurred, based on patch from
   Klaus Weidner <klaus@atsec.com>
+o Included a patch from Hagen Paul Pfeifer <pfeifer@netlab.nec.de> to fix a
+  problem when building with LIBNL_VERSION >= 1006
 
 * Release Release 0.17 (September 28, 2006)
 ------------------------------------------------------------------------------
