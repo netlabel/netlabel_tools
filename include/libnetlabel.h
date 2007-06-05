@@ -67,21 +67,21 @@ typedef uint32_t nlbl_cv4_mtype;
 typedef uint8_t nlbl_cv4_tag;
 typedef struct nlbl_cv4_tag_array_s {
   nlbl_cv4_tag *array;
-  ssize_t size;
+  size_t size;
 } nlbl_cv4_tag_a;
 
 /* mls sensitivity levels */
 typedef uint32_t nlbl_cv4_lvl;
 typedef struct nlbl_cv4_lvl_array_s {
   nlbl_cv4_lvl *array;
-  ssize_t size;
+  size_t size;
 } nlbl_cv4_lvl_a;
 
 /* mls categories */
 typedef uint32_t nlbl_cv4_cat;
 typedef struct cv4_cat_array_s {
   nlbl_cv4_cat *array;
-  ssize_t size;
+  size_t size;
 } nlbl_cv4_cat_a;
 
 /*** management types */
