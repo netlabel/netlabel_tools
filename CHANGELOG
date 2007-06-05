@@ -11,7 +11,7 @@ o Included a patch from Hagen Paul Pfeifer <pfeifer@netlab.nec.de> to fix a
   problem when building with LIBNL_VERSION >= 1006
 o Only use size_t and not ssize_t to specify datum sizes/lengths
 
-* Release Release 0.17 (September 28, 2006)
+* Release 0.17 (September 28, 2006)
 ------------------------------------------------------------------------------
 o Changed to support the updated use of Netlink attributes by NetLabel
 o Ported to use the libnl (version 1.0-pre5/6) library
