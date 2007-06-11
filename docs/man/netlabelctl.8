@@ -1,84 +1,196 @@
-.TH "netlabelctl" 1 "14 July 2006" "paul.moore@hp.com" "NetLabel Documentation"
+.TH "netlabelctl" 1 "11 June 2007" "paul.moore@hp.com" "NetLabel Documentation"
+.//////////////////////////////////////////////////////////////////////////////
 .SH NAME
-netlabelctl \- NetLabel control utility
+.//////////////////////////////////////////////////////////////////////////////
+netlabelctl \- NetLabel management utility
+.//////////////////////////////////////////////////////////////////////////////
 .SH SYNOPSIS
+.//////////////////////////////////////////////////////////////////////////////
 .B netlabelctl
-[<flags>] <module> [<commands>]
+[<global flags>] <module> [<module commands>]
+.//////////////////////////////////////////////////////////////////////////////
 .SH DESCRIPTION
-.B netlabelctl
-allows privileged users to query and manipulate the NetLabel subsystem within
-the kernel.
+.//////////////////////////////////////////////////////////////////////////////
+The NetLabel management utility, netlabelctl, is a command line program
+designed to allow system administrators to configure the NetLabel system in the
+kernel.  The utility is based around different "modules" which correspond to
+the different types of NetLabel commands supported by the kernel.
+.//////////////////////////////////////////////////////////////////////////////
 .SH OPTIONS
-.TP
-Flags
-.TP
-.B \-h
+.//////////////////////////////////////////////////////////////////////////////
+.SS Global Flags
+.TP 5
+.B -h
 Help message
-.TP
-.B \-p
-Attempt to make the output "pretty"
-.TP
-.B \-t <seconds>
+.TP 5
+.B -p
+Attempt to make the output human readable or "pretty"
+.TP 5
+.B -t <seconds>
 Set a timeout to be used when waiting for the NetLabel subsystem to respond
-.TP
-.B \-v
+.TP 5
+.B -v
 Enable extra output
-.TP
-.B \-V
+.TP 5
+.B -V
 Display the version information
-.TP
-Modules
-.TP
+.//////////////////////////////////////////////////////////////////////////////
+.SS Supported Modules
+.TP 5
 .B mgmt
-The following commands are valid within this module
-.nf
-
-version
-protocols
-.fi
-.TP
+.P
+The management module is used to perform general queries about the NetLabel
+subsystem within the kernel.  The different commands and their syntax are
+listed below.
+.HP
+.I version
+.br
+Display the kernel's NetLabel management protocol version.
+.HP
+.I protocols
+.br
+Display the kernel's list of supported labeling protocols.
+.TP 5
 .B map
-The following commands are valid within this module
-.nf
-
-add default|domain:<domain> protocol:<protocol>[,<extra>]
-del default|domain:<domain>
-list
-.fi
-.TP
+.P
+The domain mapping module is used to map different NetLabel labeling protocols
+to either individual LSM domains or the default domain mapping.  It is up to
+each LSM to determine what defines a domain.  With SELinux, the normal SELinux
+domain should be used, i.e. "ping_t".  When specifying the labeling protocol
+to use for each domain mapping there is an optional "extra" field which is used
+to further identify the specific labeling protocol configuration.  When
+specifying the unlabeled protocol, "unlbl", there is no extra identification
+needed.  When specifying the CIPSO/IPv4 protocol, "cipsov4", the DOI value
+should be specified; see the EXAMPLES section for details.  The different
+commands and their syntax are listed below.
+.HP
+.I add default|domain:<domain> protocol:<protocol>[,<extra>]
+.br
+Add a new LSM domain to NetLabel protocol mapping.
+.HP
+.I del default|domain:<domain>
+.br
+Delete an existing LSM domain to NetLabel protocol mapping.
+.HP
+.I list
+.br
+Display all of the configured LSM domain to NetLabel protocol mappings.
+.TP 5
 .B unlbl
-The following commands are valid within this module
-.nf
-
-accept on|off
-list
-.fi
-.TP
+.P
+The unlabeled (unlbl) module controls the unlabeled labeling protocol which is
+used by domains for outbound traffic when packet labeling is not desired as
+well as when unlabeled packets are received by the system.  At present the
+unlabeled module is very simple, supporting only one configurable action:
+allow or disallow unlabeled packets to be delivered to user applications.  The
+different commands and their syntax are listed below.
+.HP
+.I accept on|off
+.br
+Toggle the unlabeled traffic accept flag.
+.HP
+.I list
+.br
+Display the status of the unlabeled accept flag.
+.TP 5
 .B cipsov4
-The following commands are valid within this module
-.nf
-
-add std doi:<DOI> tags:<T1>,<Tn> levels:<LL1>=<RL1>,<LLn>=<RLn>
-        categories:<LC1>=<RC1>,<LCn>=<RCn>
-add pass doi:<DOI> tags:<T1>,<Tn>
-del doi:<DOI>
-list [doi:<DOI>]
-.fi
+.P
+The CIPSO/IPv4 (cipsov4) module controls the CIPSO/IPv4 labeling engine in the
+kernel.  The CIPSO/IPv4 engine provided by NetLabel supports multiple Domains
+Of Interpretation (DOI) and the CIPSO/IPv4 module allows for different
+configurations for each DOI.  At present there are two types of configurations,
+the "std" configuration which allows on-the-fly translation of MLS sensitivity
+labels and the "pass" configuration which does not perform any translation of
+the MLS sensitivity label.  Regardless of which configuration type is chosen a
+DOI value must be specified as well as the list of CIPSO/IPv4 tag types to use
+when generating CIPSO/IPv4 packet labels.  The list of CIPSO/IPv4 tags is
+ordered such that when possible the first tag type listed is used when a
+CIPSO/IPv4 label is generated.  However, if it is not possible to use the
+first tag type then each tag type is checked, in order, until a suitable tag
+type is found.  If a valid tag type can not be found then the operation
+causing the CIPSO/IPv4 label will fail, typically this occurs whenever a new
+socket is created.  The different commands and their syntax are listed below.
+.HP
+.I add std doi:<DOI> tags:<T1>,<Tn> levels:<LL1>=<RL1>,<LLn>=<RLn> categories:<LC1>=<RC1>,<LCn>=<RCn>
+.br
+Add a new CIPSO/IPv4 configuration using the standard/translated mapping with
+the given level and category translations.  The levels are translated in such a
+way that the local level "LLn" is translated to the remote, on-the-wire level
+of "RLn"; the reverse translation is done for incoming packets.  The same
+translation is done for the categories using "LCn" and "RCn".  In order for a
+packet to be accepted, or a socket created by an application, there must be a
+translation for the sensitivity level and all the categories present in the MLS
+sensitivity label; if the entire requested sensitivity label can not be
+translated the application will fail.
+.HP
+.I add pass doi:<DOI> tags:<T1>,<Tn>
+.br
+Add a new CIPSO/IPv4 configuration without any level or category translations.
+.HP
+.I del doi:<DOI>
+.br
+Delete an existing CIPSO/IPv4 configuration with the given DOI value.  If any
+LSM domain mappings are present which make use of this DOI they will also be
+deleted.
+.HP
+.I list [doi:<DOI>]
+.br
+Display a list of all the CIPSO/IPv4 configurations or just the configuration
+matching the optionally specified DOI.
+.//////////////////////////////////////////////////////////////////////////////
 .SH "EXAMPLES"
-.TP
-.B netlabelctl cipsov4 add std doi:8 tags:1 levels:0=0,1=1 categories:0=1,1=0
-Add a CIPSO/IPv4 mapping with a DOI value of "8", using CIPSO tag "1"
+.//////////////////////////////////////////////////////////////////////////////
+.TP 5
+.I netlabelctl cipsov4 add pass doi:16 tags:1
+.br
+Add a CIPSO/IPv4 configuration with a DOI value of "16", using CIPSO tag "1"
+(the permissive bitmap tag).  The CIPSO and LSM levels/categories are passed
+through the NetLabel subsystem without any translation.
+.HP
+.I netlabelctl cipsov4 add std doi:8 tags:1 levels:0=0,1=1 categories:0=1,1=0
+.br
+Add a CIPSO/IPv4 configuration with a DOI value of "8", using CIPSO tag "1"
 (the permissive bitmap tag).  The specified mapping converts local LSM levels
 "0" and "1" to CIPSO levels "0" and "1" respectively while local LSM categories
 "0" and "1" are mapped to CIPSO categories "1" and "0" respectively.
-.TP
-.B netlabelctl map add domain:lsm_specific_string protocol:cipsov4,8
-Add a domain mapping so that all outgoing packets asscoiated with the
-specified LSM domain string will be labeled according to the CIPSO/IPv4
-protocol using DOI 8.
+.HP
+.I netlabelctl -p cipsov4 list
+.br
+Display all of the CIPSO/IPv4 configurations in a human readable format.
+.HP
+.I netlabelctl -p cipsov4 list doi:16
+.br
+Display specific information about the CIPSO/IPv4 DOI 16 configuration.
+.HP
+.I netlabelctl cipsov4 del doi:8
+.br
+Delete the CIPSO/IPv4 configuration assigned to DOI 8.  In addition to
+removing the CIPSO/IPv4 configuration any domain mappings using this
+configuration will also be removed.
+.HP
+.I netlabelctl map add domain:lsm_domain protocol:cipsov4,8
+.br
+Add a domain mapping so that all outgoing packets sent from the "lsm_domain"
+will be labeled according to the CIPSO/IPv4 protocol using DOI 8.
+.HP
+.I netlabelctl -p map list
+.br
+Display all of the domain mappings in a human readable format.
+.HP
+.I netlabelctl del domain:lsm_domain
+.br
+Delete the domain mapping for the "lsm_domain", packets sent from the
+"lsm_domain" will fallback to the default NetLabel mapping.
+.//////////////////////////////////////////////////////////////////////////////
 .SH "NOTES"
-This program is currently under development, please report any bugs to the author.
+.//////////////////////////////////////////////////////////////////////////////
+This program is currently under development, please report any bugs to the
+author.
+.//////////////////////////////////////////////////////////////////////////////
 .SH "AUTHOR"
+.//////////////////////////////////////////////////////////////////////////////
 Paul Moore <paul.moore@hp.com>
+.//////////////////////////////////////////////////////////////////////////////
 .SH "SEE ALSO"
+.//////////////////////////////////////////////////////////////////////////////
 <other pages to be created at a future date>
