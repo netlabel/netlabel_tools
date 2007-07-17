@@ -51,11 +51,10 @@ the following command:
 Now that you have removed any existing NetLabel configuration you can setup a
 basic CIPSO configuration.  The first step is to add a CIPSO/IPv4 definition
 to the kernel.  The command below creates a CIPSO/IPv4 definition using a DOI
-value of 1, the permissive bitmask tag, and three levels and categories both
-mapping straight from the CIPSO values to the local values.
+value of 1, the permissive bitmask tag (value 1), and a pass through mapping
+meaning the CIPSO MLS values are passed straight through to the LSM.
 
- # netlabelctl cipsov4 add std doi:1 tags:1 levels:0=0,1=1,2=2 \
-   categories:0=0,1=1,2=2
+ # netlabelctl cipsov4 add pass doi:1 tags:1
 
 The next step is to tell the NetLabel system to use this CIPSO/IPv4 defintion
 by default.  You do that with the following command:
