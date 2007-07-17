@@ -16,6 +16,7 @@ o Removed the RPM specfile which included all contributions by Steve Grubb
 o Updated copyright notice to GPLv2 only, received explicit approval from both
   Klaus Weidner <klaus@atsec.com> and
   Hagen Paul Pfeifer <pfeifer@netlab.nec.de>
+o Updated the README
 
 * Release 0.17 (September 28, 2006)
 ------------------------------------------------------------------------------
