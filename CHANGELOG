@@ -11,6 +11,11 @@ o Included a patch from Hagen Paul Pfeifer <pfeifer@netlab.nec.de> to fix a
   problem when building with LIBNL_VERSION >= 1006
 o Only use size_t and not ssize_t to specify datum sizes/lengths
 o Updated the netlabelctl man page with more text and examples
+o Removed the RPM specfile which included all contributions by Steve Grubb
+  <sgrubb@redhat.com>
+o Updated copyright notice to GPLv2 only, received explicit approval from both
+  Klaus Weidner <klaus@atsec.com> and
+  Hagen Paul Pfeifer <pfeifer@netlab.nec.de>
 
 * Release 0.17 (September 28, 2006)
 ------------------------------------------------------------------------------
