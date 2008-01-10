@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include <linux/types.h>
+#include <netinet/in.h>
 #include <netlink/netlink.h>
 #include <netlink/msg.h>
 #include <netlink/attr.h>
@@ -53,6 +54,28 @@ typedef uint16_t nlbl_cmd;
 /*** protocol type */
 
 typedef uint32_t nlbl_proto;
+
+/*** network interface type */
+
+typedef char *nlbl_netdev;
+
+/*** network address type */
+
+typedef struct nlbl_mgmt_netaddr_s {
+  short type;
+  union {
+    struct in_addr v4;
+    struct in6_addr v6;
+  } addr;
+  union {
+    struct in_addr v4;
+    struct in6_addr v6;
+  } mask;
+} nlbl_netaddr;
+
+/*** security label/context type */
+
+typedef char *nlbl_secctx;
 
 /*** cipso/ipv4 types */
 
@@ -84,7 +107,8 @@ typedef struct cv4_cat_array_s {
 
 /*** management types */
 
-typedef struct nlbl_mgmt_domain_s {
+/* domain mapping */
+typedef struct nlbl_dommap_s {
   char *domain;
   nlbl_proto proto_type;
   union {
@@ -92,7 +116,14 @@ typedef struct nlbl_mgmt_domain_s {
       nlbl_cv4_doi doi;
     } cv4;
   } proto;
-} nlbl_mgmt_domain;
+} nlbl_dommap;
+
+/* address mapping */
+typedef struct nlbl_addrmap_s {
+  nlbl_netdev dev;
+  nlbl_netaddr addr;
+  nlbl_secctx label;
+} nlbl_addrmap;
 
 /*
  * Functions
@@ -131,16 +162,29 @@ struct nlattr *nlbl_attr_find(nlbl_msg *msg, int nla_type);
 /* management */
 int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version);
 int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols);
-int nlbl_mgmt_add(nlbl_handle *hndl, nlbl_mgmt_domain *domain);
-int nlbl_mgmt_adddef(nlbl_handle *hndl, nlbl_mgmt_domain *domain);
+int nlbl_mgmt_add(nlbl_handle *hndl, nlbl_dommap *domain);
+int nlbl_mgmt_adddef(nlbl_handle *hndl, nlbl_dommap *domain);
 int nlbl_mgmt_del(nlbl_handle *hndl, char *domain);
 int nlbl_mgmt_deldef(nlbl_handle *hndl);
-int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_mgmt_domain **domains);
-int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_mgmt_domain *domain);
+int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_dommap **domains);
+int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_dommap *domain);
 
 /* unlabeled */
 int nlbl_unlbl_accept(nlbl_handle *hndl, uint8_t allow_flag);
 int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag);
+int nlbl_unlbl_staticadd(nlbl_handle *hndl,
+			 nlbl_netdev dev,
+			 nlbl_netaddr *addr,
+			 nlbl_secctx label);
+int nlbl_unlbl_staticadddef(nlbl_handle *hndl,
+			    nlbl_netaddr *addr,
+			    nlbl_secctx label);
+int nlbl_unlbl_staticdel(nlbl_handle *hndl,
+			 nlbl_netdev dev,
+			 nlbl_netaddr *addr);
+int nlbl_unlbl_staticdeldef(nlbl_handle *hndl, nlbl_netaddr *addr);
+int nlbl_unlbl_staticlist(nlbl_handle *hndl, nlbl_addrmap **addrs);
+int nlbl_unlbl_staticlistdef(nlbl_handle *hndl, nlbl_addrmap **addrs);
 
 /* cipso/ipv4 */
 int nlbl_cipsov4_add_std(nlbl_handle *hndl,

@@ -46,7 +46,7 @@ int map_add(int argc, char *argv[])
   int ret_val;
   uint32_t iter;
   uint8_t def_flag = 0;
-  nlbl_mgmt_domain domain;
+  nlbl_dommap domain;
   char *domain_proto_extra = NULL;
 
   /* sanity checks */
@@ -155,7 +155,7 @@ int map_del(int argc, char *argv[])
 int map_list(int argc, char *argv[])
 {
   int ret_val;
-  nlbl_mgmt_domain *domain_p = NULL;
+  nlbl_dommap *domain_p = NULL;
   size_t count;
   uint32_t iter;
 
@@ -166,10 +166,10 @@ int map_list(int argc, char *argv[])
   count = ret_val;
 
   /* get the default mapping */
-  domain_p = realloc(domain_p, sizeof(nlbl_mgmt_domain) * (count + 1));
+  domain_p = realloc(domain_p, sizeof(nlbl_dommap) * (count + 1));
   if (domain_p == NULL)
     goto list_return;
-  memset(&domain_p[count], 0, sizeof(nlbl_mgmt_domain));
+  memset(&domain_p[count], 0, sizeof(nlbl_dommap));
   ret_val = nlbl_mgmt_listdef(NULL, &domain_p[count]);
   if (ret_val < 0 && ret_val != -ENOENT)
     goto list_return;

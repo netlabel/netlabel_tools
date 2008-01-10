@@ -21,6 +21,9 @@ o Add libnl v 1.0-pre8 compatible code and make it the default (needed for
   Fedora Rawhide post F8)
 o Renamed the CIPSOv4 'std' mapping to 'trans' to better reflect it's usage,
   'std' still works but is marked as deprecated
+o Merged the 'static-label' branch which provides fallback/static labeling
+  support
+o Renamed the 'nlbl_mgmt_domain' structure to 'nlbl_dommap'
 
 * Release 0.17 (September 28, 2006)
 ------------------------------------------------------------------------------
