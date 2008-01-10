@@ -50,7 +50,11 @@ nlbl_msg *nlbl_msg_new(void)
   struct genlmsghdr genl_hdr;
 
   /* create the message with a simple netlink header */
+#if LIBNL_VERSION >= 1008
+  msg = nlmsg_alloc();
+#else
   msg = nlmsg_build_no_hdr();
+#endif
   if (msg == NULL)
     goto msg_new_failure;
 

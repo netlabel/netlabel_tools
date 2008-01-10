@@ -35,11 +35,12 @@ struct nlbl_handle_s {
 /* Specify which version of libnl we are using */
 /*  1.0-pre5 => 1005 */
 /*  1.0-pre6 => 1006 */
-#define LIBNL_VERSION           1005
+/*  1.0-pre8 => 1008 */
+#define LIBNL_VERSION           1008
 
 /* XXX - this whole block will most likely go away once libnl supports Generic
  * Netlink */
-#if 1 /* Generic Netlink types */
+#if LIBNL_VERSION <= 1006 /* Generic Netlink types */
 
 /* Generic Netlink message header */
 struct genlmsghdr {

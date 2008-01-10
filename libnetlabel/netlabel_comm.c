@@ -98,7 +98,10 @@ nlbl_handle *nlbl_comm_open(void)
     goto open_failure;
 
   /* set the netlink handle properties */
-#if LIBNL_VERSION >= 1006
+#if LIBNL_VERSION >= 1008
+  nl_socket_set_peer_port(hndl->nl_hndl, 0);
+  nl_set_passcred(hndl->nl_hndl, 1);
+#elif LIBNL_VERSION == 1006
   nl_handle_set_peer_pid(hndl->nl_hndl, 0);
   nl_set_passcred(hndl->nl_hndl, 1);
 #endif
@@ -175,7 +178,11 @@ int nlbl_comm_recv_raw(nlbl_handle *hndl, unsigned char **data)
    * is waiting to be read from the handle */
   timeout.tv_sec = nlcomm_read_timeout;
   timeout.tv_usec = 0;
+#if LIBNL_VERSION >= 1008
+  nl_fd = nl_socket_get_fd(hndl->nl_hndl);
+#else
   nl_fd = nl_handle_get_fd(hndl->nl_hndl);
+#endif
   FD_ZERO(&read_fds);
   FD_SET(nl_fd, &read_fds);
   ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
@@ -248,7 +255,11 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
    * is waiting to be read from the handle */
   timeout.tv_sec = nlcomm_read_timeout;
   timeout.tv_usec = 0;
+#if LIBNL_VERSION >= 1008
+  nl_fd = nl_socket_get_fd(hndl->nl_hndl);
+#else
   nl_fd = nl_handle_get_fd(hndl->nl_hndl);
+#endif
   FD_ZERO(&read_fds);
   FD_SET(nl_fd, &read_fds);
   ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
