@@ -63,7 +63,10 @@ int cipsov4_add(int argc, char *argv[])
   /* parse the arguments */
   arg_iter = 0;
   while (arg_iter < argc && argv[arg_iter] != NULL) {
-    if (strcmp(argv[arg_iter], "std") == 0) {
+    if (strcmp(argv[arg_iter], "trans") == 0) {
+      cipso_type = CIPSO_V4_MAP_STD;
+    } else if (strcmp(argv[arg_iter], "std") == 0) {
+      fprintf(stderr, MSG_OLD("use 'trans' instead of 'std'\n"));
       cipso_type = CIPSO_V4_MAP_STD;
     } else if (strcmp(argv[arg_iter], "pass") == 0) {
       cipso_type = CIPSO_V4_MAP_PASS;

@@ -38,6 +38,8 @@ extern uint32_t opt_pretty;
 #define MSG_WARN_MOD(_m,_x) "%s: warning[%s], "_x,nlctl_name,_m
 #define MSG_ERR(_x) "%s: error, "_x,nlctl_name
 #define MSG_ERR_MOD(_m,_x) "%s: error[%s], "_x,nlctl_name,_m
+#define MSG_OLD(_x) "%s: deprecated, "_x,nlctl_name
+#define MSG_OLD_MOD(_m,_x) "%s: deprecated[%s], "_x,nlctl_name,_m
 
 /* message display */
 #define MSG(_x) (opt_pretty?_x:"")
