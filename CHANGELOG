@@ -17,6 +17,8 @@ o Updated copyright notice to GPLv2 only, received explicit approval from both
   Klaus Weidner <klaus@atsec.com> and
   Hagen Paul Pfeifer <pfeifer@netlab.nec.de>
 o Updated the README
+o Add libnl v 1.0-pre8 compatible code and make it the default (needed for
+  Fedora Rawhide post F8)
 
 * Release 0.17 (September 28, 2006)
 ------------------------------------------------------------------------------
