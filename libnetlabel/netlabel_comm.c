@@ -25,9 +25,16 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <linux/types.h>
+#include <sys/types.h>
+
+#ifndef __USE_GNU
+#define __USE_GNU
+#include <sys/socket.h>
+#undef __USE_GNU
+#else
+#include <sys/socket.h>
+#endif
 
 #include <libnetlabel.h>
 
@@ -193,14 +200,12 @@ int nlbl_comm_recv_raw(nlbl_handle *hndl, unsigned char **data)
 
   /* perform the read operation */
   *data = NULL;
-#if LIBNL_VERSION == 1005
-  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
+#if LIBNL_VERSION >= 1006
+  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
   if (ret_val < 0)
     return ret_val;
-  /* XXX - avoid a compiler warning about unused variables */
-  creds = NULL;
-#elif LIBNL_VERSION >= 1006
-  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
+#else
+  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
   if (ret_val < 0)
     return ret_val;
 #endif
@@ -269,12 +274,16 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
     return -EAGAIN;
 
   /* perform the read operation */
-#if LIBNL_VERSION == 1005
-  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data);
+#if LIBNL_VERSION >= 1100
+  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data, &creds);
   if (ret_val < 0)
     return ret_val;
 #elif LIBNL_VERSION >= 1006
-  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data, &creds);
+  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
+  if (ret_val < 0)
+    return ret_val;
+#else
+  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
   if (ret_val < 0)
     return ret_val;
 #endif

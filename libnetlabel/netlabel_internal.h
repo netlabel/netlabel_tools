@@ -36,7 +36,8 @@ struct nlbl_handle_s {
 /*  1.0-pre5 => 1005 */
 /*  1.0-pre6 => 1006 */
 /*  1.0-pre8 => 1008 */
-#define LIBNL_VERSION           1008
+/*  1.1      => 1100 */
+#define LIBNL_VERSION           1100
 
 /* XXX - this whole block will most likely go away once libnl supports Generic
  * Netlink */
