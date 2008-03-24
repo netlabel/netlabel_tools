@@ -209,7 +209,7 @@ static int cipsov4_list_all(void)
   count = ret_val;
 
   if (opt_pretty) {
-    printf("Configured CIPSOv4 mappings (%u)\n", count);
+    printf("Configured CIPSOv4 mappings (%zu)\n", count);
     for (iter = 0; iter < count; iter++) {
       /* doi value */
       printf(" DOI value : %u\n", doi_list[iter]);
@@ -288,7 +288,7 @@ static int cipsov4_list_doi(uint32_t doi)
 
   if (opt_pretty) {
     printf("Configured CIPSOv4 mapping (DOI = %u)\n", doi);
-    printf(" tags (%u): \n", tags.size);
+    printf(" tags (%zu): \n", tags.size);
     for (iter = 0; iter < tags.size; iter++) {
       switch (tags.array[iter]) {
       case 1:
@@ -314,13 +314,13 @@ static int cipsov4_list_doi(uint32_t doi)
     switch (maptype) {
     case CIPSO_V4_MAP_STD:
       /* levels */
-      printf(" levels (%u): \n", lvls.size);
+      printf(" levels (%zu): \n", lvls.size);
       for (iter = 0; iter < lvls.size; iter++)
 	printf("   %u = %u\n", 
 	       lvls.array[iter * 2],
 	       lvls.array[iter * 2 + 1]);
       /* categories */
-      printf(" categories (%u): \n", cats.size);
+      printf(" categories (%zu): \n", cats.size);
       for (iter = 0; iter < cats.size; iter++)
 	printf("   %u = %u\n",
 	       cats.array[iter * 2],

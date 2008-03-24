@@ -118,7 +118,7 @@ int unlbl_list(void)
 
   /* display the static label mappings */
   if (opt_pretty) {
-    printf("Configured NetLabel address mappings (%u)\n", count);
+    printf("Configured NetLabel address mappings (%zu)\n", count);
     for (iter = 0; iter < count; iter++) {
       iter_p = &addr_p[iter];
       /* interface */

@@ -180,7 +180,7 @@ int map_list(int argc, char *argv[])
 
   /* display the results */
   if (opt_pretty) {
-    printf("Configured NetLabel domain mappings (%u)\n", count);
+    printf("Configured NetLabel domain mappings (%zu)\n", count);
     for (iter = 0; iter < count; iter++) {
       /* domain string */
       printf(" domain: ");
