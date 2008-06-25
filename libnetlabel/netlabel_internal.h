@@ -28,7 +28,7 @@
 #include <netlink/netlink.h>
 
 /* NetLabel communication handle */
-struct nlbl_handle_s {
+struct nlbl_handle {
 	struct nl_handle *nl_hndl;
 };
 

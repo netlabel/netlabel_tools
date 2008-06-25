@@ -91,7 +91,7 @@ msg_new_failure:
  * values on failure.
  *
  */
-static int nlbl_mgmt_recv(nlbl_handle *hndl, nlbl_msg **msg)
+static int nlbl_mgmt_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 {
 	int ret_val;
 	struct nlmsghdr *nl_hdr;
@@ -154,7 +154,7 @@ static int nlbl_mgmt_parse_ack(nlbl_msg *msg)
 int nlbl_mgmt_init(void)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *hndl;
+	struct nlbl_handle *hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 	struct nlmsghdr *nl_hdr;
@@ -249,10 +249,10 @@ init_return:
  * success, zero if no protocols are supported, and negative values on failure.
  *
  */
-int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
+int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	unsigned char *data = NULL;
 	nlbl_msg *msg = NULL;
 	struct nlmsghdr *nl_hdr;
@@ -372,10 +372,10 @@ protocols_return:
  * on failure.
  *
  */
-int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version)
+int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 	struct genlmsghdr *genl_hdr;
@@ -457,10 +457,10 @@ int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version)
  * Returns zero on success, negative values on failure.
 			*
 			*/
-int nlbl_mgmt_add(nlbl_handle *hndl, struct nlbl_dommap *domain)
+int nlbl_mgmt_add(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 
@@ -536,10 +536,10 @@ add_return:
  * on failure.
  *
  */
-int nlbl_mgmt_adddef(nlbl_handle *hndl, struct nlbl_dommap *domain)
+int nlbl_mgmt_adddef(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 
@@ -611,10 +611,10 @@ adddef_return:
  * NetLabel handle.  Returns zero on success, negative values on failure.
  *
  */
-int nlbl_mgmt_del(nlbl_handle *hndl, char *domain)
+int nlbl_mgmt_del(struct nlbl_handle *hndl, char *domain)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 
@@ -678,10 +678,10 @@ del_return:
  *  handle.  Returns zero on success, negative values on failure.
  *
  */
-int nlbl_mgmt_deldef(nlbl_handle *hndl)
+int nlbl_mgmt_deldef(struct nlbl_handle *hndl)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 
@@ -740,10 +740,10 @@ deldef_return:
  * on failure.
  *
  */
-int nlbl_mgmt_listdef(nlbl_handle *hndl, struct nlbl_dommap *domain)
+int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 	struct genlmsghdr *genl_hdr;
@@ -835,10 +835,10 @@ listdef_return:
  * zero if no domains are specified, and negative values on failure.
  *
  */
-int nlbl_mgmt_listall(nlbl_handle *hndl, struct nlbl_dommap **domains)
+int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	unsigned char *data = NULL;
 	nlbl_msg *msg = NULL;
 	struct nlmsghdr *nl_hdr;

@@ -55,7 +55,7 @@ static uint32_t nlcomm_read_timeout = 10;
  * Return true if @hndl is valid, false otherwise.
  *
  */
-static int nlbl_comm_hndl_valid(nlbl_handle *hndl)
+static int nlbl_comm_hndl_valid(struct nlbl_handle *hndl)
 {
 	return (hndl != NULL && hndl->nl_hndl != NULL);
 }
@@ -90,9 +90,9 @@ void nlbl_comm_timeout(uint32_t seconds)
  * structure.
  *
  */
-nlbl_handle *nlbl_comm_open(void)
+struct nlbl_handle *nlbl_comm_open(void)
 {
-	nlbl_handle *hndl;
+	struct nlbl_handle *hndl;
 
 	/* allocate the handle memory */
 	hndl = calloc(1, sizeof(*hndl));
@@ -140,7 +140,7 @@ open_failure:
  * on failure.
  *
  */
-int nlbl_comm_close(nlbl_handle *hndl)
+int nlbl_comm_close(struct nlbl_handle *hndl)
 {
 	/* sanity checks */
 	if (!nlbl_comm_hndl_valid(hndl))
@@ -168,7 +168,7 @@ int nlbl_comm_close(nlbl_handle *hndl)
  * success, zero on EOF, and negative values on failure.
  *
  */
-int nlbl_comm_recv_raw(nlbl_handle *hndl, unsigned char **data)
+int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data)
 {
 	int ret_val;
 	struct sockaddr_nl peer_nladdr;
@@ -239,7 +239,7 @@ recv_raw_failure:
  * success, zero on EOF, and negative values on failure.
  *
  */
-int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
+int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 {
 	int ret_val;
 	struct sockaddr_nl peer_nladdr;
@@ -337,7 +337,7 @@ recv_failure:
  * of bytes written on success, or negative values on failure.
  *
  */
-int nlbl_comm_send(nlbl_handle *hndl, nlbl_msg *msg)
+int nlbl_comm_send(struct nlbl_handle *hndl, nlbl_msg *msg)
 {
 	struct nlmsghdr *nl_hdr;
 	struct ucred creds;

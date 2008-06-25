@@ -91,7 +91,7 @@ msg_new_failure:
  * values on failure.
  *
  */
-static int nlbl_unlbl_recv(nlbl_handle *hndl, nlbl_msg **msg)
+static int nlbl_unlbl_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 {
 	int ret_val;
 	struct nlmsghdr *nl_hdr;
@@ -154,7 +154,7 @@ static int nlbl_unlbl_parse_ack(nlbl_msg *msg)
 int nlbl_unlbl_init(void)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *hndl;
+	struct nlbl_handle *hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 	struct nlmsghdr *nl_hdr;
@@ -249,10 +249,10 @@ init_return:
  * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_accept(nlbl_handle *hndl, uint8_t allow_flag)
+int nlbl_unlbl_accept(struct nlbl_handle *hndl, uint8_t allow_flag)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 
@@ -318,10 +318,10 @@ accept_return:
  * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag)
+int nlbl_unlbl_list(struct nlbl_handle *hndl, uint8_t *allow_flag)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 	struct genlmsghdr *genl_hdr;
@@ -403,13 +403,13 @@ list_return:
  * handle.  Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_staticadd(nlbl_handle *hndl,
+int nlbl_unlbl_staticadd(struct nlbl_handle *hndl,
 			 nlbl_netdev dev,
 			 struct nlbl_netaddr *addr,
 			 nlbl_secctx label)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 
@@ -511,12 +511,12 @@ staticadd_return:
  * NetLabel handle.  Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_staticadddef(nlbl_handle *hndl,
+int nlbl_unlbl_staticadddef(struct nlbl_handle *hndl,
 			    struct nlbl_netaddr *addr,
 			    nlbl_secctx label)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 
@@ -615,12 +615,12 @@ staticadddef_return:
  * handle.  Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_staticdel(nlbl_handle *hndl,
+int nlbl_unlbl_staticdel(struct nlbl_handle *hndl,
 			 nlbl_netdev dev,
 			 struct nlbl_netaddr *addr)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 
@@ -719,11 +719,11 @@ staticdel_return:
  * NetLabel handle.  Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_staticdeldef(nlbl_handle *hndl,
+int nlbl_unlbl_staticdeldef(struct nlbl_handle *hndl,
 			    struct nlbl_netaddr *addr)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 
@@ -818,10 +818,10 @@ staticdeldef_return:
  * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_staticlist(nlbl_handle *hndl, struct nlbl_addrmap **addrs)
+int nlbl_unlbl_staticlist(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	unsigned char *data = NULL;
 	nlbl_msg *msg = NULL;
 	struct nlmsghdr *nl_hdr;
@@ -991,10 +991,10 @@ staticlist_return:
  * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_staticlistdef(nlbl_handle *hndl, struct nlbl_addrmap **addrs)
+int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	unsigned char *data = NULL;
 	nlbl_msg *msg = NULL;
 	struct nlmsghdr *nl_hdr;

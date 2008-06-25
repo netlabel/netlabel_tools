@@ -91,7 +91,7 @@ msg_new_failure:
  * values on failure.
  *
  */
-static int nlbl_cipsov4_recv(nlbl_handle *hndl, nlbl_msg **msg)
+static int nlbl_cipsov4_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 {
 	int ret_val;
 	struct nlmsghdr *nl_hdr;
@@ -154,7 +154,7 @@ static int nlbl_cipsov4_parse_ack(nlbl_msg *msg)
 int nlbl_cipsov4_init(void)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *hndl;
+	struct nlbl_handle *hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 	struct nlmsghdr *nl_hdr;
@@ -252,14 +252,14 @@ init_return:
  * failure.
  *
  */
-int nlbl_cipsov4_add_std(nlbl_handle *hndl,
+int nlbl_cipsov4_add_std(struct nlbl_handle *hndl,
                          nlbl_cv4_doi doi,
                          struct nlbl_cv4_tag_a *tags,
                          struct nlbl_cv4_lvl_a *lvls,
                          struct nlbl_cv4_cat_a *cats)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *nest_msg_a = NULL;
 	nlbl_msg *nest_msg_b = NULL;
@@ -410,12 +410,12 @@ add_std_return:
  * failure.
  *
  */
-int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
+int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 			  nlbl_cv4_doi doi,
 			  struct nlbl_cv4_tag_a *tags)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *nest_msg = NULL;
 	nlbl_msg *ans_msg = NULL;
@@ -500,10 +500,10 @@ add_pass_return:
  * handle.  Returns zero on success, negative values on failure. 
  *
  */
-int nlbl_cipsov4_del(nlbl_handle *hndl, nlbl_cv4_doi doi)
+int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 
@@ -573,7 +573,7 @@ del_return:
  * zero on success, negative values on failure.   
  *
  */
-int nlbl_cipsov4_list(nlbl_handle *hndl,
+int nlbl_cipsov4_list(struct nlbl_handle *hndl,
                       nlbl_cv4_doi doi,
 		      nlbl_cv4_mtype *mtype,
                       struct nlbl_cv4_tag_a *tags,
@@ -581,7 +581,7 @@ int nlbl_cipsov4_list(nlbl_handle *hndl,
                       struct nlbl_cv4_cat_a *cats)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
 	struct genlmsghdr *genl_hdr;
@@ -749,12 +749,12 @@ list_return:
  * success, zero if no mappings exist, and negative values on failure.   
  *
  */
-int nlbl_cipsov4_listall(nlbl_handle *hndl,
+int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 			 nlbl_cv4_doi **dois,
 			 nlbl_cv4_mtype **mtypes)
 {
 	int ret_val = -ENOMEM;
-	nlbl_handle *p_hndl = hndl;
+	struct nlbl_handle *p_hndl = hndl;
 	unsigned char *data = NULL;
 	nlbl_msg *msg = NULL;
 	struct nlmsghdr *nl_hdr;

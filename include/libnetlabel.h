@@ -47,7 +47,7 @@
 
 /*** communication types */
 
-typedef struct nlbl_handle_s nlbl_handle;
+struct nlbl_handle;
 typedef struct nl_msg nlbl_msg;
 typedef uint16_t nlbl_cmd;
 
@@ -140,11 +140,11 @@ void nlbl_exit(void);
 void nlbl_comm_timeout(uint32_t seconds);
 
 /* netlabel handle i/o */
-nlbl_handle *nlbl_comm_open(void);
-int nlbl_comm_close(nlbl_handle *hndl);
-int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg);
-int nlbl_comm_recv_raw(nlbl_handle *hndl, unsigned char **data);
-int nlbl_comm_send(nlbl_handle *hndl, nlbl_msg *msg);
+struct nlbl_handle *nlbl_comm_open(void);
+int nlbl_comm_close(struct nlbl_handle *hndl);
+int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg);
+int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data);
+int nlbl_comm_send(struct nlbl_handle *hndl, nlbl_msg *msg);
 
 /* netlabel message handling */
 nlbl_msg *nlbl_msg_new(void);
@@ -160,49 +160,49 @@ struct nlattr *nlbl_attr_find(nlbl_msg *msg, int nla_type);
 /*** operations */
 
 /* management */
-int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version);
-int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols);
-int nlbl_mgmt_add(nlbl_handle *hndl, struct nlbl_dommap *domain);
-int nlbl_mgmt_adddef(nlbl_handle *hndl, struct nlbl_dommap *domain);
-int nlbl_mgmt_del(nlbl_handle *hndl, char *domain);
-int nlbl_mgmt_deldef(nlbl_handle *hndl);
-int nlbl_mgmt_listall(nlbl_handle *hndl, struct nlbl_dommap **domains);
-int nlbl_mgmt_listdef(nlbl_handle *hndl, struct nlbl_dommap *domain);
+int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version);
+int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols);
+int nlbl_mgmt_add(struct nlbl_handle *hndl, struct nlbl_dommap *domain);
+int nlbl_mgmt_adddef(struct nlbl_handle *hndl, struct nlbl_dommap *domain);
+int nlbl_mgmt_del(struct nlbl_handle *hndl, char *domain);
+int nlbl_mgmt_deldef(struct nlbl_handle *hndl);
+int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains);
+int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain);
 
 /* unlabeled */
-int nlbl_unlbl_accept(nlbl_handle *hndl, uint8_t allow_flag);
-int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag);
-int nlbl_unlbl_staticadd(nlbl_handle *hndl,
+int nlbl_unlbl_accept(struct nlbl_handle *hndl, uint8_t allow_flag);
+int nlbl_unlbl_list(struct nlbl_handle *hndl, uint8_t *allow_flag);
+int nlbl_unlbl_staticadd(struct nlbl_handle *hndl,
 			 nlbl_netdev dev,
 			 struct nlbl_netaddr *addr,
 			 nlbl_secctx label);
-int nlbl_unlbl_staticadddef(nlbl_handle *hndl,
+int nlbl_unlbl_staticadddef(struct nlbl_handle *hndl,
 			    struct nlbl_netaddr *addr,
 			    nlbl_secctx label);
-int nlbl_unlbl_staticdel(nlbl_handle *hndl,
+int nlbl_unlbl_staticdel(struct nlbl_handle *hndl,
 			 nlbl_netdev dev,
 			 struct nlbl_netaddr *addr);
-int nlbl_unlbl_staticdeldef(nlbl_handle *hndl, struct nlbl_netaddr *addr);
-int nlbl_unlbl_staticlist(nlbl_handle *hndl, struct nlbl_addrmap **addrs);
-int nlbl_unlbl_staticlistdef(nlbl_handle *hndl, struct nlbl_addrmap **addrs);
+int nlbl_unlbl_staticdeldef(struct nlbl_handle *hndl, struct nlbl_netaddr *addr);
+int nlbl_unlbl_staticlist(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs);
+int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs);
 
 /* cipso/ipv4 */
-int nlbl_cipsov4_add_std(nlbl_handle *hndl,
+int nlbl_cipsov4_add_std(struct nlbl_handle *hndl,
                          nlbl_cv4_doi doi,
                          struct nlbl_cv4_tag_a *tags,
                          struct nlbl_cv4_lvl_a *lvls,
                          struct nlbl_cv4_cat_a *cats);
-int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
+int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 			  nlbl_cv4_doi doi,
 			  struct nlbl_cv4_tag_a *tags);
-int nlbl_cipsov4_del(nlbl_handle *hndl, nlbl_cv4_doi doi);
-int nlbl_cipsov4_list(nlbl_handle *hndl,
+int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi);
+int nlbl_cipsov4_list(struct nlbl_handle *hndl,
                       nlbl_cv4_doi doi,
 		      nlbl_cv4_mtype *mtype,
                       struct nlbl_cv4_tag_a *tags,
                       struct nlbl_cv4_lvl_a *lvls,
                       struct nlbl_cv4_cat_a *cats);
-int nlbl_cipsov4_listall(nlbl_handle *hndl,
+int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 			 nlbl_cv4_doi **dois,
 			 nlbl_cv4_mtype **mtypes);
 
