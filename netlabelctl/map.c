@@ -195,10 +195,12 @@ int map_list(int argc, char *argv[])
 				printf("UNLABELED\n");
 				break;
 			case NETLBL_NLTYPE_CIPSOV4:
-				printf("CIPSOv4, DOI = %u\n", domain_p[iter].proto.cv4.doi);
+				printf("CIPSOv4, DOI = %u\n",
+				       domain_p[iter].proto.cv4.doi);
 				break;
 			default:
-				printf("UNKNOWN(%u)\n", domain_p[iter].proto_type);
+				printf("UNKNOWN(%u)\n",
+				       domain_p[iter].proto_type);
 				break;
 			}
 		}
@@ -216,10 +218,12 @@ int map_list(int argc, char *argv[])
 				printf("UNLABELED");
 				break;
 			case NETLBL_NLTYPE_CIPSOV4:
-				printf("CIPSOv4,%u", domain_p[iter].proto.cv4.doi);
+				printf("CIPSOv4,%u",
+				       domain_p[iter].proto.cv4.doi);
 				break;
 			default:
-				printf("UNKNOWN(%u)", domain_p[iter].proto_type);
+				printf("UNKNOWN(%u)",
+				       domain_p[iter].proto_type);
 				break;
 			}
 			if (iter + 1 < count)

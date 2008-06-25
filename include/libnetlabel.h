@@ -182,9 +182,12 @@ int nlbl_unlbl_staticadddef(struct nlbl_handle *hndl,
 int nlbl_unlbl_staticdel(struct nlbl_handle *hndl,
 			 nlbl_netdev dev,
 			 struct nlbl_netaddr *addr);
-int nlbl_unlbl_staticdeldef(struct nlbl_handle *hndl, struct nlbl_netaddr *addr);
-int nlbl_unlbl_staticlist(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs);
-int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs);
+int nlbl_unlbl_staticdeldef(struct nlbl_handle *hndl,
+			    struct nlbl_netaddr *addr);
+int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
+			  struct nlbl_addrmap **addrs);
+int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
+			     struct nlbl_addrmap **addrs);
 
 /* cipso/ipv4 */
 int nlbl_cipsov4_add_std(struct nlbl_handle *hndl,

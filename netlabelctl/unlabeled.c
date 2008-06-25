@@ -96,7 +96,8 @@ int unlbl_list(void)
 	if (ret_val < 0)
 		return ret_val;
 	if (opt_pretty)
-		printf("Accept unlabeled packets : %s\n", (flag ? "on" : "off"));
+		printf("Accept unlabeled packets : %s\n",
+		       (flag ? "on" : "off"));
 	else
 		printf("accept:%s", (flag ? "on" : "off"));
 
@@ -109,10 +110,12 @@ int unlbl_list(void)
 	/* get the default static label mapping */
 	ret_val = nlbl_unlbl_staticlistdef(NULL, &addrdef_p);
 	if (ret_val > 0) {
-		addr_p = realloc(addr_p, sizeof(struct nlbl_addrmap) * (count + ret_val));
+		addr_p = realloc(addr_p,
+				 sizeof(struct nlbl_addrmap) * (count + ret_val));
 		if (addr_p == NULL)
 			goto list_return;
-		memcpy(&addr_p[count], addrdef_p, sizeof(struct nlbl_addrmap) * ret_val);
+		memcpy(&addr_p[count], addrdef_p,
+		       sizeof(struct nlbl_addrmap) * ret_val);
 		count += ret_val;
 	}
 
@@ -136,14 +139,20 @@ int unlbl_list(void)
 			switch (iter_p->addr.type) {
 			case AF_INET:
 				iter_p->addr.mask.v4.s_addr = ntohl(iter_p->addr.mask.v4.s_addr);
-				for (mask_size = 0; iter_p->addr.mask.v4.s_addr != 0; mask_size++)
+				for (mask_size = 0;
+				     iter_p->addr.mask.v4.s_addr != 0;
+				     mask_size++)
 					iter_p->addr.mask.v4.s_addr <<= 1;
 				printf("%s/%u\n",
-				       inet_ntop(AF_INET, &iter_p->addr.addr.v4, addr_s, addr_s_len),
+				       inet_ntop(AF_INET,
+						 &iter_p->addr.addr.v4,
+						 addr_s, addr_s_len),
 				       mask_size);
 				break;
 			case AF_INET6:
-				for (mask_size = 0, mask_off = 0; mask_off < 4; mask_off++) {
+				for (mask_size = 0, mask_off = 0;
+				     mask_off < 4;
+				     mask_off++) {
 					iter_p->addr.mask.v6.s6_addr32[mask_off] =
 						ntohl(iter_p->addr.mask.v6.s6_addr32[mask_off]);
 					while (iter_p->addr.mask.v6.s6_addr32[mask_off] != 0) {
@@ -152,7 +161,9 @@ int unlbl_list(void)
 					}
 				}
 				printf("%s/%u\n",
-				       inet_ntop(AF_INET6, &iter_p->addr.addr.v6, addr_s, addr_s_len),
+				       inet_ntop(AF_INET6,
+						 &iter_p->addr.addr.v6,
+						 addr_s, addr_s_len),
 				       mask_size);
 				break;
 			default:
@@ -178,14 +189,20 @@ int unlbl_list(void)
 			switch (iter_p->addr.type) {
 			case AF_INET:
 				iter_p->addr.mask.v4.s_addr = ntohl(iter_p->addr.mask.v4.s_addr);
-				for (mask_size = 0; iter_p->addr.mask.v4.s_addr != 0; mask_size++)
+				for (mask_size = 0;
+				     iter_p->addr.mask.v4.s_addr != 0;
+				     mask_size++)
 					iter_p->addr.mask.v4.s_addr <<= 1;
 				printf("%s/%u,",
-				       inet_ntop(AF_INET, &iter_p->addr.addr.v4, addr_s, addr_s_len),
+				       inet_ntop(AF_INET,
+						 &iter_p->addr.addr.v4,
+						 addr_s, addr_s_len),
 				       mask_size);
 				break;
 			case AF_INET6:
-				for (mask_size = 0, mask_off = 0; mask_off < 4; mask_off++) {
+				for (mask_size = 0, mask_off = 0;
+				     mask_off < 4;
+				     mask_off++) {
 					iter_p->addr.mask.v6.s6_addr32[mask_off] =
 						ntohl(iter_p->addr.mask.v6.s6_addr32[mask_off]);
 					while (iter_p->addr.mask.v6.s6_addr32[mask_off] != 0) {
@@ -194,7 +211,9 @@ int unlbl_list(void)
 					}
 				}
 				printf("%s/%u,",
-				       inet_ntop(AF_INET6, &iter_p->addr.addr.v6, addr_s, addr_s_len),
+				       inet_ntop(AF_INET6,
+						 &iter_p->addr.addr.v6,
+						 addr_s, addr_s_len),
 				       mask_size);
 				break;
 			default:
@@ -264,7 +283,8 @@ int unlbl_add(int argc, char *argv[])
 				mask[0] = '\0';
 				mask++;
 			}
-			ret_val = inet_pton(AF_INET, argv[iter] + 8, &addr.addr.v4);
+			ret_val = inet_pton(AF_INET,
+					    argv[iter] + 8, &addr.addr.v4);
 			if (ret_val > 0) {
 				addr.type = AF_INET;
 				mask_iter = (mask ? atoi(mask) : 32);
@@ -274,12 +294,16 @@ int unlbl_add(int argc, char *argv[])
 				}
 				addr.mask.v4.s_addr = htonl(addr.mask.v4.s_addr);
 			} else {
-				ret_val = inet_pton(AF_INET6, argv[iter] + 8, &addr.addr.v6);
+				ret_val = inet_pton(AF_INET6,
+						    argv[iter] + 8,
+						    &addr.addr.v6);
 				if (ret_val > 0) {
 					uint32_t tmp_iter;
 					addr.type = AF_INET6;
 					mask_iter = (mask ? atoi(mask) : 128);
-					for (tmp_iter = 0; mask_iter > 0 && tmp_iter < 4; tmp_iter++) {
+					for (tmp_iter = 0;
+					     mask_iter > 0 && tmp_iter < 4;
+					     tmp_iter++) {
 						for (; mask_iter > 0 &&
 							     addr.mask.v6.s6_addr32[tmp_iter] < 0xffffffff;
 						     mask_iter--) {
@@ -343,7 +367,8 @@ int unlbl_del(int argc, char *argv[])
 				mask[0] = '\0';
 				mask++;
 			}
-			ret_val = inet_pton(AF_INET, argv[iter] + 8, &addr.addr.v4);
+			ret_val = inet_pton(AF_INET,
+					    argv[iter] + 8, &addr.addr.v4);
 			if (ret_val > 0) {
 				addr.type = AF_INET;
 				mask_iter = (mask ? atoi(mask) : 32);
@@ -353,12 +378,16 @@ int unlbl_del(int argc, char *argv[])
 				}
 				addr.mask.v4.s_addr = htonl(addr.mask.v4.s_addr);
 			} else {
-				ret_val = inet_pton(AF_INET6, argv[iter] + 8, &addr.addr.v6);
+				ret_val = inet_pton(AF_INET6,
+						    argv[iter] + 8,
+						    &addr.addr.v6);
 				if (ret_val > 0) {
 					uint32_t tmp_iter;
 					addr.type = AF_INET6;
 					mask_iter = (mask ? atoi(mask) : 128);
-					for (tmp_iter = 0; mask_iter > 0 && tmp_iter < 4; tmp_iter++)
+					for (tmp_iter = 0;
+					     mask_iter > 0 && tmp_iter < 4;
+					     tmp_iter++)
 						for (; mask_iter > 0 &&
 							     addr.mask.v6.s6_addr32[tmp_iter] < 0xffffffff;
 						     mask_iter--) {

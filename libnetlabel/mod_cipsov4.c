@@ -302,7 +302,8 @@ int nlbl_cipsov4_add_std(struct nlbl_handle *hndl,
 		goto add_std_return;
 	}
 	for (iter = 0; iter < tags->size; iter++) {
-		ret_val = nla_put_u8(nest_msg_a, NLBL_CIPSOV4_A_TAG, tags->array[iter]);
+		ret_val = nla_put_u8(nest_msg_a,
+				     NLBL_CIPSOV4_A_TAG, tags->array[iter]);
 		if (ret_val != 0)
 			goto add_std_return;
 	}
@@ -455,7 +456,8 @@ int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 		goto add_pass_return;
 	}
 	for (iter = 0; iter < tags->size; iter++) {
-		ret_val = nla_put_u8(nest_msg, NLBL_CIPSOV4_A_TAG, tags->array[iter]);
+		ret_val = nla_put_u8(nest_msg,
+				     NLBL_CIPSOV4_A_TAG, tags->array[iter]);
 		if (ret_val != 0)
 			goto add_pass_return;
 	}
@@ -675,7 +677,8 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 		nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSLVLLST);
 		if (nla_a == NULL)
 			goto list_return;
-		nla_for_each_attr(nla_b, nla_data(nla_a), nla_len(nla_a), nla_b_rem)
+		nla_for_each_attr(nla_b,
+				  nla_data(nla_a), nla_len(nla_a), nla_b_rem)
 			if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSLVL) {
 				lvls->array = realloc(lvls->array,
 						      ((lvls->size + 1) * 2) * sizeof(nlbl_cv4_lvl));
@@ -704,7 +707,8 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 		nla_for_each_attr(nla_b,
 				  nla_data(nla_a), nla_len(nla_a), nla_b_rem)
 			if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSCAT) {
-				cats->array = realloc(cats->array, ((cats->size + 1) * 2) * sizeof(nlbl_cv4_cat));
+				cats->array = realloc(cats->array,
+						      ((cats->size + 1) * 2) * sizeof(nlbl_cv4_cat));
 				if (cats->array == NULL) {
 					ret_val = -ENOMEM;
 					goto list_return;

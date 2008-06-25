@@ -230,7 +230,8 @@ int main(int argc, char *argv[])
 	/* perform any setup we have to do */
 	ret_val = nlbl_init();
 	if (ret_val < 0) {
-		fprintf(stderr, MSG_ERR("failed to initialize the NetLabel library\n"));
+		fprintf(stderr,
+			MSG_ERR("failed to initialize the NetLabel library\n"));
 		goto exit;
 	}
 	nlbl_comm_timeout(opt_timeout);
@@ -249,7 +250,9 @@ int main(int argc, char *argv[])
 	} else if (!strcmp(module_name, "cipsov4")) {
 		module_main = cipsov4_main;
 	} else {
-		fprintf(stderr, MSG_ERR("unknown or missing module '%s'\n"), module_name);
+		fprintf(stderr,
+			MSG_ERR("unknown or missing module '%s'\n"),
+			module_name);
 		goto exit;
 	}
 	ret_val = module_main(argc - optind - 1, argv + optind + 1);

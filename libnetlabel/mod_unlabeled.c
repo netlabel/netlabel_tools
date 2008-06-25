@@ -818,7 +818,8 @@ staticdeldef_return:
  * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_staticlist(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs)
+int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
+			  struct nlbl_addrmap **addrs)
 {
 	int ret_val = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -876,7 +877,8 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs)
 		data_len = ret_val;
 		nl_hdr = (struct nlmsghdr *)data;
 
-		/* check to see if this is a netlink control message we don't care about */
+		/* check to see if this is a netlink control message we don't
+		 * care about */
 		if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
 		    nl_hdr->nlmsg_type == NLMSG_ERROR ||
 		    nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
@@ -885,40 +887,51 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs)
 		}
 
 		/* loop through the messages */
-		while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
+		while (nlmsg_ok(nl_hdr, data_len) &&
+		       nl_hdr->nlmsg_type != NLMSG_DONE) {
 			/* get the header pointers */
 			genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
-			if (genl_hdr == NULL || genl_hdr->cmd != NLBL_UNLABEL_C_STATICLIST) {
+			if (genl_hdr == NULL ||
+			    genl_hdr->cmd != NLBL_UNLABEL_C_STATICLIST) {
 				ret_val = -EBADMSG;
 				goto staticlist_return;
 			}
 			nla_head = (struct nlattr *)(&genl_hdr[1]);
-			data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+			data_attrlen = nlmsg_len(nl_hdr) -
+				NLMSG_ALIGN(sizeof(*genl_hdr));
       
 			/* resize the array */
 			addr_array = realloc(addr_array,
 					     sizeof(struct nlbl_addrmap) * (addr_count + 1));
 			if (addr_array == NULL)
 				goto staticlist_return;
-			memset(&addr_array[addr_count], 0, sizeof(struct nlbl_addrmap));
+			memset(&addr_array[addr_count], 0,
+			       sizeof(struct nlbl_addrmap));
 
 			/* get the attribute information */
-			nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IFACE);
+			nla = nla_find(nla_head,
+				       data_attrlen, NLBL_UNLABEL_A_IFACE);
 			if (nla == NULL)
 				goto staticlist_return;
 			addr_array[addr_count].dev = malloc(nla_len(nla));
 			if (addr_array[addr_count].dev == NULL)
 				goto staticlist_return;
-			strncpy(addr_array[addr_count].dev, nla_data(nla), nla_len(nla));
-			nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_SECCTX);
+			strncpy(addr_array[addr_count].dev,
+				nla_data(nla), nla_len(nla));
+			nla = nla_find(nla_head,
+				       data_attrlen, NLBL_UNLABEL_A_SECCTX);
 			if (nla == NULL)
 				goto staticlist_return;
 			addr_array[addr_count].label = malloc(nla_len(nla));
 			if (addr_array[addr_count].label == NULL)
 				goto staticlist_return;
-			strncpy(addr_array[addr_count].label, nla_data(nla), nla_len(nla));
-			if (nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV4ADDR)) {
-				nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV4ADDR);
+			strncpy(addr_array[addr_count].label,
+				nla_data(nla), nla_len(nla));
+			if (nla_find(nla_head,
+				     data_attrlen, NLBL_UNLABEL_A_IPV4ADDR)) {
+				nla = nla_find(nla_head,
+					       data_attrlen,
+					       NLBL_UNLABEL_A_IPV4ADDR);
 				if (nla == NULL)
 					goto staticlist_return;
 				if (nla_len(nla) != sizeof(struct in_addr))
@@ -926,7 +939,9 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs)
 				memcpy(&addr_array[addr_count].addr.addr.v4,
 				       nla_data(nla),
 				       nla_len(nla));
-				nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV4MASK);
+				nla = nla_find(nla_head,
+					       data_attrlen,
+					       NLBL_UNLABEL_A_IPV4MASK);
 				if (nla == NULL)
 					goto staticlist_return;
 				if (nla_len(nla) != sizeof(struct in_addr))
@@ -935,8 +950,12 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs)
 				       nla_data(nla),
 				       nla_len(nla));
 				addr_array[addr_count].addr.type = AF_INET;
-			} else if (nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV6ADDR)) {
-				nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV6ADDR);
+			} else if (nla_find(nla_head,
+					    data_attrlen,
+					    NLBL_UNLABEL_A_IPV6ADDR)) {
+				nla = nla_find(nla_head,
+					       data_attrlen,
+					       NLBL_UNLABEL_A_IPV6ADDR);
 				if (nla == NULL)
 					goto staticlist_return;
 				if (nla_len(nla) != sizeof(struct in6_addr))
@@ -944,7 +963,9 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs)
 				memcpy(&addr_array[addr_count].addr.addr.v6,
 				       nla_data(nla),
 				       nla_len(nla));
-				nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV6MASK);
+				nla = nla_find(nla_head,
+					       data_attrlen,
+					       NLBL_UNLABEL_A_IPV6MASK);
 				if (nla == NULL)
 					goto staticlist_return;
 				if (nla_len(nla) != sizeof(struct in6_addr))
@@ -991,7 +1012,8 @@ staticlist_return:
  * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl, struct nlbl_addrmap **addrs)
+int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
+			     struct nlbl_addrmap **addrs)
 {
 	int ret_val = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -1049,7 +1071,8 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl, struct nlbl_addrmap **add
 		data_len = ret_val;
 		nl_hdr = (struct nlmsghdr *)data;
 
-		/* check to see if this is a netlink control message we don't care about */
+		/* check to see if this is a netlink control message we don't
+		 * care about */
 		if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
 		    nl_hdr->nlmsg_type == NLMSG_ERROR ||
 		    nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
@@ -1058,33 +1081,42 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl, struct nlbl_addrmap **add
 		}
 
 		/* loop through the messages */
-		while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
+		while (nlmsg_ok(nl_hdr, data_len) &&
+		       nl_hdr->nlmsg_type != NLMSG_DONE) {
 			/* get the header pointers */
 			genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
-			if (genl_hdr == NULL || genl_hdr->cmd != NLBL_UNLABEL_C_STATICLISTDEF) {
+			if (genl_hdr == NULL ||
+			    genl_hdr->cmd != NLBL_UNLABEL_C_STATICLISTDEF) {
 				ret_val = -EBADMSG;
 				goto staticlistdef_return;
 			}
 			nla_head = (struct nlattr *)(&genl_hdr[1]);
-			data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+			data_attrlen = nlmsg_len(nl_hdr) -
+				NLMSG_ALIGN(sizeof(*genl_hdr));
       
 			/* resize the array */
 			addr_array = realloc(addr_array,
 					     sizeof(struct nlbl_addrmap) * (addr_count + 1));
 			if (addr_array == NULL)
 				goto staticlistdef_return;
-			memset(&addr_array[addr_count], 0, sizeof(struct nlbl_addrmap));
+			memset(&addr_array[addr_count], 0,
+			       sizeof(struct nlbl_addrmap));
 
 			/* get the attribute information */
-			nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_SECCTX);
+			nla = nla_find(nla_head,
+				       data_attrlen, NLBL_UNLABEL_A_SECCTX);
 			if (nla == NULL)
 				goto staticlistdef_return;
 			addr_array[addr_count].label = malloc(nla_len(nla));
 			if (addr_array[addr_count].label == NULL)
 				goto staticlistdef_return;
-			strncpy(addr_array[addr_count].label, nla_data(nla), nla_len(nla));
-			if (nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV4ADDR)) {
-				nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV4ADDR);
+			strncpy(addr_array[addr_count].label,
+				nla_data(nla), nla_len(nla));
+			if (nla_find(nla_head,
+				     data_attrlen, NLBL_UNLABEL_A_IPV4ADDR)) {
+				nla = nla_find(nla_head,
+					       data_attrlen,
+					       NLBL_UNLABEL_A_IPV4ADDR);
 				if (nla == NULL)
 					goto staticlistdef_return;
 				if (nla_len(nla) != sizeof(struct in_addr))
@@ -1092,7 +1124,9 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl, struct nlbl_addrmap **add
 				memcpy(&addr_array[addr_count].addr.addr.v4,
 				       nla_data(nla),
 				       nla_len(nla));
-				nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV4MASK);
+				nla = nla_find(nla_head,
+					       data_attrlen,
+					       NLBL_UNLABEL_A_IPV4MASK);
 				if (nla == NULL)
 					goto staticlistdef_return;
 				if (nla_len(nla) != sizeof(struct in_addr))
@@ -1101,8 +1135,12 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl, struct nlbl_addrmap **add
 				       nla_data(nla),
 				       nla_len(nla));
 				addr_array[addr_count].addr.type = AF_INET;
-			} else if (nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV6ADDR)) {
-				nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV6ADDR);
+			} else if (nla_find(nla_head,
+					    data_attrlen,
+					    NLBL_UNLABEL_A_IPV6ADDR)) {
+				nla = nla_find(nla_head,
+					       data_attrlen,
+					       NLBL_UNLABEL_A_IPV6ADDR);
 				if (nla == NULL)
 					goto staticlistdef_return;
 				if (nla_len(nla) != sizeof(struct in6_addr))
@@ -1110,7 +1148,9 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl, struct nlbl_addrmap **add
 				memcpy(&addr_array[addr_count].addr.addr.v6,
 				       nla_data(nla),
 				       nla_len(nla));
-				nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IPV6MASK);
+				nla = nla_find(nla_head,
+					       data_attrlen,
+					       NLBL_UNLABEL_A_IPV6MASK);
 				if (nla == NULL)
 					goto staticlistdef_return;
 				if (nla_len(nla) != sizeof(struct in6_addr))

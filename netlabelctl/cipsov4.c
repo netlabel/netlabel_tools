@@ -66,7 +66,8 @@ int cipsov4_add(int argc, char *argv[])
 		if (strcmp(argv[arg_iter], "trans") == 0) {
 			cipso_type = CIPSO_V4_MAP_STD;
 		} else if (strcmp(argv[arg_iter], "std") == 0) {
-			fprintf(stderr, MSG_OLD("use 'trans' instead of 'std'\n"));
+			fprintf(stderr,
+				MSG_OLD("use 'trans' instead of 'std'\n"));
 			cipso_type = CIPSO_V4_MAP_STD;
 		} else if (strcmp(argv[arg_iter], "pass") == 0) {
 			cipso_type = CIPSO_V4_MAP_PASS;
@@ -340,14 +341,18 @@ static int cipsov4_list_doi(uint32_t doi)
 			/* levels */
 			printf(" levels:");
 			for (iter = 0; iter < lvls.size; iter++) {
-				printf("%u=%u", lvls.array[iter * 2], lvls.array[iter * 2 + 1]);
+				printf("%u=%u",
+				       lvls.array[iter * 2],
+				       lvls.array[iter * 2 + 1]);
 				if (iter + 1 < lvls.size)
 					printf(",");
 			}
 			/* categories */
 			printf(" categories:");
 			for (iter = 0; iter < cats.size; iter++) {
-				printf("%u=%u", cats.array[iter * 2], cats.array[iter * 2 + 1]);
+				printf("%u=%u",
+				       cats.array[iter * 2],
+				       cats.array[iter * 2 + 1]);
 				if (iter + 1 < cats.size)
 					printf(",");
 			}

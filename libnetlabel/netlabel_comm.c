@@ -181,8 +181,8 @@ int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data)
 	if (!nlbl_comm_hndl_valid(hndl) || data == NULL)
 		return -EINVAL;
 
-	/* we use blocking sockets so do enforce a timeout using select() if no data
-	 * is waiting to be read from the handle */
+	/* we use blocking sockets so do enforce a timeout using select() if
+	 * no data is waiting to be read from the handle */
 	timeout.tv_sec = nlcomm_read_timeout;
 	timeout.tv_usec = 0;
 #if LIBNL_VERSION >= 1008
@@ -210,8 +210,8 @@ int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data)
 		return ret_val;
 #endif
 
-	/* if we are setup to receive credentials, only accept messages from the
-	 * kernel (ignore all others and send an -EAGAIN) */
+	/* if we are setup to receive credentials, only accept messages from
+	 * the kernel (ignore all others and send an -EAGAIN) */
 	if (creds != NULL && creds->pid != 0) {
 		ret_val = -EAGAIN;
 		goto recv_raw_failure;
@@ -256,8 +256,8 @@ int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 	if (!nlbl_comm_hndl_valid(hndl) || msg == NULL)
 		return -EINVAL;
 
-	/* we use blocking sockets so do enforce a timeout using select() if no data
-	 * is waiting to be read from the handle */
+	/* we use blocking sockets so do enforce a timeout using select() if
+	 * no data is waiting to be read from the handle */
 	timeout.tv_sec = nlcomm_read_timeout;
 	timeout.tv_usec = 0;
 #if LIBNL_VERSION >= 1008
@@ -288,8 +288,8 @@ int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 		return ret_val;
 #endif
 
-	/* if we are setup to receive credentials, only accept messages from the
-	 * kernel (ignore all others and send an -EAGAIN) */
+	/* if we are setup to receive credentials, only accept messages from
+	 * the kernel (ignore all others and send an -EAGAIN) */
 	if (creds != NULL && creds->pid != 0) {
 		ret_val = -EAGAIN;
 		goto recv_failure;
@@ -303,7 +303,8 @@ int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 		goto recv_failure;
 	}
 
-	/* check to see if this is a netlink control message we don't care about */
+	/* check to see if this is a netlink control message we don't care
+	 * about */
 	if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
 	    nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
 		ret_val = -EBADMSG;

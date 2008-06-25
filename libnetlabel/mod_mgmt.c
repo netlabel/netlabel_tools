@@ -309,7 +309,8 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 		data_len = ret_val;
 		nl_hdr = (struct nlmsghdr *)data;
 
-		/* check to see if this is a netlink control message we don't care about */
+		/* check to see if this is a netlink control message we don't
+		 * care about */
 		if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
 		    nl_hdr->nlmsg_type == NLMSG_ERROR ||
 		    nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
@@ -318,23 +319,28 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 		}
 
 		/* loop through the messages */
-		while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
+		while (nlmsg_ok(nl_hdr, data_len) &&
+		       nl_hdr->nlmsg_type != NLMSG_DONE) {
 			/* get the header pointers */
 			genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
-			if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_PROTOCOLS) {
+			if (genl_hdr == NULL ||
+			    genl_hdr->cmd != NLBL_MGMT_C_PROTOCOLS) {
 				ret_val = -EBADMSG;
 				goto protocols_return;
 			}
 			nla_head = (struct nlattr *)(&genl_hdr[1]);
-			data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+			data_attrlen = nlmsg_len(nl_hdr) -
+				NLMSG_ALIGN(sizeof(*genl_hdr));
 
 			/* resize the array */
-			protos = realloc(protos, sizeof(nlbl_proto) * (protos_count + 1));
+			protos = realloc(protos,
+					 sizeof(nlbl_proto) * (protos_count + 1));
 			if (protos == NULL)
 				goto protocols_return;
 
 			/* get the attribute information */
-			nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_PROTOCOL);
+			nla = nla_find(nla_head,
+				       data_attrlen, NLBL_MGMT_A_PROTOCOL);
 			if (nla == NULL)
 				goto protocols_return;
 			protos[protos_count] = nla_get_u32(nla);
@@ -491,7 +497,9 @@ int nlbl_mgmt_add(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 		goto add_return;
 	switch (domain->proto_type) {
 	case NETLBL_NLTYPE_CIPSOV4:
-		ret_val = nla_put_u32(msg, NLBL_MGMT_A_CV4DOI, domain->proto.cv4.doi);
+		ret_val = nla_put_u32(msg,
+				      NLBL_MGMT_A_CV4DOI,
+				      domain->proto.cv4.doi);
 		if (ret_val != 0)
 			goto add_return;
 		break;
@@ -567,7 +575,9 @@ int nlbl_mgmt_adddef(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 		goto adddef_return;
 	switch (domain->proto_type) {
 	case NETLBL_NLTYPE_CIPSOV4:
-		ret_val = nla_put_u32(msg, NLBL_MGMT_A_CV4DOI, domain->proto.cv4.doi);
+		ret_val = nla_put_u32(msg,
+				      NLBL_MGMT_A_CV4DOI,
+				      domain->proto.cv4.doi);
 		if (ret_val != 0)
 			goto adddef_return;
 		break;
@@ -915,7 +925,8 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 	    data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 
 	    /* resize the array */
-	    dmns = realloc(dmns, sizeof(struct nlbl_dommap) * (dmns_count + 1));
+	    dmns = realloc(dmns,
+			   sizeof(struct nlbl_dommap) * (dmns_count + 1));
 	    if (dmns == NULL)
 		    goto listall_return;
 	    memset(&dmns[dmns_count], 0, sizeof(struct nlbl_dommap));
