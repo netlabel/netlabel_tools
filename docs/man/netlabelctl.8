@@ -1,4 +1,4 @@
-.TH "netlabelctl" 1 "11 June 2007" "paul.moore@hp.com" "NetLabel Documentation"
+.TH "netlabelctl" 1 "25 June 2008" "paul.moore@hp.com" "NetLabel Documentation"
 .//////////////////////////////////////////////////////////////////////////////
 .SH NAME
 .//////////////////////////////////////////////////////////////////////////////
@@ -99,19 +99,20 @@ The CIPSO/IPv4 (cipsov4) module controls the CIPSO/IPv4 labeling engine in the
 kernel.  The CIPSO/IPv4 engine provided by NetLabel supports multiple Domains
 Of Interpretation (DOI) and the CIPSO/IPv4 module allows for different
 configurations for each DOI.  At present there are two types of configurations,
-the "std" configuration which allows on-the-fly translation of MLS sensitivity
-labels and the "pass" configuration which does not perform any translation of
-the MLS sensitivity label.  Regardless of which configuration type is chosen a
-DOI value must be specified as well as the list of CIPSO/IPv4 tag types to use
-when generating CIPSO/IPv4 packet labels.  The list of CIPSO/IPv4 tags is
-ordered such that when possible the first tag type listed is used when a
-CIPSO/IPv4 label is generated.  However, if it is not possible to use the
-first tag type then each tag type is checked, in order, until a suitable tag
-type is found.  If a valid tag type can not be found then the operation
-causing the CIPSO/IPv4 label will fail, typically this occurs whenever a new
-socket is created.  The different commands and their syntax are listed below.
+the "trans" configuration which allows on-the-fly translation of MLS
+sensitivity labels and the "pass" configuration which does not perform any
+translation of the MLS sensitivity label.  Regardless of which configuration
+type is chosen a DOI value must be specified as well as the list of CIPSO/IPv4
+tag types to use when generating CIPSO/IPv4 packet labels.  The list of
+CIPSO/IPv4 tags is ordered such that when possible the first tag type listed is
+used when a CIPSO/IPv4 label is generated.  However, if it is not possible to
+use the first tag type then each tag type is checked, in order, until a
+suitable tag type is found.  If a valid tag type can not be found then the
+operation causing the CIPSO/IPv4 label will fail, typically this occurs
+whenever a new socket is created.  The different commands and their syntax are
+listed below.
 .HP
-.I add std doi:<DOI> tags:<T1>,<Tn> levels:<LL1>=<RL1>,<LLn>=<RLn> categories:<LC1>=<RC1>,<LCn>=<RCn>
+.I add trans doi:<DOI> tags:<T1>,<Tn> levels:<LL1>=<RL1>,<LLn>=<RLn> categories:<LC1>=<RC1>,<LCn>=<RCn>
 .br
 Add a new CIPSO/IPv4 configuration using the standard/translated mapping with
 the given level and category translations.  The levels are translated in such a
@@ -147,7 +148,7 @@ Add a CIPSO/IPv4 configuration with a DOI value of "16", using CIPSO tag "1"
 (the permissive bitmap tag).  The CIPSO and LSM levels/categories are passed
 through the NetLabel subsystem without any translation.
 .HP
-.I netlabelctl cipsov4 add std doi:8 tags:1 levels:0=0,1=1 categories:0=1,1=0
+.I netlabelctl cipsov4 add trans doi:8 tags:1 levels:0=0,1=1 categories:0=1,1=0
 .br
 Add a CIPSO/IPv4 configuration with a DOI value of "8", using CIPSO tag "1"
 (the permissive bitmap tag).  The specified mapping converts local LSM levels

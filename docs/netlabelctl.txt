@@ -85,7 +85,7 @@ kernel.  The different commands are as follows:
 This command lists all of the defined CIPSO/IPv4 definitions, or if a DOI value
 is specified it displays detailed information about the DOI definition.
 
- # netlabelctl cipsov4 add std doi:<DOI> tags:<T1>,<Tn> \
+ # netlabelctl cipsov4 add trans doi:<DOI> tags:<T1>,<Tn> \
                        levels:<LL1>=<RL1>,<LLn>=<RLn> \
                        categories:<LC1>=<RC1>,<LCn>=<RCn>
 
@@ -100,7 +100,7 @@ the local, "<LCx>", to remote/CIPSO, "<RCx>", category mappings.
  # netlabelctl cipsov4 add pass doi:<DOI> tags:<T1>,<Tn>
 
 This command adds a CIPSO/IPv4 DOI definition to the NetLabel system similar
-to the "add std" CIPSO/IPv4 command.  However, when using the "add pass"
+to the "add trans" CIPSO/IPv4 command.  However, when using the "add pass"
 command you do not have the option to translate levels or categories, they are
 passed straight through the NetLabel system on both the outbound and inbound
 side.
