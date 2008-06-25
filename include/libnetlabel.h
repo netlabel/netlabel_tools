@@ -45,22 +45,65 @@
  * Types
  */
 
-/*** communication types */
+/* general types */
 
+/**
+ * struct nlbl_handle - NetLabel communications handle
+ *
+ * Description:
+ * XXX
+ *
+ */
 struct nlbl_handle;
+
+/**
+ * nlbl_msg - NetLabel message
+ *
+ * Description:
+ * XXX
+ *
+ */
 typedef struct nl_msg nlbl_msg;
+
+/**
+ * nlbl_cmd - NetLabel command
+ *
+ * Description:
+ * XXX
+ *
+ */
 typedef uint16_t nlbl_cmd;
 
-/*** protocol type */
-
+/**
+ * nlbl_proto - NetLabel labeling protocol
+ *
+ * Description:
+ * XXX
+ *
+ */
 typedef uint32_t nlbl_proto;
 
-/*** network interface type */
-
+/**
+ * nlbl_netdev - NetLabel network device
+ *
+ * Description:
+ * XXX
+ *
+ */
 typedef char *nlbl_netdev;
 
-/*** network address type */
-
+/**
+ * struct nlbl_netaddr - NetLabel network address structure
+ * @type: address family
+ * @addr.v4: IPv4 address
+ * @addr.v6: IPv6 address
+ * @mask.v4: IPv4 address mask
+ * @mask.v6: IPv6 address mask
+ *
+ * Description:
+ * XXX
+ *
+ */
 struct nlbl_netaddr {
 	short type;
 	union {
@@ -73,41 +116,116 @@ struct nlbl_netaddr {
 	} mask;
 };
 
-/*** security label/context type */
-
+/**
+ * nlbl_secctx - NetLabel security label
+ *
+ * Description:
+ * XXX
+ *
+ */
 typedef char *nlbl_secctx;
 
-/*** cipso/ipv4 types */
+/* CIPSOv4 types */
 
-/* domain of interpretation (doi) */
+/**
+ * nlbl_cv4_doi - NetLabel CIPSOv4 Domain Of Interpretation (DOI) value
+ *
+ * Description:
+ * XXX
+ *
+ */
 typedef uint32_t nlbl_cv4_doi;
 
+/**
+ * nlbl_cv4_mtype - NetLabel CIPSOv4 mapping type
+ *
+ * Description:
+ * XXX
+ *
+ */
 typedef uint32_t nlbl_cv4_mtype;
 
-/* tags */
+/**
+ * nlbl_cv4_tag - NetLabel CIPSOv4 tag type
+ *
+ * Description:
+ * XXX
+ *
+ */
 typedef uint8_t nlbl_cv4_tag;
+
+/**
+ * struct nlbl_cv4_tag_a - NetLabel CIPSOv4 tag array
+ * @array: array of tag types
+ * @size: size of array
+ *
+ * Description:
+ * XXX
+ *
+ */
 struct nlbl_cv4_tag_a {
 	nlbl_cv4_tag *array;
 	size_t size;
 };
 
-/* mls sensitivity levels */
+/**
+ * nlbl_cv4_lvl - NetLabel CIPSOv4 MLS level
+ *
+ * Description:
+ * XXX
+ *
+ */
 typedef uint32_t nlbl_cv4_lvl;
+
+/**
+ * struct nlbl_cv4_lvl_a - NetLabel CIPSOv4 MLS level array
+ * @array: array of MLS levels
+ * @size: size of array
+ *
+ * Description:
+ * XXX
+ *
+ */
 struct nlbl_cv4_lvl_a {
 	nlbl_cv4_lvl *array;
 	size_t size;
 };
 
-/* mls categories */
+/**
+ * nlbl_cv4_cat - NetLabel CIPSOv4 MLS category
+ *
+ * Description:
+ * XXX
+ *
+ */
 typedef uint32_t nlbl_cv4_cat;
+
+/**
+ * struct nlbl_cv4_cat_a - NetLabel CIPSOv4 MLS category array
+ * @array: array of MLS categories
+ * @size: size of array
+ *
+ * Description:
+ * XXX
+ *
+ */
 struct nlbl_cv4_cat_a {
 	nlbl_cv4_cat *array;
 	size_t size;
 };
 
-/*** management types */
+/* lsm/domain mapping types */
 
-/* domain mapping */
+/**
+ * struct nlbl_dommap - NetLabel LSM/Domain mapping structure
+ * @domain: LSM domain
+ * @proto_type: labeling protocol
+ * @proto.cv4.doi: CIPSOv4 DOI
+ *
+ * Description:
+ * XXX
+ *
+ */
 struct nlbl_dommap {
 	char *domain;
 	nlbl_proto proto_type;
@@ -118,7 +236,16 @@ struct nlbl_dommap {
 	} proto;
 };
 
-/* address mapping */
+/**
+ * struct nlbl_addrmap - NetLabel network address mapping structure
+ * @dev: network device
+ * @addr: network address
+ * @label: security label
+ *
+ * Description:
+ * XXX
+ *
+ */
 struct nlbl_addrmap {
 	nlbl_netdev dev;
 	struct nlbl_netaddr addr;
@@ -129,12 +256,12 @@ struct nlbl_addrmap {
  * Functions
  */
 
-/*** init/exit */
+/* init/exit */
 
 int nlbl_init(void);
 void nlbl_exit(void);
 
-/*** low-level communications */
+/* low-level communications */
 
 /* control */
 void nlbl_comm_timeout(uint32_t seconds);
@@ -157,7 +284,7 @@ struct nlmsgerr *nlbl_msg_err(nlbl_msg *msg);
 struct nlattr *nlbl_attr_head(nlbl_msg *msg);
 struct nlattr *nlbl_attr_find(nlbl_msg *msg, int nla_type);
 
-/*** operations */
+/* operations */
 
 /* management */
 int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version);
