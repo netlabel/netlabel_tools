@@ -51,33 +51,33 @@ static uint16_t nlbl_cipsov4_fid = 0;
  */
 static nlbl_msg *nlbl_cipsov4_msg_new(uint16_t command, int flags)
 {
-  nlbl_msg *msg;
-  struct nlmsghdr *nl_hdr;
-  struct genlmsghdr *genl_hdr;
+	nlbl_msg *msg;
+	struct nlmsghdr *nl_hdr;
+	struct genlmsghdr *genl_hdr;
 
-  /* create a new message */
-  msg = nlbl_msg_new();
-  if (msg == NULL)
-    goto msg_new_failure;
+	/* create a new message */
+	msg = nlbl_msg_new();
+	if (msg == NULL)
+		goto msg_new_failure;
 
-  /* setup the netlink header */
-  nl_hdr = nlbl_msg_nlhdr(msg);
-  if (nl_hdr == NULL)
-    goto msg_new_failure;
-  nl_hdr->nlmsg_type = nlbl_cipsov4_fid;
-  nl_hdr->nlmsg_flags = flags;
+	/* setup the netlink header */
+	nl_hdr = nlbl_msg_nlhdr(msg);
+	if (nl_hdr == NULL)
+		goto msg_new_failure;
+	nl_hdr->nlmsg_type = nlbl_cipsov4_fid;
+	nl_hdr->nlmsg_flags = flags;
 
-  /* setup the generic netlink header */
-  genl_hdr = nlbl_msg_genlhdr(msg);
-  if (genl_hdr == NULL)
-    goto msg_new_failure;
-  genl_hdr->cmd = command;
+	/* setup the generic netlink header */
+	genl_hdr = nlbl_msg_genlhdr(msg);
+	if (genl_hdr == NULL)
+		goto msg_new_failure;
+	genl_hdr->cmd = command;
 
-  return msg;
+	return msg;
 
- msg_new_failure:
-  nlbl_msg_free(msg);
-  return NULL;
+msg_new_failure:
+	nlbl_msg_free(msg);
+	return NULL;
 }
 
 /**
@@ -93,29 +93,29 @@ static nlbl_msg *nlbl_cipsov4_msg_new(uint16_t command, int flags)
  */
 static int nlbl_cipsov4_recv(nlbl_handle *hndl, nlbl_msg **msg)
 {
-  int ret_val;
-  struct nlmsghdr *nl_hdr;
+	int ret_val;
+	struct nlmsghdr *nl_hdr;
 
-  /* try to get a message from the handle */
-  ret_val = nlbl_comm_recv(hndl, msg);
-  if (ret_val <= 0)
-    goto recv_failure;
+	/* try to get a message from the handle */
+	ret_val = nlbl_comm_recv(hndl, msg);
+	if (ret_val <= 0)
+		goto recv_failure;
   
-  /* process the response */
-  nl_hdr = nlbl_msg_nlhdr(*msg);
-  if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_cipsov4_fid &&
-			 nl_hdr->nlmsg_type != NLMSG_DONE &&
-			 nl_hdr->nlmsg_type != NLMSG_ERROR)) {
-    ret_val = -EBADMSG;
-    goto recv_failure;
-  }
+	/* process the response */
+	nl_hdr = nlbl_msg_nlhdr(*msg);
+	if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_cipsov4_fid &&
+			       nl_hdr->nlmsg_type != NLMSG_DONE &&
+			       nl_hdr->nlmsg_type != NLMSG_ERROR)) {
+		ret_val = -EBADMSG;
+		goto recv_failure;
+	}
   
-  return ret_val;
+	return ret_val;
   
- recv_failure:
-  if (ret_val > 0)
-    nlbl_msg_free(*msg);
-  return ret_val;
+recv_failure:
+	if (ret_val > 0)
+		nlbl_msg_free(*msg);
+	return ret_val;
 }
 
 /**
@@ -129,13 +129,13 @@ static int nlbl_cipsov4_recv(nlbl_handle *hndl, nlbl_msg **msg)
  */
 static int nlbl_cipsov4_parse_ack(nlbl_msg *msg)
 {
-  struct nlmsgerr *nl_err;
+	struct nlmsgerr *nl_err;
 
-  nl_err = nlbl_msg_err(msg);
-  if (nl_err == NULL)
-    return -ENOMSG;
+	nl_err = nlbl_msg_err(msg);
+	if (nl_err == NULL)
+		return -ENOMSG;
 
-  return nl_err->error;
+	return nl_err->error;
 }
 
 /*
@@ -153,84 +153,84 @@ static int nlbl_cipsov4_parse_ack(nlbl_msg *msg)
  */
 int nlbl_cipsov4_init(void)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
-  struct nlmsghdr *nl_hdr;
-  struct genlmsghdr *genl_hdr;
-  struct nlattr *nla;
+	int ret_val = -ENOMEM;
+	nlbl_handle *hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *ans_msg = NULL;
+	struct nlmsghdr *nl_hdr;
+	struct genlmsghdr *genl_hdr;
+	struct nlattr *nla;
 
-  /* get a netlabel handle */
-  hndl = nlbl_comm_open();
-  if (hndl == NULL)
-    goto init_return;
+	/* get a netlabel handle */
+	hndl = nlbl_comm_open();
+	if (hndl == NULL)
+		goto init_return;
 
-  /* create a new message */
-  msg = nlbl_msg_new();
-  if (msg == NULL)
-    goto init_return;
+	/* create a new message */
+	msg = nlbl_msg_new();
+	if (msg == NULL)
+		goto init_return;
 
-  /* setup the netlink header */
-  nl_hdr = nlbl_msg_nlhdr(msg);
-  if (nl_hdr == NULL)
-    goto init_return;
-  nl_hdr->nlmsg_type = GENL_ID_CTRL;
+	/* setup the netlink header */
+	nl_hdr = nlbl_msg_nlhdr(msg);
+	if (nl_hdr == NULL)
+		goto init_return;
+	nl_hdr->nlmsg_type = GENL_ID_CTRL;
   
-  /* setup the generic netlink header */
-  genl_hdr = nlbl_msg_genlhdr(msg);
-  if (genl_hdr == NULL)
-    goto init_return;
-  genl_hdr->cmd = CTRL_CMD_GETFAMILY;
-  genl_hdr->version = 1;
+	/* setup the generic netlink header */
+	genl_hdr = nlbl_msg_genlhdr(msg);
+	if (genl_hdr == NULL)
+		goto init_return;
+	genl_hdr->cmd = CTRL_CMD_GETFAMILY;
+	genl_hdr->version = 1;
 
-  /* add the netlabel family request attributes */
-  ret_val = nla_put_string(msg,
-			   CTRL_ATTR_FAMILY_NAME,
-			   NETLBL_NLTYPE_CIPSOV4_NAME);
-  if (ret_val != 0)
-    goto init_return;
+	/* add the netlabel family request attributes */
+	ret_val = nla_put_string(msg,
+				 CTRL_ATTR_FAMILY_NAME,
+				 NETLBL_NLTYPE_CIPSOV4_NAME);
+	if (ret_val != 0)
+		goto init_return;
 
-  /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto init_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto init_return;
+	}
 
-  /* read the response */
-  ret_val = nlbl_comm_recv(hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto init_return;
-  }
+	/* read the response */
+	ret_val = nlbl_comm_recv(hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto init_return;
+	}
   
-  /* process the response */
-  genl_hdr = nlbl_msg_genlhdr(ans_msg);
-  if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
-    ret_val = -EBADMSG;
-    goto init_return;
-  }
-  nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
-  if (nla == NULL) {
-    ret_val = -EBADMSG;
-    goto init_return;
-  }
-  nlbl_cipsov4_fid = nla_get_u16(nla);
-  if (nlbl_cipsov4_fid == 0) {
-    ret_val = -EBADMSG;
-    goto init_return;
-  }
+	/* process the response */
+	genl_hdr = nlbl_msg_genlhdr(ans_msg);
+	if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
+		ret_val = -EBADMSG;
+		goto init_return;
+	}
+	nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
+	if (nla == NULL) {
+		ret_val = -EBADMSG;
+		goto init_return;
+	}
+	nlbl_cipsov4_fid = nla_get_u16(nla);
+	if (nlbl_cipsov4_fid == 0) {
+		ret_val = -EBADMSG;
+		goto init_return;
+	}
   
-  ret_val = 0;
+	ret_val = 0;
   
- init_return:
-  nlbl_comm_close(hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+init_return:
+	nlbl_comm_close(hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /*
@@ -258,143 +258,143 @@ int nlbl_cipsov4_add_std(nlbl_handle *hndl,
                          nlbl_cv4_lvl_a *lvls,
                          nlbl_cv4_cat_a *cats)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *nest_msg_a = NULL;
-  nlbl_msg *nest_msg_b = NULL;
-  nlbl_msg *ans_msg = NULL;
-  uint32_t iter;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *nest_msg_a = NULL;
+	nlbl_msg *nest_msg_b = NULL;
+	nlbl_msg *ans_msg = NULL;
+	uint32_t iter;
 
-  /* sanity checks */
-  if (doi == 0 ||
-      tags == NULL || tags->size == 0 ||
-      lvls == NULL || lvls->size == 0)
-    return -EINVAL;
-  if (nlbl_cipsov4_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (doi == 0 ||
+	    tags == NULL || tags->size == 0 ||
+	    lvls == NULL || lvls->size == 0)
+		return -EINVAL;
+	if (nlbl_cipsov4_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto add_std_return;
-  }
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto add_std_return;
+	}
 
-  /* create a new message */
-  msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_ADD, 0);
-  if (msg == NULL)
-    goto add_std_return;
+	/* create a new message */
+	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_ADD, 0);
+	if (msg == NULL)
+		goto add_std_return;
 
-  /* add the required attributes to the message */
+	/* add the required attributes to the message */
 
-  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
-  if (ret_val != 0)
-    goto add_std_return;
+	ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
+	if (ret_val != 0)
+		goto add_std_return;
 
-  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_STD);
-  if (ret_val != 0)
-    goto add_std_return;
+	ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_STD);
+	if (ret_val != 0)
+		goto add_std_return;
 
-  nest_msg_a = nlmsg_build(NULL);
-  if (nest_msg_a == NULL) {
-    ret_val = -ENOMEM;
-    goto add_std_return;
-  }
-  for (iter = 0; iter < tags->size; iter++) {
-    ret_val = nla_put_u8(nest_msg_a, NLBL_CIPSOV4_A_TAG, tags->array[iter]);
-    if (ret_val != 0)
-      goto add_std_return;
-  }
-  nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg_a);
-  nlbl_msg_free(nest_msg_a);
-  nest_msg_a = NULL;
+	nest_msg_a = nlmsg_build(NULL);
+	if (nest_msg_a == NULL) {
+		ret_val = -ENOMEM;
+		goto add_std_return;
+	}
+	for (iter = 0; iter < tags->size; iter++) {
+		ret_val = nla_put_u8(nest_msg_a, NLBL_CIPSOV4_A_TAG, tags->array[iter]);
+		if (ret_val != 0)
+			goto add_std_return;
+	}
+	nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg_a);
+	nlbl_msg_free(nest_msg_a);
+	nest_msg_a = NULL;
 
-  nest_msg_a = nlmsg_build(NULL);
-  if (nest_msg_a == NULL) {
-    ret_val = -ENOMEM;
-    goto add_std_return;
-  }
-  for (iter = 0; iter < lvls->size; iter++) {
-    nest_msg_b = nlmsg_build(NULL);
-    if (nest_msg_b == NULL) {
-      ret_val = -ENOMEM;
-      goto add_std_return;
-    }
-    ret_val = nla_put_u32(nest_msg_b,
-			  NLBL_CIPSOV4_A_MLSLVLLOC,
-			  lvls->array[iter * 2]);
-    if (ret_val != 0)
-      goto add_std_return;
-    ret_val = nla_put_u32(nest_msg_b,
-			  NLBL_CIPSOV4_A_MLSLVLREM,
-			  lvls->array[iter * 2 + 1]);
-    if (ret_val != 0)
-      goto add_std_return;
-    nla_put_nested(nest_msg_a, NLBL_CIPSOV4_A_MLSLVL, nest_msg_b);
-    nlbl_msg_free(nest_msg_b);
-    nest_msg_b = NULL;
-  }
-  nla_put_nested(msg, NLBL_CIPSOV4_A_MLSLVLLST, nest_msg_a);
-  nlbl_msg_free(nest_msg_a);
-  nest_msg_a = NULL;
+	nest_msg_a = nlmsg_build(NULL);
+	if (nest_msg_a == NULL) {
+		ret_val = -ENOMEM;
+		goto add_std_return;
+	}
+	for (iter = 0; iter < lvls->size; iter++) {
+		nest_msg_b = nlmsg_build(NULL);
+		if (nest_msg_b == NULL) {
+			ret_val = -ENOMEM;
+			goto add_std_return;
+		}
+		ret_val = nla_put_u32(nest_msg_b,
+				      NLBL_CIPSOV4_A_MLSLVLLOC,
+				      lvls->array[iter * 2]);
+		if (ret_val != 0)
+			goto add_std_return;
+		ret_val = nla_put_u32(nest_msg_b,
+				      NLBL_CIPSOV4_A_MLSLVLREM,
+				      lvls->array[iter * 2 + 1]);
+		if (ret_val != 0)
+			goto add_std_return;
+		nla_put_nested(nest_msg_a, NLBL_CIPSOV4_A_MLSLVL, nest_msg_b);
+		nlbl_msg_free(nest_msg_b);
+		nest_msg_b = NULL;
+	}
+	nla_put_nested(msg, NLBL_CIPSOV4_A_MLSLVLLST, nest_msg_a);
+	nlbl_msg_free(nest_msg_a);
+	nest_msg_a = NULL;
 
-  nest_msg_a = nlmsg_build(NULL);
-  if (nest_msg_a == NULL) {
-    ret_val = -ENOMEM;
-    goto add_std_return;
-  }
-  for (iter = 0; iter < cats->size; iter++) {
-    nest_msg_b = nlmsg_build(NULL);
-    if (nest_msg_b == NULL) {
-      ret_val = -ENOMEM;
-      goto add_std_return;
-    }
-    ret_val = nla_put_u32(nest_msg_b,
-			  NLBL_CIPSOV4_A_MLSCATLOC,
-			  cats->array[iter * 2]);
-    if (ret_val != 0)
-      goto add_std_return;
-    ret_val = nla_put_u32(nest_msg_b,
-			  NLBL_CIPSOV4_A_MLSCATREM,
-			  cats->array[iter * 2 + 1]);
-    if (ret_val != 0)
-      goto add_std_return;
-    nla_put_nested(nest_msg_a, NLBL_CIPSOV4_A_MLSCAT, nest_msg_b);
-    nlbl_msg_free(nest_msg_b);
-    nest_msg_b = NULL;
-  }
-  nla_put_nested(msg, NLBL_CIPSOV4_A_MLSCATLST, nest_msg_a);
-  nlbl_msg_free(nest_msg_a);
-  nest_msg_a = NULL;
+	nest_msg_a = nlmsg_build(NULL);
+	if (nest_msg_a == NULL) {
+		ret_val = -ENOMEM;
+		goto add_std_return;
+	}
+	for (iter = 0; iter < cats->size; iter++) {
+		nest_msg_b = nlmsg_build(NULL);
+		if (nest_msg_b == NULL) {
+			ret_val = -ENOMEM;
+			goto add_std_return;
+		}
+		ret_val = nla_put_u32(nest_msg_b,
+				      NLBL_CIPSOV4_A_MLSCATLOC,
+				      cats->array[iter * 2]);
+		if (ret_val != 0)
+			goto add_std_return;
+		ret_val = nla_put_u32(nest_msg_b,
+				      NLBL_CIPSOV4_A_MLSCATREM,
+				      cats->array[iter * 2 + 1]);
+		if (ret_val != 0)
+			goto add_std_return;
+		nla_put_nested(nest_msg_a, NLBL_CIPSOV4_A_MLSCAT, nest_msg_b);
+		nlbl_msg_free(nest_msg_b);
+		nest_msg_b = NULL;
+	}
+	nla_put_nested(msg, NLBL_CIPSOV4_A_MLSCATLST, nest_msg_a);
+	nlbl_msg_free(nest_msg_a);
+	nest_msg_a = NULL;
 
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto add_std_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto add_std_return;
+	}
 
-  /* read the response */
-  ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto add_std_return;
-  }
+	/* read the response */
+	ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto add_std_return;
+	}
 
-  /* process the response */
-  ret_val = nlbl_cipsov4_parse_ack(ans_msg);
+	/* process the response */
+	ret_val = nlbl_cipsov4_parse_ack(ans_msg);
 
- add_std_return:
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(nest_msg_a);
-  nlbl_msg_free(nest_msg_b);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+add_std_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(nest_msg_a);
+	nlbl_msg_free(nest_msg_b);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /**
@@ -414,79 +414,79 @@ int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
 			  nlbl_cv4_doi doi,
 			  nlbl_cv4_tag_a *tags)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *nest_msg = NULL;
-  nlbl_msg *ans_msg = NULL;
-  uint32_t iter;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *nest_msg = NULL;
+	nlbl_msg *ans_msg = NULL;
+	uint32_t iter;
 
-  /* sanity checks */
-  if (doi == 0 ||
-      tags == NULL || tags->size == 0)
-    return -EINVAL;
-  if (nlbl_cipsov4_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (doi == 0 ||
+	    tags == NULL || tags->size == 0)
+		return -EINVAL;
+	if (nlbl_cipsov4_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto add_pass_return;
-  }
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto add_pass_return;
+	}
 
-  /* create a new message */
-  msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_ADD, 0);
-  if (msg == NULL)
-    goto add_pass_return;
+	/* create a new message */
+	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_ADD, 0);
+	if (msg == NULL)
+		goto add_pass_return;
 
-  /* add the required attributes to the message */
+	/* add the required attributes to the message */
 
-  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
-  if (ret_val != 0)
-    goto add_pass_return;
-  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_PASS);
-  if (ret_val != 0)
-    goto add_pass_return;
+	ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
+	if (ret_val != 0)
+		goto add_pass_return;
+	ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_PASS);
+	if (ret_val != 0)
+		goto add_pass_return;
 
-  nest_msg = nlmsg_build(NULL);
-  if (nest_msg == NULL) {
-    ret_val = -ENOMEM;
-    goto add_pass_return;
-  }
-  for (iter = 0; iter < tags->size; iter++) {
-    ret_val = nla_put_u8(nest_msg, NLBL_CIPSOV4_A_TAG, tags->array[iter]);
-    if (ret_val != 0)
-      goto add_pass_return;
-  }
-  nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg);
+	nest_msg = nlmsg_build(NULL);
+	if (nest_msg == NULL) {
+		ret_val = -ENOMEM;
+		goto add_pass_return;
+	}
+	for (iter = 0; iter < tags->size; iter++) {
+		ret_val = nla_put_u8(nest_msg, NLBL_CIPSOV4_A_TAG, tags->array[iter]);
+		if (ret_val != 0)
+			goto add_pass_return;
+	}
+	nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg);
 
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto add_pass_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto add_pass_return;
+	}
 
-  /* read the response */
-  ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto add_pass_return;
-  }
+	/* read the response */
+	ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto add_pass_return;
+	}
 
-  /* process the response */
-  ret_val = nlbl_cipsov4_parse_ack(ans_msg);
+	/* process the response */
+	ret_val = nlbl_cipsov4_parse_ack(ans_msg);
 
- add_pass_return:
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(nest_msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+add_pass_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(nest_msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /**
@@ -502,59 +502,59 @@ int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
  */
 int nlbl_cipsov4_del(nlbl_handle *hndl, nlbl_cv4_doi doi)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *ans_msg = NULL;
 
-  /* sanity checks */
-  if (doi == 0)
-    return -EINVAL;
-  if (nlbl_cipsov4_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (doi == 0)
+		return -EINVAL;
+	if (nlbl_cipsov4_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto del_return;
-  }
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto del_return;
+	}
 
-  /* create a new message */
-  msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_REMOVE, 0);
-  if (msg == NULL)
-    goto del_return;
+	/* create a new message */
+	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_REMOVE, 0);
+	if (msg == NULL)
+		goto del_return;
 
-  /* add the required attributes to the message */
-  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
-  if (ret_val != 0)
-    goto del_return;
+	/* add the required attributes to the message */
+	ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
+	if (ret_val != 0)
+		goto del_return;
 
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto del_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto del_return;
+	}
 
-  /* read the response */
-  ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto del_return;
-  }
+	/* read the response */
+	ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto del_return;
+	}
 
-  /* process the response */
-  ret_val = nlbl_cipsov4_parse_ack(ans_msg);
+	/* process the response */
+	ret_val = nlbl_cipsov4_parse_ack(ans_msg);
 
- del_return:
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+del_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /**
@@ -580,159 +580,159 @@ int nlbl_cipsov4_list(nlbl_handle *hndl,
                       nlbl_cv4_lvl_a *lvls,
                       nlbl_cv4_cat_a *cats)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
-  struct genlmsghdr *genl_hdr;
-  struct nlattr *nla_a;
-  struct nlattr *nla_b;
-  struct nlattr *nla_c;
-  struct nlattr *nla_d;
-  int nla_b_rem;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *ans_msg = NULL;
+	struct genlmsghdr *genl_hdr;
+	struct nlattr *nla_a;
+	struct nlattr *nla_b;
+	struct nlattr *nla_c;
+	struct nlattr *nla_d;
+	int nla_b_rem;
 
-  /* sanity checks */
-  if (doi == 0 ||
-      mtype == NULL || tags == NULL || lvls == NULL || cats == NULL)
-    return -EINVAL;
-  if (nlbl_cipsov4_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (doi == 0 ||
+	    mtype == NULL || tags == NULL || lvls == NULL || cats == NULL)
+		return -EINVAL;
+	if (nlbl_cipsov4_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto list_return;
-  }
-
-  /* create a new message */
-  msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_LIST, 0);
-  if (msg == NULL)
-    goto list_return;
-
-  /* add the required attributes to the message */
-  ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
-  if (ret_val != 0)
-    goto list_return;
-
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto list_return;
-  }
-
-  /* read the response */
-  ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto list_return;
-  }
-
-  /* check the response */
-  ret_val = nlbl_cipsov4_parse_ack(ans_msg);
-  if (ret_val < 0 && ret_val != -ENOMSG)
-    goto list_return;
-  genl_hdr = nlbl_msg_genlhdr(ans_msg);
-  if (genl_hdr == NULL) {
-    ret_val = -EBADMSG;
-    goto list_return;
-  } else if (genl_hdr->cmd != NLBL_CIPSOV4_C_LIST) {
-    ret_val = -EBADMSG;
-    goto list_return;
-  }
-
-  /* process the response */
-
-  lvls->size = 0;
-  lvls->array = NULL;
-  cats->size = 0;
-  cats->array = NULL;
-
-  nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MTYPE);
-  if (nla_a == NULL)
-    goto list_return;
-  *mtype = nla_get_u32(nla_a);
-
-  nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_TAGLST);
-  if (nla_a == NULL)
-    goto list_return;
-  tags->size = 0;
-  tags->array = NULL;
-  nla_for_each_attr(nla_b, nla_data(nla_a), nla_len(nla_a), nla_b_rem)
-    if (nla_b->nla_type == NLBL_CIPSOV4_A_TAG) {
-      tags->array = realloc(tags->array, tags->size + 1);
-      if (tags->array == NULL) {
-	ret_val = -ENOMEM;
-	goto list_return;
-      }
-      tags->array[tags->size++] = nla_get_u8(nla_b);
-    }
-
-  if (*mtype == CIPSO_V4_MAP_STD) {
-    nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSLVLLST);
-    if (nla_a == NULL)
-      goto list_return;
-    nla_for_each_attr(nla_b, nla_data(nla_a), nla_len(nla_a), nla_b_rem)
-      if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSLVL) {
-	lvls->array = realloc(lvls->array,
-			      ((lvls->size + 1) * 2) * sizeof(nlbl_cv4_lvl));
-	if (lvls->array == NULL) {
-	  ret_val = -ENOMEM;
-	  goto list_return;
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto list_return;
 	}
-	nla_c = nla_find(nla_data(nla_b),
-			 nla_len(nla_b),
-			 NLBL_CIPSOV4_A_MLSLVLLOC);
-	if (nla_c == NULL)
-	  goto list_return;
-	nla_d = nla_find(nla_data(nla_b),
-			 nla_len(nla_b),
-			 NLBL_CIPSOV4_A_MLSLVLREM);
-	if (nla_d == NULL)
-	  goto list_return;
-	lvls->array[lvls->size * 2] = nla_get_u32(nla_c);
-	lvls->array[lvls->size * 2 + 1] = nla_get_u32(nla_d);
-	lvls->size++;
-      }
+
+	/* create a new message */
+	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_LIST, 0);
+	if (msg == NULL)
+		goto list_return;
+
+	/* add the required attributes to the message */
+	ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
+	if (ret_val != 0)
+		goto list_return;
+
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto list_return;
+	}
+
+	/* read the response */
+	ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto list_return;
+	}
+
+	/* check the response */
+	ret_val = nlbl_cipsov4_parse_ack(ans_msg);
+	if (ret_val < 0 && ret_val != -ENOMSG)
+		goto list_return;
+	genl_hdr = nlbl_msg_genlhdr(ans_msg);
+	if (genl_hdr == NULL) {
+		ret_val = -EBADMSG;
+		goto list_return;
+	} else if (genl_hdr->cmd != NLBL_CIPSOV4_C_LIST) {
+		ret_val = -EBADMSG;
+		goto list_return;
+	}
+
+	/* process the response */
+
+	lvls->size = 0;
+	lvls->array = NULL;
+	cats->size = 0;
+	cats->array = NULL;
+
+	nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MTYPE);
+	if (nla_a == NULL)
+		goto list_return;
+	*mtype = nla_get_u32(nla_a);
+
+	nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_TAGLST);
+	if (nla_a == NULL)
+		goto list_return;
+	tags->size = 0;
+	tags->array = NULL;
+	nla_for_each_attr(nla_b, nla_data(nla_a), nla_len(nla_a), nla_b_rem)
+		if (nla_b->nla_type == NLBL_CIPSOV4_A_TAG) {
+			tags->array = realloc(tags->array, tags->size + 1);
+			if (tags->array == NULL) {
+				ret_val = -ENOMEM;
+				goto list_return;
+			}
+			tags->array[tags->size++] = nla_get_u8(nla_b);
+		}
+
+	if (*mtype == CIPSO_V4_MAP_STD) {
+		nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSLVLLST);
+		if (nla_a == NULL)
+			goto list_return;
+		nla_for_each_attr(nla_b, nla_data(nla_a), nla_len(nla_a), nla_b_rem)
+			if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSLVL) {
+				lvls->array = realloc(lvls->array,
+						      ((lvls->size + 1) * 2) * sizeof(nlbl_cv4_lvl));
+				if (lvls->array == NULL) {
+					ret_val = -ENOMEM;
+					goto list_return;
+				}
+				nla_c = nla_find(nla_data(nla_b),
+						 nla_len(nla_b),
+						 NLBL_CIPSOV4_A_MLSLVLLOC);
+				if (nla_c == NULL)
+					goto list_return;
+				nla_d = nla_find(nla_data(nla_b),
+						 nla_len(nla_b),
+						 NLBL_CIPSOV4_A_MLSLVLREM);
+				if (nla_d == NULL)
+					goto list_return;
+				lvls->array[lvls->size * 2] = nla_get_u32(nla_c);
+				lvls->array[lvls->size * 2 + 1] = nla_get_u32(nla_d);
+				lvls->size++;
+			}
     
-    nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSCATLST);
-    if (nla_a == NULL)
-      goto list_return;
-    nla_for_each_attr(nla_b, nla_data(nla_a), nla_len(nla_a), nla_b_rem)
-      if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSCAT) {
-	cats->array = realloc(cats->array,
-			      ((cats->size + 1) * 2) * sizeof(nlbl_cv4_cat));
-	if (cats->array == NULL) {
-	  ret_val = -ENOMEM;
-	  goto list_return;
+		nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSCATLST);
+		if (nla_a == NULL)
+			goto list_return;
+		nla_for_each_attr(nla_b,
+				  nla_data(nla_a), nla_len(nla_a), nla_b_rem)
+			if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSCAT) {
+				cats->array = realloc(cats->array, ((cats->size + 1) * 2) * sizeof(nlbl_cv4_cat));
+				if (cats->array == NULL) {
+					ret_val = -ENOMEM;
+					goto list_return;
+				}
+				nla_c = nla_find(nla_data(nla_b),
+						 nla_len(nla_b),
+						 NLBL_CIPSOV4_A_MLSCATLOC);
+				if (nla_c == NULL)
+					goto list_return;
+				nla_d = nla_find(nla_data(nla_b),
+						 nla_len(nla_b),
+						 NLBL_CIPSOV4_A_MLSCATREM);
+				if (nla_d == NULL)
+					goto list_return;
+				cats->array[cats->size * 2] = nla_get_u32(nla_c);
+				cats->array[cats->size * 2 + 1] = nla_get_u32(nla_d);
+				cats->size++;
+			}
 	}
-	nla_c = nla_find(nla_data(nla_b),
-			 nla_len(nla_b),
-			 NLBL_CIPSOV4_A_MLSCATLOC);
-	if (nla_c == NULL)
-	  goto list_return;
-	nla_d = nla_find(nla_data(nla_b),
-			 nla_len(nla_b),
-			 NLBL_CIPSOV4_A_MLSCATREM);
-	if (nla_d == NULL)
-	  goto list_return;
-	cats->array[cats->size * 2] = nla_get_u32(nla_c);
-	cats->array[cats->size * 2 + 1] = nla_get_u32(nla_d);
-	cats->size++;
-      }
-  }
 
-  ret_val = 0;
+	ret_val = 0;
 
- list_return:
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+list_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /**
@@ -753,28 +753,28 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
 			 nlbl_cv4_doi **dois,
 			 nlbl_cv4_mtype **mtypes)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  unsigned char *data = NULL;
-  nlbl_msg *msg = NULL;
-  struct nlmsghdr *nl_hdr;
-  struct genlmsghdr *genl_hdr;
-  struct nlattr *nla_head;
-  struct nlattr *nla;
-  int data_len;
-  int data_attrlen;
-  nlbl_cv4_doi *doi_a = NULL;
-  nlbl_cv4_mtype *mtype_a = NULL;
-  uint32_t count = 0;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	unsigned char *data = NULL;
+	nlbl_msg *msg = NULL;
+	struct nlmsghdr *nl_hdr;
+	struct genlmsghdr *genl_hdr;
+	struct nlattr *nla_head;
+	struct nlattr *nla;
+	int data_len;
+	int data_attrlen;
+	nlbl_cv4_doi *doi_a = NULL;
+	nlbl_cv4_mtype *mtype_a = NULL;
+	uint32_t count = 0;
 
-  /* sanity checks */
-  if (dois == NULL || mtypes == NULL)
-    return -EINVAL;
-  if (nlbl_cipsov4_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (dois == NULL || mtypes == NULL)
+		return -EINVAL;
+	if (nlbl_cipsov4_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
     p_hndl = nlbl_comm_open();
     if (p_hndl == NULL)
       goto listall_return;
@@ -816,43 +816,43 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
     if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
 	nl_hdr->nlmsg_type == NLMSG_ERROR ||
 	nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
-      ret_val = -EBADMSG;
-      goto listall_return;
+	    ret_val = -EBADMSG;
+	    goto listall_return;
     }
 
     /* loop through the messages */
     while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
-      /* get the header pointers */
-      genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
-      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_LISTALL) {
-	ret_val = -EBADMSG;
-	goto listall_return;
-      }
-      nla_head = (struct nlattr *)(&genl_hdr[1]);
-      data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+	    /* get the header pointers */
+	    genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
+	    if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_LISTALL) {
+		    ret_val = -EBADMSG;
+		    goto listall_return;
+	    }
+	    nla_head = (struct nlattr *)(&genl_hdr[1]);
+	    data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 
-      /* resize the arrays */
-      doi_a = realloc(doi_a, sizeof(nlbl_cv4_doi) * (count + 1));
-      if (doi_a == NULL)
-	goto listall_return;
-      mtype_a = realloc(mtype_a, sizeof(nlbl_cv4_mtype) * (count + 1));
-      if (mtype_a == NULL)
-	goto listall_return;
+	    /* resize the arrays */
+	    doi_a = realloc(doi_a, sizeof(nlbl_cv4_doi) * (count + 1));
+	    if (doi_a == NULL)
+		    goto listall_return;
+	    mtype_a = realloc(mtype_a, sizeof(nlbl_cv4_mtype) * (count + 1));
+	    if (mtype_a == NULL)
+		    goto listall_return;
 
-      /* get the attribute information */
-      nla = nla_find(nla_head, data_attrlen, NLBL_CIPSOV4_A_DOI);
-      if (nla == NULL)
-	goto listall_return;
-      doi_a[count] = nla_get_u32(nla);
-      nla = nla_find(nla_head, data_attrlen, NLBL_CIPSOV4_A_MTYPE);
-      if (nla == NULL)
-	goto listall_return;
-      mtype_a[count] = nla_get_u32(nla);
+	    /* get the attribute information */
+	    nla = nla_find(nla_head, data_attrlen, NLBL_CIPSOV4_A_DOI);
+	    if (nla == NULL)
+		    goto listall_return;
+	    doi_a[count] = nla_get_u32(nla);
+	    nla = nla_find(nla_head, data_attrlen, NLBL_CIPSOV4_A_MTYPE);
+	    if (nla == NULL)
+		    goto listall_return;
+	    mtype_a[count] = nla_get_u32(nla);
 
-      count++;
+	    count++;
 
-      /* next message */
-      nl_hdr = nlmsg_next(nl_hdr, &data_len);
+	    /* next message */
+	    nl_hdr = nlmsg_next(nl_hdr, &data_len);
     }
   } while (data > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
 
@@ -860,17 +860,17 @@ int nlbl_cipsov4_listall(nlbl_handle *hndl,
   *mtypes = mtype_a;
   ret_val = count;
 
- listall_return:
+listall_return:
   if (ret_val < 0) {
-    if (doi_a)
-      free(doi_a);
-    if (mtype_a)
-      free(mtype_a);
+	  if (doi_a)
+		  free(doi_a);
+	  if (mtype_a)
+		  free(mtype_a);
   }
   if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
+	  nlbl_comm_close(p_hndl);
   nlbl_msg_free(msg);
   if (data)
-    free(data);
+	  free(data);
   return ret_val;
 }

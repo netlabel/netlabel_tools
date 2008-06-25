@@ -45,24 +45,24 @@
  */
 int nlbl_init(void)
 {
-  int ret_val;
+	int ret_val;
 
-  ret_val = nlbl_mgmt_init();
-  if (ret_val < 0)
-    goto init_failure;
+	ret_val = nlbl_mgmt_init();
+	if (ret_val < 0)
+		goto init_failure;
 
-  ret_val = nlbl_cipsov4_init();
-  if (ret_val < 0)
-    goto init_failure;
+	ret_val = nlbl_cipsov4_init();
+	if (ret_val < 0)
+		goto init_failure;
 
-  ret_val = nlbl_unlbl_init();
-  if (ret_val < 0)
-    goto init_failure;
+	ret_val = nlbl_unlbl_init();
+	if (ret_val < 0)
+		goto init_failure;
 
-  return 0;
+	return 0;
 
- init_failure:
-  return ret_val;
+init_failure:
+	return ret_val;
 }
 
 /**
@@ -75,5 +75,5 @@ int nlbl_init(void)
  */
 void nlbl_exit(void)
 {
-  return;
+	return;
 }

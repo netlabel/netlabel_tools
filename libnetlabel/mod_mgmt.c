@@ -51,33 +51,33 @@ static uint16_t nlbl_mgmt_fid = 0;
  */
 static nlbl_msg *nlbl_mgmt_msg_new(uint16_t command, int flags)
 {
-  nlbl_msg *msg;
-  struct nlmsghdr *nl_hdr;
-  struct genlmsghdr *genl_hdr;
+	nlbl_msg *msg;
+	struct nlmsghdr *nl_hdr;
+	struct genlmsghdr *genl_hdr;
 
-  /* create a new message */
-  msg = nlbl_msg_new();
-  if (msg == NULL)
-    goto msg_new_failure;
+	/* create a new message */
+	msg = nlbl_msg_new();
+	if (msg == NULL)
+		goto msg_new_failure;
 
-  /* setup the netlink header */
-  nl_hdr = nlbl_msg_nlhdr(msg);
-  if (nl_hdr == NULL)
-    goto msg_new_failure;
-  nl_hdr->nlmsg_type = nlbl_mgmt_fid;
-  nl_hdr->nlmsg_flags = flags;
+	/* setup the netlink header */
+	nl_hdr = nlbl_msg_nlhdr(msg);
+	if (nl_hdr == NULL)
+		goto msg_new_failure;
+	nl_hdr->nlmsg_type = nlbl_mgmt_fid;
+	nl_hdr->nlmsg_flags = flags;
 
-  /* setup the generic netlink header */
-  genl_hdr = nlbl_msg_genlhdr(msg);
-  if (genl_hdr == NULL)
-    goto msg_new_failure;
-  genl_hdr->cmd = command;
+	/* setup the generic netlink header */
+	genl_hdr = nlbl_msg_genlhdr(msg);
+	if (genl_hdr == NULL)
+		goto msg_new_failure;
+	genl_hdr->cmd = command;
 
-  return msg;
+	return msg;
 
- msg_new_failure:
-  nlbl_msg_free(msg);
-  return NULL;
+msg_new_failure:
+	nlbl_msg_free(msg);
+	return NULL;
 }
 
 /**
@@ -93,29 +93,29 @@ static nlbl_msg *nlbl_mgmt_msg_new(uint16_t command, int flags)
  */
 static int nlbl_mgmt_recv(nlbl_handle *hndl, nlbl_msg **msg)
 {
-  int ret_val;
-  struct nlmsghdr *nl_hdr;
+	int ret_val;
+	struct nlmsghdr *nl_hdr;
 
-  /* try to get a message from the handle */
-  ret_val = nlbl_comm_recv(hndl, msg);
-  if (ret_val <= 0)
-    goto recv_failure;
+	/* try to get a message from the handle */
+	ret_val = nlbl_comm_recv(hndl, msg);
+	if (ret_val <= 0)
+		goto recv_failure;
   
-  /* process the response */
-  nl_hdr = nlbl_msg_nlhdr(*msg);
-  if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_mgmt_fid &&
-			 nl_hdr->nlmsg_type != NLMSG_DONE &&
-			 nl_hdr->nlmsg_type != NLMSG_ERROR)) {
-    ret_val = -EBADMSG;
-    goto recv_failure;
-  }
+	/* process the response */
+	nl_hdr = nlbl_msg_nlhdr(*msg);
+	if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_mgmt_fid &&
+			       nl_hdr->nlmsg_type != NLMSG_DONE &&
+			       nl_hdr->nlmsg_type != NLMSG_ERROR)) {
+		ret_val = -EBADMSG;
+		goto recv_failure;
+	}
   
-  return ret_val;
+	return ret_val;
   
- recv_failure:
-  if (ret_val > 0)
-    nlbl_msg_free(*msg);
-  return ret_val;
+recv_failure:
+	if (ret_val > 0)
+		nlbl_msg_free(*msg);
+	return ret_val;
 }
 
 /**
@@ -129,13 +129,13 @@ static int nlbl_mgmt_recv(nlbl_handle *hndl, nlbl_msg **msg)
  */
 static int nlbl_mgmt_parse_ack(nlbl_msg *msg)
 {
-  struct nlmsgerr *nl_err;
+	struct nlmsgerr *nl_err;
 
-  nl_err = nlbl_msg_err(msg);
-  if (nl_err == NULL)
-    return -ENOMSG;
+	nl_err = nlbl_msg_err(msg);
+	if (nl_err == NULL)
+		return -ENOMSG;
 
-  return nl_err->error;
+	return nl_err->error;
 }
 
 /*
@@ -153,84 +153,84 @@ static int nlbl_mgmt_parse_ack(nlbl_msg *msg)
  */
 int nlbl_mgmt_init(void)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
-  struct nlmsghdr *nl_hdr;
-  struct genlmsghdr *genl_hdr;
-  struct nlattr *nla;
+	int ret_val = -ENOMEM;
+	nlbl_handle *hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *ans_msg = NULL;
+	struct nlmsghdr *nl_hdr;
+	struct genlmsghdr *genl_hdr;
+	struct nlattr *nla;
 
-  /* get a netlabel handle */
-  hndl = nlbl_comm_open();
-  if (hndl == NULL)
-    goto init_return;
+	/* get a netlabel handle */
+	hndl = nlbl_comm_open();
+	if (hndl == NULL)
+		goto init_return;
 
-  /* create a new message */
-  msg = nlbl_msg_new();
-  if (msg == NULL)
-    goto init_return;
+	/* create a new message */
+	msg = nlbl_msg_new();
+	if (msg == NULL)
+		goto init_return;
 
-  /* setup the netlink header */
-  nl_hdr = nlbl_msg_nlhdr(msg);
-  if (nl_hdr == NULL)
-    goto init_return;
-  nl_hdr->nlmsg_type = GENL_ID_CTRL;
+	/* setup the netlink header */
+	nl_hdr = nlbl_msg_nlhdr(msg);
+	if (nl_hdr == NULL)
+		goto init_return;
+	nl_hdr->nlmsg_type = GENL_ID_CTRL;
   
-  /* setup the generic netlink header */
-  genl_hdr = nlbl_msg_genlhdr(msg);
-  if (genl_hdr == NULL)
-    goto init_return;
-  genl_hdr->cmd = CTRL_CMD_GETFAMILY;
-  genl_hdr->version = 1;
+	/* setup the generic netlink header */
+	genl_hdr = nlbl_msg_genlhdr(msg);
+	if (genl_hdr == NULL)
+		goto init_return;
+	genl_hdr->cmd = CTRL_CMD_GETFAMILY;
+	genl_hdr->version = 1;
 
-  /* add the netlabel family request attributes */
-  ret_val = nla_put_string(msg,
-			   CTRL_ATTR_FAMILY_NAME,
-			   NETLBL_NLTYPE_MGMT_NAME);
-  if (ret_val != 0)
-    goto init_return;
+	/* add the netlabel family request attributes */
+	ret_val = nla_put_string(msg,
+				 CTRL_ATTR_FAMILY_NAME,
+				 NETLBL_NLTYPE_MGMT_NAME);
+	if (ret_val != 0)
+		goto init_return;
 
-  /* send the request */
-  ret_val = nlbl_comm_send(hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto init_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto init_return;
+	}
 
-  /* read the response */
-  ret_val = nlbl_comm_recv(hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto init_return;
-  }
+	/* read the response */
+	ret_val = nlbl_comm_recv(hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto init_return;
+	}
   
-  /* process the response */
-  genl_hdr = nlbl_msg_genlhdr(ans_msg);
-  if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
-    ret_val = -EBADMSG;
-    goto init_return;
-  }
-  nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
-  if (nla == NULL) {
-    ret_val = -EBADMSG;
-    goto init_return;
-  }
-  nlbl_mgmt_fid = nla_get_u16(nla);
-  if (nlbl_mgmt_fid == 0) {
-    ret_val = -EBADMSG;
-    goto init_return;
-  }
+	/* process the response */
+	genl_hdr = nlbl_msg_genlhdr(ans_msg);
+	if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
+		ret_val = -EBADMSG;
+		goto init_return;
+	}
+	nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
+	if (nla == NULL) {
+		ret_val = -EBADMSG;
+		goto init_return;
+	}
+	nlbl_mgmt_fid = nla_get_u16(nla);
+	if (nlbl_mgmt_fid == 0) {
+		ret_val = -EBADMSG;
+		goto init_return;
+	}
   
-  ret_val = 0;
+	ret_val = 0;
   
- init_return:
-  nlbl_comm_close(hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+init_return:
+	nlbl_comm_close(hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /*
@@ -251,113 +251,113 @@ int nlbl_mgmt_init(void)
  */
 int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  unsigned char *data = NULL;
-  nlbl_msg *msg = NULL;
-  struct nlmsghdr *nl_hdr;
-  struct genlmsghdr *genl_hdr;
-  struct nlattr *nla_head;
-  struct nlattr *nla;
-  int data_len;
-  int data_attrlen;
-  nlbl_proto *protos = NULL;
-  uint32_t protos_count = 0;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	unsigned char *data = NULL;
+	nlbl_msg *msg = NULL;
+	struct nlmsghdr *nl_hdr;
+	struct genlmsghdr *genl_hdr;
+	struct nlattr *nla_head;
+	struct nlattr *nla;
+	int data_len;
+	int data_attrlen;
+	nlbl_proto *protos = NULL;
+	uint32_t protos_count = 0;
 
-  /* sanity checks */
-  if (protocols == NULL)
-    return -EINVAL;
-  if (nlbl_mgmt_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (protocols == NULL)
+		return -EINVAL;
+	if (nlbl_mgmt_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto protocols_return;
-  }
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto protocols_return;
+	}
 
-  /* create a new message */
-  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_PROTOCOLS, NLM_F_DUMP);
-  if (msg == NULL) {
-    ret_val = -ENOMEM;
-    goto protocols_return;
-  }
+	/* create a new message */
+	msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_PROTOCOLS, NLM_F_DUMP);
+	if (msg == NULL) {
+		ret_val = -ENOMEM;
+		goto protocols_return;
+	}
 
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto protocols_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto protocols_return;
+	}
 
-  /* read all of the messages (multi-message response) */
-  do {
-    if (data) {
-      free(data);
-      data = NULL;
-    }
+	/* read all of the messages (multi-message response) */
+	do {
+		if (data) {
+			free(data);
+			data = NULL;
+		}
 
-    /* get the next set of messages */
-    ret_val = nlbl_comm_recv_raw(p_hndl, &data);
-    if (ret_val <= 0) {
-      if (ret_val == 0)
-	ret_val = -ENODATA;
-      goto protocols_return;
-    }
-    data_len = ret_val;
-    nl_hdr = (struct nlmsghdr *)data;
+		/* get the next set of messages */
+		ret_val = nlbl_comm_recv_raw(p_hndl, &data);
+		if (ret_val <= 0) {
+			if (ret_val == 0)
+				ret_val = -ENODATA;
+			goto protocols_return;
+		}
+		data_len = ret_val;
+		nl_hdr = (struct nlmsghdr *)data;
 
-    /* check to see if this is a netlink control message we don't care about */
-    if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
-	nl_hdr->nlmsg_type == NLMSG_ERROR ||
-	nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
-      ret_val = -EBADMSG;
-      goto protocols_return;
-    }
+		/* check to see if this is a netlink control message we don't care about */
+		if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
+		    nl_hdr->nlmsg_type == NLMSG_ERROR ||
+		    nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
+			ret_val = -EBADMSG;
+			goto protocols_return;
+		}
 
-    /* loop through the messages */
-    while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
-      /* get the header pointers */
-      genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
-      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_PROTOCOLS) {
-	ret_val = -EBADMSG;
-	goto protocols_return;
-      }
-      nla_head = (struct nlattr *)(&genl_hdr[1]);
-      data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+		/* loop through the messages */
+		while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
+			/* get the header pointers */
+			genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
+			if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_PROTOCOLS) {
+				ret_val = -EBADMSG;
+				goto protocols_return;
+			}
+			nla_head = (struct nlattr *)(&genl_hdr[1]);
+			data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 
-      /* resize the array */
-      protos = realloc(protos, sizeof(nlbl_proto) * (protos_count + 1));
-      if (protos == NULL)
-	goto protocols_return;
+			/* resize the array */
+			protos = realloc(protos, sizeof(nlbl_proto) * (protos_count + 1));
+			if (protos == NULL)
+				goto protocols_return;
 
-      /* get the attribute information */
-      nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_PROTOCOL);
-      if (nla == NULL)
-	goto protocols_return;
-      protos[protos_count] = nla_get_u32(nla);
+			/* get the attribute information */
+			nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_PROTOCOL);
+			if (nla == NULL)
+				goto protocols_return;
+			protos[protos_count] = nla_get_u32(nla);
 
-      protos_count++;
+			protos_count++;
 
-      /* next message */
-      nl_hdr = nlmsg_next(nl_hdr, &data_len);
-    }
-  } while (data_len > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
+			/* next message */
+			nl_hdr = nlmsg_next(nl_hdr, &data_len);
+		}
+	} while (data_len > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
 
-  *protocols = protos;
-  ret_val = protos_count;
+	*protocols = protos;
+	ret_val = protos_count;
 
- protocols_return:
-  if (ret_val < 0 && protos)
-    free(protos);
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  if (data)
-    free(data);
-  nlbl_msg_free(msg);
-  return ret_val;
+protocols_return:
+	if (ret_val < 0 && protos)
+		free(protos);
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	if (data)
+		free(data);
+	nlbl_msg_free(msg);
+	return ret_val;
 }
 
 /**
@@ -374,21 +374,21 @@ int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols)
  */
 int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
-  struct genlmsghdr *genl_hdr;
-  struct nlattr *nla;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *ans_msg = NULL;
+	struct genlmsghdr *genl_hdr;
+	struct nlattr *nla;
 
-  /* sanity checks */
-  if (version == NULL)
-    return -EINVAL;
-  if (nlbl_mgmt_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (version == NULL)
+		return -EINVAL;
+	if (nlbl_mgmt_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
     p_hndl = nlbl_comm_open();
     if (p_hndl == NULL)
       goto version_return;
@@ -455,73 +455,73 @@ int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version)
  * Add the domain mapping in @domain to the NetLabel system.  If @hndl is NULL
  * then the function will handle opening and closing it's own NetLabel handle.
  * Returns zero on success, negative values on failure.
- *
- */
+			*
+			*/
 int nlbl_mgmt_add(nlbl_handle *hndl, nlbl_dommap *domain)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *ans_msg = NULL;
 
-  /* sanity checks */
-  if (domain == NULL || domain->domain == NULL)
-    return -EINVAL;
-  if (nlbl_mgmt_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (domain == NULL || domain->domain == NULL)
+		return -EINVAL;
+	if (nlbl_mgmt_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto add_return;
-  }
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto add_return;
+	}
 
-  /* create a new message */
-  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_ADD, 0);
-  if (msg == NULL)
-    goto add_return;
+	/* create a new message */
+	msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_ADD, 0);
+	if (msg == NULL)
+		goto add_return;
 
-  /* add the required attributes to the message */
-  ret_val = nla_put_string(msg, NLBL_MGMT_A_DOMAIN, domain->domain);
-  if (ret_val != 0)
-    goto add_return;
-  ret_val = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
-  if (ret_val != 0)
-    goto add_return;
-  switch (domain->proto_type) {
-  case NETLBL_NLTYPE_CIPSOV4:
-    ret_val = nla_put_u32(msg, NLBL_MGMT_A_CV4DOI, domain->proto.cv4.doi);
-    if (ret_val != 0)
-      goto add_return;
-    break;
-  }
+	/* add the required attributes to the message */
+	ret_val = nla_put_string(msg, NLBL_MGMT_A_DOMAIN, domain->domain);
+	if (ret_val != 0)
+		goto add_return;
+	ret_val = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
+	if (ret_val != 0)
+		goto add_return;
+	switch (domain->proto_type) {
+	case NETLBL_NLTYPE_CIPSOV4:
+		ret_val = nla_put_u32(msg, NLBL_MGMT_A_CV4DOI, domain->proto.cv4.doi);
+		if (ret_val != 0)
+			goto add_return;
+		break;
+	}
 
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto add_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto add_return;
+	}
 
-  /* read the response */
-  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto add_return;
-  }
+	/* read the response */
+	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto add_return;
+	}
 
-  /* process the response */
-  ret_val = nlbl_mgmt_parse_ack(ans_msg);
+	/* process the response */
+	ret_val = nlbl_mgmt_parse_ack(ans_msg);
 
- add_return:
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+add_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /**
@@ -538,66 +538,66 @@ int nlbl_mgmt_add(nlbl_handle *hndl, nlbl_dommap *domain)
  */
 int nlbl_mgmt_adddef(nlbl_handle *hndl, nlbl_dommap *domain)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *ans_msg = NULL;
 
-  /* sanity checks */
-  if (domain == NULL)
-    return -EINVAL;
-  if (nlbl_mgmt_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (domain == NULL)
+		return -EINVAL;
+	if (nlbl_mgmt_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto adddef_return;
-  }
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto adddef_return;
+	}
 
-  /* create a new message */
-  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_ADDDEF, 0);
-  if (msg == NULL)
-    goto adddef_return;
+	/* create a new message */
+	msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_ADDDEF, 0);
+	if (msg == NULL)
+		goto adddef_return;
 
-  /* add the required attributes to the message */
-  ret_val = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
-  if (ret_val != 0)
-    goto adddef_return;
-  switch (domain->proto_type) {
-  case NETLBL_NLTYPE_CIPSOV4:
-    ret_val = nla_put_u32(msg, NLBL_MGMT_A_CV4DOI, domain->proto.cv4.doi);
-    if (ret_val != 0)
-      goto adddef_return;
-    break;
-  }
+	/* add the required attributes to the message */
+	ret_val = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
+	if (ret_val != 0)
+		goto adddef_return;
+	switch (domain->proto_type) {
+	case NETLBL_NLTYPE_CIPSOV4:
+		ret_val = nla_put_u32(msg, NLBL_MGMT_A_CV4DOI, domain->proto.cv4.doi);
+		if (ret_val != 0)
+			goto adddef_return;
+		break;
+	}
 
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto adddef_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto adddef_return;
+	}
 
-  /* read the response */
-  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto adddef_return;
-  }
+	/* read the response */
+	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto adddef_return;
+	}
 
-  /* process the response */
-  ret_val = nlbl_mgmt_parse_ack(ans_msg);
+	/* process the response */
+	ret_val = nlbl_mgmt_parse_ack(ans_msg);
 
- adddef_return:
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+adddef_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /**
@@ -613,59 +613,59 @@ int nlbl_mgmt_adddef(nlbl_handle *hndl, nlbl_dommap *domain)
  */
 int nlbl_mgmt_del(nlbl_handle *hndl, char *domain)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *ans_msg = NULL;
 
-  /* sanity checks */
-  if (domain == NULL)
-    return -EINVAL;
-  if (nlbl_mgmt_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (domain == NULL)
+		return -EINVAL;
+	if (nlbl_mgmt_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto del_return;
-  }
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto del_return;
+	}
 
-  /* create a new message */
-  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_REMOVE, 0);
-  if (msg == NULL)
-    goto del_return;
+	/* create a new message */
+	msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_REMOVE, 0);
+	if (msg == NULL)
+		goto del_return;
 
-  /* add the required attributes to the message */
-  ret_val = nla_put_string(msg, NLBL_MGMT_A_DOMAIN, domain);
-  if (ret_val != 0)
-    goto del_return;
+	/* add the required attributes to the message */
+	ret_val = nla_put_string(msg, NLBL_MGMT_A_DOMAIN, domain);
+	if (ret_val != 0)
+		goto del_return;
 
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto del_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto del_return;
+	}
 
-  /* read the response */
-  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto del_return;
-  }
+	/* read the response */
+	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto del_return;
+	}
 
-  /* process the response */
-  ret_val = nlbl_mgmt_parse_ack(ans_msg);
+	/* process the response */
+	ret_val = nlbl_mgmt_parse_ack(ans_msg);
 
- del_return:
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+del_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /**
@@ -680,52 +680,52 @@ int nlbl_mgmt_del(nlbl_handle *hndl, char *domain)
  */
 int nlbl_mgmt_deldef(nlbl_handle *hndl)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *ans_msg = NULL;
 
-  /* sanity checks */
-  if (nlbl_mgmt_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (nlbl_mgmt_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto deldef_return;
-  }
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto deldef_return;
+	}
 
-  /* create a new message */
-  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_REMOVEDEF, 0);
-  if (msg == NULL)
-    goto deldef_return;
+	/* create a new message */
+	msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_REMOVEDEF, 0);
+	if (msg == NULL)
+		goto deldef_return;
 
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto deldef_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto deldef_return;
+	}
 
-  /* read the response */
-  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto deldef_return;
-  }
+	/* read the response */
+	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto deldef_return;
+	}
 
-  /* process the response */
-  ret_val = nlbl_mgmt_parse_ack(ans_msg);
+	/* process the response */
+	ret_val = nlbl_mgmt_parse_ack(ans_msg);
 
- deldef_return:
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+deldef_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /**
@@ -742,85 +742,85 @@ int nlbl_mgmt_deldef(nlbl_handle *hndl)
  */
 int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_dommap *domain)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  nlbl_msg *msg = NULL;
-  nlbl_msg *ans_msg = NULL;
-  struct genlmsghdr *genl_hdr;
-  struct nlattr *nla;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *ans_msg = NULL;
+	struct genlmsghdr *genl_hdr;
+	struct nlattr *nla;
 
-  /* sanity checks */
-  if (domain == NULL)
-    return -EINVAL;
-  if (nlbl_mgmt_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (domain == NULL)
+		return -EINVAL;
+	if (nlbl_mgmt_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto listdef_return;
-  }
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto listdef_return;
+	}
 
-  /* create a new message */
-  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_LISTDEF, 0);
-  if (msg == NULL)
-    goto listdef_return;
+	/* create a new message */
+	msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_LISTDEF, 0);
+	if (msg == NULL)
+		goto listdef_return;
 
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto listdef_return;
-  }
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto listdef_return;
+	}
 
-  /* read the response */
-  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto listdef_return;
-  }
+	/* read the response */
+	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto listdef_return;
+	}
 
-  /* check the response */
-  ret_val = nlbl_mgmt_parse_ack(ans_msg);
-  if (ret_val < 0 && ret_val != -ENOMSG)
-    goto listdef_return;
-  genl_hdr = nlbl_msg_genlhdr(ans_msg);
-  if (genl_hdr == NULL) {
-    ret_val = -EBADMSG;
-    goto listdef_return;
-  } else if (genl_hdr->cmd != NLBL_MGMT_C_LISTDEF) {
-    ret_val = -EBADMSG;
-    goto listdef_return;
-  }
+	/* check the response */
+	ret_val = nlbl_mgmt_parse_ack(ans_msg);
+	if (ret_val < 0 && ret_val != -ENOMSG)
+		goto listdef_return;
+	genl_hdr = nlbl_msg_genlhdr(ans_msg);
+	if (genl_hdr == NULL) {
+		ret_val = -EBADMSG;
+		goto listdef_return;
+	} else if (genl_hdr->cmd != NLBL_MGMT_C_LISTDEF) {
+		ret_val = -EBADMSG;
+		goto listdef_return;
+	}
 
-  /* process the response */
-  genl_hdr = nlbl_msg_genlhdr(ans_msg);
-  if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTDEF)
-    goto listdef_return;
-  nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_PROTOCOL);
-  if (nla == NULL)
-    goto listdef_return;
-  domain->proto_type = nla_get_u32(nla);
-  switch (domain->proto_type) {
-  case NETLBL_NLTYPE_CIPSOV4:
-    nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_CV4DOI);
-    if (nla == NULL)
-      goto listdef_return;
-    domain->proto.cv4.doi = nla_get_u32(nla);
-    break;
-  }
+	/* process the response */
+	genl_hdr = nlbl_msg_genlhdr(ans_msg);
+	if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTDEF)
+		goto listdef_return;
+	nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_PROTOCOL);
+	if (nla == NULL)
+		goto listdef_return;
+	domain->proto_type = nla_get_u32(nla);
+	switch (domain->proto_type) {
+	case NETLBL_NLTYPE_CIPSOV4:
+		nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_CV4DOI);
+		if (nla == NULL)
+			goto listdef_return;
+		domain->proto.cv4.doi = nla_get_u32(nla);
+		break;
+	}
 
-  ret_val = 0;
+	ret_val = 0;
 
- listdef_return:
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+listdef_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /**
@@ -837,27 +837,27 @@ int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_dommap *domain)
  */
 int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_dommap **domains)
 {
-  int ret_val = -ENOMEM;
-  nlbl_handle *p_hndl = hndl;
-  unsigned char *data = NULL;
-  nlbl_msg *msg = NULL;
-  struct nlmsghdr *nl_hdr;
-  struct genlmsghdr *genl_hdr;
-  struct nlattr *nla_head;
-  struct nlattr *nla;
-  int data_len;
-  int data_attrlen;
-  nlbl_dommap *dmns = NULL;
-  uint32_t dmns_count = 0;
+	int ret_val = -ENOMEM;
+	nlbl_handle *p_hndl = hndl;
+	unsigned char *data = NULL;
+	nlbl_msg *msg = NULL;
+	struct nlmsghdr *nl_hdr;
+	struct genlmsghdr *genl_hdr;
+	struct nlattr *nla_head;
+	struct nlattr *nla;
+	int data_len;
+	int data_attrlen;
+	nlbl_dommap *dmns = NULL;
+	uint32_t dmns_count = 0;
 
-  /* sanity checks */
-  if (domains == NULL)
-    return -EINVAL;
-  if (nlbl_mgmt_fid == 0)
-    return -ENOPROTOOPT;
+	/* sanity checks */
+	if (domains == NULL)
+		return -EINVAL;
+	if (nlbl_mgmt_fid == 0)
+		return -ENOPROTOOPT;
 
-  /* open a handle if we need one */
-  if (p_hndl == NULL) {
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
     p_hndl = nlbl_comm_open();
     if (p_hndl == NULL)
       goto listall_return;
@@ -899,70 +899,70 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_dommap **domains)
     if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
 	nl_hdr->nlmsg_type == NLMSG_ERROR ||
 	nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
-      ret_val = -EBADMSG;
-      goto listall_return;
+	    ret_val = -EBADMSG;
+	    goto listall_return;
     }
 
     /* loop through the messages */
     while (nlmsg_ok(nl_hdr, data_len) && nl_hdr->nlmsg_type != NLMSG_DONE) {
-      /* get the header pointers */
-      genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
-      if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTALL) {
-	ret_val = -EBADMSG;
-	goto listall_return;
-      }
-      nla_head = (struct nlattr *)(&genl_hdr[1]);
-      data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
+	    /* get the header pointers */
+	    genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
+	    if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTALL) {
+		    ret_val = -EBADMSG;
+		    goto listall_return;
+	    }
+	    nla_head = (struct nlattr *)(&genl_hdr[1]);
+	    data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 
-      /* resize the array */
-      dmns = realloc(dmns, sizeof(nlbl_dommap) * (dmns_count + 1));
-      if (dmns == NULL)
-	goto listall_return;
-      memset(&dmns[dmns_count], 0, sizeof(nlbl_dommap));
+	    /* resize the array */
+	    dmns = realloc(dmns, sizeof(nlbl_dommap) * (dmns_count + 1));
+	    if (dmns == NULL)
+		    goto listall_return;
+	    memset(&dmns[dmns_count], 0, sizeof(nlbl_dommap));
 
-      /* get the attribute information */
-      nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_DOMAIN);
-      if (nla == NULL)
-	goto listall_return;
-      dmns[dmns_count].domain = malloc(nla_len(nla));
-      if (dmns[dmns_count].domain == NULL)
-	goto listall_return;
-      strncpy(dmns[dmns_count].domain, nla_data(nla), nla_len(nla));
-      nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_PROTOCOL);
-      if (nla == NULL)
-	goto listall_return;
-      dmns[dmns_count].proto_type = nla_get_u32(nla);
-      switch (dmns[dmns_count].proto_type) {
-      case NETLBL_NLTYPE_CIPSOV4:
-	nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_CV4DOI);
-	if (nla == NULL)
-	  goto listall_return;
-	dmns[dmns_count].proto.cv4.doi = nla_get_u32(nla);
-	break;
-      }
+	    /* get the attribute information */
+	    nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_DOMAIN);
+	    if (nla == NULL)
+		    goto listall_return;
+	    dmns[dmns_count].domain = malloc(nla_len(nla));
+	    if (dmns[dmns_count].domain == NULL)
+		    goto listall_return;
+	    strncpy(dmns[dmns_count].domain, nla_data(nla), nla_len(nla));
+	    nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_PROTOCOL);
+	    if (nla == NULL)
+		    goto listall_return;
+	    dmns[dmns_count].proto_type = nla_get_u32(nla);
+	    switch (dmns[dmns_count].proto_type) {
+	    case NETLBL_NLTYPE_CIPSOV4:
+		    nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_CV4DOI);
+		    if (nla == NULL)
+			    goto listall_return;
+		    dmns[dmns_count].proto.cv4.doi = nla_get_u32(nla);
+		    break;
+	    }
 
-      dmns_count++;
+	    dmns_count++;
 
-      /* next message */
-      nl_hdr = nlmsg_next(nl_hdr, &data_len);
+	    /* next message */
+	    nl_hdr = nlmsg_next(nl_hdr, &data_len);
     }
   } while (data_len > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
 
   *domains = dmns;
   ret_val = dmns_count;
 
- listall_return:
+listall_return:
   if (ret_val < 0 && dmns) {
-    do {
-      if (dmns[dmns_count].domain)
-	free(dmns[dmns_count].domain);
-    } while (dmns_count-- > 0);
-    free(dmns);
+	  do {
+		  if (dmns[dmns_count].domain)
+			  free(dmns[dmns_count].domain);
+	  } while (dmns_count-- > 0);
+	  free(dmns);
   }
   if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
+	  nlbl_comm_close(p_hndl);
   nlbl_msg_free(msg);
   if (data)
-    free(data);
+	  free(data);
   return ret_val;
 }

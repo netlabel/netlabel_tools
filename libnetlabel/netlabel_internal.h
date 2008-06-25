@@ -29,7 +29,7 @@
 
 /* NetLabel communication handle */
 struct nlbl_handle_s {
-  struct nl_handle *nl_hndl;
+	struct nl_handle *nl_hndl;
 };
 
 /* Specify which version of libnl we are using */
@@ -45,30 +45,30 @@ struct nlbl_handle_s {
 
 /* Generic Netlink message header */
 struct genlmsghdr {
-  uint8_t cmd;
-  uint8_t version;
-  uint16_t reserved;
+	uint8_t cmd;
+	uint8_t version;
+	uint16_t reserved;
 };
 
 #define GENL_ID_CTRL            0x10
 
 enum {
-  CTRL_CMD_UNSPEC,
-  CTRL_CMD_NEWFAMILY,
-  CTRL_CMD_DELFAMILY,
-  CTRL_CMD_GETFAMILY,
-  CTRL_CMD_NEWOPS,
-  CTRL_CMD_DELOPS,
-  CTRL_CMD_GETOPS,
-  __CTRL_CMD_MAX,
+	CTRL_CMD_UNSPEC,
+	CTRL_CMD_NEWFAMILY,
+	CTRL_CMD_DELFAMILY,
+	CTRL_CMD_GETFAMILY,
+	CTRL_CMD_NEWOPS,
+	CTRL_CMD_DELOPS,
+	CTRL_CMD_GETOPS,
+	__CTRL_CMD_MAX,
 };
 #define CTRL_CMD_MAX (__CTRL_CMD_MAX - 1)
 
 enum {
-  CTRL_ATTR_UNSPEC,
-  CTRL_ATTR_FAMILY_ID,
-  CTRL_ATTR_FAMILY_NAME,
-  __CTRL_ATTR_MAX,
+	CTRL_ATTR_UNSPEC,
+	CTRL_ATTR_FAMILY_ID,
+	CTRL_ATTR_FAMILY_NAME,
+	__CTRL_ATTR_MAX,
 };
 #define CTRL_ATTR_MAX (__CTRL_ATTR_MAX - 1)
 

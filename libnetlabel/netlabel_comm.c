@@ -57,7 +57,7 @@ static uint32_t nlcomm_read_timeout = 10;
  */
 static int nlbl_comm_hndl_valid(nlbl_handle *hndl)
 {
-  return (hndl != NULL && hndl->nl_hndl != NULL);
+	return (hndl != NULL && hndl->nl_hndl != NULL);
 }
 
 /*
@@ -74,7 +74,7 @@ static int nlbl_comm_hndl_valid(nlbl_handle *hndl)
  */
 void nlbl_comm_timeout(uint32_t seconds)
 {
-  nlcomm_read_timeout = seconds;
+	nlcomm_read_timeout = seconds;
 }
 
 /*
@@ -92,43 +92,43 @@ void nlbl_comm_timeout(uint32_t seconds)
  */
 nlbl_handle *nlbl_comm_open(void)
 {
-  nlbl_handle *hndl;
+	nlbl_handle *hndl;
 
-  /* allocate the handle memory */
-  hndl = calloc(1, sizeof(*hndl));
-  if (hndl == NULL)
-    goto open_failure;
+	/* allocate the handle memory */
+	hndl = calloc(1, sizeof(*hndl));
+	if (hndl == NULL)
+		goto open_failure;
 
-  /* create a new netlink handle */
-  hndl->nl_hndl = nl_handle_alloc();
-  if (hndl->nl_hndl == NULL)
-    goto open_failure;
+	/* create a new netlink handle */
+	hndl->nl_hndl = nl_handle_alloc();
+	if (hndl->nl_hndl == NULL)
+		goto open_failure;
 
-  /* set the netlink handle properties */
+	/* set the netlink handle properties */
 #if LIBNL_VERSION >= 1008
-  nl_socket_set_peer_port(hndl->nl_hndl, 0);
-  nl_set_passcred(hndl->nl_hndl, 1);
+	nl_socket_set_peer_port(hndl->nl_hndl, 0);
+	nl_set_passcred(hndl->nl_hndl, 1);
 #elif LIBNL_VERSION == 1006
-  nl_handle_set_peer_pid(hndl->nl_hndl, 0);
-  nl_set_passcred(hndl->nl_hndl, 1);
+	nl_handle_set_peer_pid(hndl->nl_hndl, 0);
+	nl_set_passcred(hndl->nl_hndl, 1);
 #endif
-  nl_disable_sequence_check(hndl->nl_hndl);
+	nl_disable_sequence_check(hndl->nl_hndl);
 
-  /* connect to the generic netlink subsystem in the kernel */
-  if (nl_connect(hndl->nl_hndl, NETLINK_GENERIC) != 0)
-    goto open_failure;
+	/* connect to the generic netlink subsystem in the kernel */
+	if (nl_connect(hndl->nl_hndl, NETLINK_GENERIC) != 0)
+		goto open_failure;
 
-  return hndl;
+	return hndl;
 
- open_failure:
-  if (hndl) {
-    if (hndl->nl_hndl) {
-      nl_close(hndl->nl_hndl);
-      nl_handle_destroy(hndl->nl_hndl);
-    }
-    free(hndl);
-  }
-  return NULL;
+open_failure:
+	if (hndl) {
+		if (hndl->nl_hndl) {
+			nl_close(hndl->nl_hndl);
+			nl_handle_destroy(hndl->nl_hndl);
+		}
+		free(hndl);
+	}
+	return NULL;
 }
 
 /**
@@ -142,18 +142,18 @@ nlbl_handle *nlbl_comm_open(void)
  */
 int nlbl_comm_close(nlbl_handle *hndl)
 {
-  /* sanity checks */
-  if (!nlbl_comm_hndl_valid(hndl))
-    return -EINVAL;
+	/* sanity checks */
+	if (!nlbl_comm_hndl_valid(hndl))
+		return -EINVAL;
 
-  /* close and destroy the socket */
-  nl_close(hndl->nl_hndl);
-  nl_handle_destroy(hndl->nl_hndl);
+	/* close and destroy the socket */
+	nl_close(hndl->nl_hndl);
+	nl_handle_destroy(hndl->nl_hndl);
 
-  /* free the memory */
-  free(hndl);
+	/* free the memory */
+	free(hndl);
 
-  return 0;
+	return 0;
 }
 
 /**
@@ -170,61 +170,61 @@ int nlbl_comm_close(nlbl_handle *hndl)
  */
 int nlbl_comm_recv_raw(nlbl_handle *hndl, unsigned char **data)
 {
-  int ret_val;
-  struct sockaddr_nl peer_nladdr;
-  struct ucred *creds = NULL;
-  int nl_fd;
-  fd_set read_fds;
-  struct timeval timeout;
+	int ret_val;
+	struct sockaddr_nl peer_nladdr;
+	struct ucred *creds = NULL;
+	int nl_fd;
+	fd_set read_fds;
+	struct timeval timeout;
 
-  /* sanity checks */
-  if (!nlbl_comm_hndl_valid(hndl) || data == NULL)
-    return -EINVAL;
+	/* sanity checks */
+	if (!nlbl_comm_hndl_valid(hndl) || data == NULL)
+		return -EINVAL;
 
-  /* we use blocking sockets so do enforce a timeout using select() if no data
-   * is waiting to be read from the handle */
-  timeout.tv_sec = nlcomm_read_timeout;
-  timeout.tv_usec = 0;
+	/* we use blocking sockets so do enforce a timeout using select() if no data
+	 * is waiting to be read from the handle */
+	timeout.tv_sec = nlcomm_read_timeout;
+	timeout.tv_usec = 0;
 #if LIBNL_VERSION >= 1008
-  nl_fd = nl_socket_get_fd(hndl->nl_hndl);
+	nl_fd = nl_socket_get_fd(hndl->nl_hndl);
 #else
-  nl_fd = nl_handle_get_fd(hndl->nl_hndl);
+	nl_fd = nl_handle_get_fd(hndl->nl_hndl);
 #endif
-  FD_ZERO(&read_fds);
-  FD_SET(nl_fd, &read_fds);
-  ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
-  if (ret_val < 0)
-    return -errno;
-  else if (ret_val == 0)
-    return -EAGAIN;
+	FD_ZERO(&read_fds);
+	FD_SET(nl_fd, &read_fds);
+	ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
+	if (ret_val < 0)
+		return -errno;
+	else if (ret_val == 0)
+		return -EAGAIN;
 
-  /* perform the read operation */
-  *data = NULL;
+	/* perform the read operation */
+	*data = NULL;
 #if LIBNL_VERSION >= 1006
-  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
-  if (ret_val < 0)
-    return ret_val;
+	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
+	if (ret_val < 0)
+		return ret_val;
 #else
-  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
-  if (ret_val < 0)
-    return ret_val;
+	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
+	if (ret_val < 0)
+		return ret_val;
 #endif
 
-  /* if we are setup to receive credentials, only accept messages from the
-   * kernel (ignore all others and send an -EAGAIN) */
-  if (creds != NULL && creds->pid != 0) {
-    ret_val = -EAGAIN;
-    goto recv_raw_failure;
-  }
+	/* if we are setup to receive credentials, only accept messages from the
+	 * kernel (ignore all others and send an -EAGAIN) */
+	if (creds != NULL && creds->pid != 0) {
+		ret_val = -EAGAIN;
+		goto recv_raw_failure;
+	}
 
-  return ret_val;
+	return ret_val;
 
- recv_raw_failure:
-  if (*data) {
-    free(*data);
-    *data = NULL;
-  }
-  return ret_val;
+recv_raw_failure:
+	if (*data) {
+		free(*data);
+		*data = NULL;
+	}
+	return ret_val;
 }
 
 /**
@@ -241,90 +241,90 @@ int nlbl_comm_recv_raw(nlbl_handle *hndl, unsigned char **data)
  */
 int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
 {
-  int ret_val;
-  struct sockaddr_nl peer_nladdr;
-  struct ucred *creds = NULL;
-  int nl_fd;
-  fd_set read_fds;
-  struct timeval timeout;
-  unsigned char *data = NULL;
-  struct nlmsghdr *nl_hdr;
+	int ret_val;
+	struct sockaddr_nl peer_nladdr;
+	struct ucred *creds = NULL;
+	int nl_fd;
+	fd_set read_fds;
+	struct timeval timeout;
+	unsigned char *data = NULL;
+	struct nlmsghdr *nl_hdr;
 
-  /* XXX - we should make use of nlbl_comm_recv_raw() here */
+	/* XXX - we should make use of nlbl_comm_recv_raw() here */
 
-  /* sanity checks */
-  if (!nlbl_comm_hndl_valid(hndl) || msg == NULL)
-    return -EINVAL;
+	/* sanity checks */
+	if (!nlbl_comm_hndl_valid(hndl) || msg == NULL)
+		return -EINVAL;
 
-  /* we use blocking sockets so do enforce a timeout using select() if no data
-   * is waiting to be read from the handle */
-  timeout.tv_sec = nlcomm_read_timeout;
-  timeout.tv_usec = 0;
+	/* we use blocking sockets so do enforce a timeout using select() if no data
+	 * is waiting to be read from the handle */
+	timeout.tv_sec = nlcomm_read_timeout;
+	timeout.tv_usec = 0;
 #if LIBNL_VERSION >= 1008
-  nl_fd = nl_socket_get_fd(hndl->nl_hndl);
+	nl_fd = nl_socket_get_fd(hndl->nl_hndl);
 #else
-  nl_fd = nl_handle_get_fd(hndl->nl_hndl);
+	nl_fd = nl_handle_get_fd(hndl->nl_hndl);
 #endif
-  FD_ZERO(&read_fds);
-  FD_SET(nl_fd, &read_fds);
-  ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
-  if (ret_val < 0)
-    return -errno;
-  else if (ret_val == 0)
-    return -EAGAIN;
+	FD_ZERO(&read_fds);
+	FD_SET(nl_fd, &read_fds);
+	ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
+	if (ret_val < 0)
+		return -errno;
+	else if (ret_val == 0)
+		return -EAGAIN;
 
-  /* perform the read operation */
+	/* perform the read operation */
 #if LIBNL_VERSION >= 1100
-  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data, &creds);
-  if (ret_val < 0)
-    return ret_val;
+	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data, &creds);
+	if (ret_val < 0)
+		return ret_val;
 #elif LIBNL_VERSION >= 1006
-  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
-  if (ret_val < 0)
-    return ret_val;
+	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
+	if (ret_val < 0)
+		return ret_val;
 #else
-  ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
-  if (ret_val < 0)
-    return ret_val;
+	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
+	if (ret_val < 0)
+		return ret_val;
 #endif
 
-  /* if we are setup to receive credentials, only accept messages from the
-   * kernel (ignore all others and send an -EAGAIN) */
-  if (creds != NULL && creds->pid != 0) {
-    ret_val = -EAGAIN;
-    goto recv_failure;
-  }
+	/* if we are setup to receive credentials, only accept messages from the
+	 * kernel (ignore all others and send an -EAGAIN) */
+	if (creds != NULL && creds->pid != 0) {
+		ret_val = -EAGAIN;
+		goto recv_failure;
+	}
 
-  nl_hdr = (struct nlmsghdr *)data;
+	nl_hdr = (struct nlmsghdr *)data;
 
-  /* make sure the received buffer is the correct length */
-  if (!nlmsg_ok(nl_hdr, ret_val)) {
-    ret_val = -EBADMSG;
-    goto recv_failure;
-  }
+	/* make sure the received buffer is the correct length */
+	if (!nlmsg_ok(nl_hdr, ret_val)) {
+		ret_val = -EBADMSG;
+		goto recv_failure;
+	}
 
-  /* check to see if this is a netlink control message we don't care about */
-  if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
-      nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
-    ret_val = -EBADMSG;
-    goto recv_failure;
-  }
+	/* check to see if this is a netlink control message we don't care about */
+	if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
+	    nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
+		ret_val = -EBADMSG;
+		goto recv_failure;
+	}
 
-  /* convert the received buffer into a nlbl_msg */
-  *msg = nlmsg_convert((struct nlmsghdr *)data);
-  if (*msg == NULL) {
-    ret_val = -EBADMSG;
-    goto recv_failure;
-  }
+	/* convert the received buffer into a nlbl_msg */
+	*msg = nlmsg_convert((struct nlmsghdr *)data);
+	if (*msg == NULL) {
+		ret_val = -EBADMSG;
+		goto recv_failure;
+	}
 
-  return ret_val;
+	return ret_val;
 
- recv_failure:
-  if (data)
-    free(data);
-  if (creds)
-    free(creds);
-  return ret_val;
+recv_failure:
+	if (data)
+		free(data);
+	if (creds)
+		free(creds);
+	return ret_val;
 }
 
 /**
@@ -339,34 +339,34 @@ int nlbl_comm_recv(nlbl_handle *hndl, nlbl_msg **msg)
  */
 int nlbl_comm_send(nlbl_handle *hndl, nlbl_msg *msg)
 {
-  struct nlmsghdr *nl_hdr;
-  struct ucred creds;
+	struct nlmsghdr *nl_hdr;
+	struct ucred creds;
 
-  /* sanity checks */
-  if (!nlbl_comm_hndl_valid(hndl) || msg == NULL)
-    return -EINVAL;
+	/* sanity checks */
+	if (!nlbl_comm_hndl_valid(hndl) || msg == NULL)
+		return -EINVAL;
 
-  /* setup our credentials using the _effective_ values */
-  /* XXX - should we use the _real_ values instead? */
-  creds.pid = getpid();
-  creds.uid = geteuid();
-  creds.gid = getegid();
+	/* setup our credentials using the _effective_ values */
+	/* XXX - should we use the _real_ values instead? */
+	creds.pid = getpid();
+	creds.uid = geteuid();
+	creds.gid = getegid();
 
-  /* set the message properties */
+	/* set the message properties */
 #if LIBNL_VERSION >= 1006
-  nlmsg_set_creds(msg, &creds);
+	nlmsg_set_creds(msg, &creds);
 #endif
 
-  /* request a netlink ack message */
-  nl_hdr = nlbl_msg_nlhdr(msg);
-  if (nl_hdr == NULL)
-    return -EBADMSG;
-  nl_hdr->nlmsg_flags |= NLM_F_ACK;
+	/* request a netlink ack message */
+	nl_hdr = nlbl_msg_nlhdr(msg);
+	if (nl_hdr == NULL)
+		return -EBADMSG;
+	nl_hdr->nlmsg_flags |= NLM_F_ACK;
 
-  /* send the message */
+	/* send the message */
 #if LIBNL_VERSION == 1005
-  return nl_send_auto_complete(hndl->nl_hndl, nlbl_msg_nlhdr(msg));
+	return nl_send_auto_complete(hndl->nl_hndl, nlbl_msg_nlhdr(msg));
 #elif LIBNL_VERSION >= 1006
-  return nl_send_auto_complete(hndl->nl_hndl, msg);
+	return nl_send_auto_complete(hndl->nl_hndl, msg);
 #endif
 }

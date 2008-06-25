@@ -57,7 +57,7 @@ char *nlctl_name = NULL;
  */
 static void nlctl_usage_print(FILE *fp)
 {
-  fprintf(fp, "usage: %s [<flags>] <module> [<commands>]\n", nlctl_name);
+	fprintf(fp, "usage: %s [<flags>] <module> [<commands>]\n", nlctl_name);
 }
 
 /**
@@ -70,10 +70,10 @@ static void nlctl_usage_print(FILE *fp)
  */
 static void nlctl_ver_print(FILE *fp)
 {
-  fprintf(fp,
-	  "NetLabel Control Utility, version %s (libnetlabel %s)\n",
-	  VERSION_NETLABELCTL,
-	  NETLBL_VER_STRING);
+	fprintf(fp,
+		"NetLabel Control Utility, version %s (libnetlabel %s)\n",
+		VERSION_NETLABELCTL,
+		NETLBL_VER_STRING);
 }
 
 /**
@@ -86,39 +86,39 @@ static void nlctl_ver_print(FILE *fp)
  */
 static void nlctl_help_print(FILE *fp)
 {
-  nlctl_ver_print(fp);
-  fprintf(fp,
-          " Usage: %s [<flags>] <module> [<commands>]\n"
-          "\n"
-          " Flags:\n"
-          "   -h        : help/usage message\n"
-          "   -p        : make the output pretty\n"
-          "   -t <secs> : timeout\n"
-          "   -v        : verbose mode\n"
-          "\n"
-          " Modules and Commands:\n"
-          "  mgmt : NetLabel management\n"
-          "    version\n"
-          "    protocols\n"
-	  "  map : Domain/Protocol mapping\n"
-          "    add default|domain:<domain> protocol:<protocol>[,<extra>]\n"
-          "    del default|domain:<domain>\n"
-          "    list\n"
-          "  unlbl : Unlabeled packet handling\n"
-          "    accept on|off\n"
-	  "    add default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
-	  "                                label:<LABEL>\n"
-	  "    del default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
-	  "    list\n"
-          "  cipsov4 : CIPSO/IPv4 packet handling\n"
-          "    add std doi:<DOI> tags:<T1>,<Tn>\n"
-	  "            levels:<LL1>=<RL1>,<LLn>=<RLn>\n"
-          "            categories:<LC1>=<RC1>,<LCn>=<RCn>\n"
-	  "    add pass doi:<DOI> tags:<T1>,<Tn>\n"
-          "    del doi:<DOI>\n"
-          "    list [doi:<DOI>]\n"
-          "\n",
-	  nlctl_name);
+	nlctl_ver_print(fp);
+	fprintf(fp,
+		" Usage: %s [<flags>] <module> [<commands>]\n"
+		"\n"
+		" Flags:\n"
+		"   -h        : help/usage message\n"
+		"   -p        : make the output pretty\n"
+		"   -t <secs> : timeout\n"
+		"   -v        : verbose mode\n"
+		"\n"
+		" Modules and Commands:\n"
+		"  mgmt : NetLabel management\n"
+		"    version\n"
+		"    protocols\n"
+		"  map : Domain/Protocol mapping\n"
+		"    add default|domain:<domain> protocol:<protocol>[,<extra>]\n"
+		"    del default|domain:<domain>\n"
+		"    list\n"
+		"  unlbl : Unlabeled packet handling\n"
+		"    accept on|off\n"
+		"    add default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
+		"                                label:<LABEL>\n"
+		"    del default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
+		"    list\n"
+		"  cipsov4 : CIPSO/IPv4 packet handling\n"
+		"    add std doi:<DOI> tags:<T1>,<Tn>\n"
+		"            levels:<LL1>=<RL1>,<LLn>=<RLn>\n"
+		"            categories:<LC1>=<RC1>,<LCn>=<RCn>\n"
+		"    add pass doi:<DOI> tags:<T1>,<Tn>\n"
+		"    del doi:<DOI>\n"
+		"    list [doi:<DOI>]\n"
+		"\n",
+		nlctl_name);
 }
 
 /**
@@ -132,41 +132,41 @@ static void nlctl_help_print(FILE *fp)
  */
 static char *nlctl_strerror(int ret_val)
 {
-  char *str = NULL;
+	char *str = NULL;
 
-  switch (ret_val) {
-  case 0:
-    str = "operation succeeded";
-    break;
-  case EINVAL:
-    str = "invalid argument or parameter";
-    break;
-  case ENOMEM:
-    str = "out of memory";
-    break;
-  case ENOENT:
-    str = "entry does not exist";
-    break;
-  case ENODATA:
-    str = "no data was available";
-    break;
-  case EBADMSG:
-    str = "bad message";
-    break;
-  case ENOPROTOOPT:
-    str = "not supported";
-    break;
-  case EAGAIN:
-    str = "try again";
-    break;
-  case ENOMSG:
-    str = "no message was received";
-    break;
-  default:
-    str = strerror(ret_val);
-  }
+	switch (ret_val) {
+	case 0:
+		str = "operation succeeded";
+		break;
+	case EINVAL:
+		str = "invalid argument or parameter";
+		break;
+	case ENOMEM:
+		str = "out of memory";
+		break;
+	case ENOENT:
+		str = "entry does not exist";
+		break;
+	case ENODATA:
+		str = "no data was available";
+		break;
+	case EBADMSG:
+		str = "bad message";
+		break;
+	case ENOPROTOOPT:
+		str = "not supported";
+		break;
+	case EAGAIN:
+		str = "try again";
+		break;
+	case ENOMSG:
+		str = "no message was received";
+		break;
+	default:
+		str = strerror(ret_val);
+	}
   
-  return str;
+	return str;
 }
 
 /**
@@ -174,93 +174,93 @@ static char *nlctl_strerror(int ret_val)
  */
 int main(int argc, char *argv[])
 {
-  int ret_val = RET_ERR;
-  int arg_iter;
-  main_function_t *module_main = NULL;
-  char *module_name;
+	int ret_val = RET_ERR;
+	int arg_iter;
+	main_function_t *module_main = NULL;
+	char *module_name;
 
-  /* sanity checks */
-  if (argc < 2) {
-    nlctl_usage_print(stderr);
-    return RET_USAGE;
-  }
+	/* sanity checks */
+	if (argc < 2) {
+		nlctl_usage_print(stderr);
+		return RET_USAGE;
+	}
 
-  /* save of the invoked program name */
-  nlctl_name = strrchr(argv[0], '/');
-  if (nlctl_name == NULL)
-    nlctl_name = argv[0];
-  else if (nlctl_name[0] == '/')
-    nlctl_name += 1;
-  else
-    nlctl_name = strdup("unknown");
+	/* save of the invoked program name */
+	nlctl_name = strrchr(argv[0], '/');
+	if (nlctl_name == NULL)
+		nlctl_name = argv[0];
+	else if (nlctl_name[0] == '/')
+		nlctl_name += 1;
+	else
+		nlctl_name = strdup("unknown");
 
-  /* get the command line arguments */
-  do {
-    arg_iter = getopt(argc, argv, "hvt:pV");
-    switch (arg_iter) {
-    case 'h':
-      /* help */
-      nlctl_help_print(stdout);
-      return RET_OK;
-      break;
-    case 'v':
-      /* verbose */
-      opt_verbose = 1;
-      break;
-    case 'p':
-      /* pretty */
-      opt_pretty = 1;
-      break;
-    case 't':
-      /* timeout */
-      if (atoi(optarg) < 0) {
-        nlctl_usage_print(stderr);
-        return RET_USAGE;
-      }
-      opt_timeout = atoi(optarg);
-      break;
-    case 'V':
-      /* version */
-      nlctl_ver_print(stdout);
-      return RET_OK;
-      break;
-    }
-  } while (arg_iter > 0);
+	/* get the command line arguments */
+	do {
+		arg_iter = getopt(argc, argv, "hvt:pV");
+		switch (arg_iter) {
+		case 'h':
+			/* help */
+			nlctl_help_print(stdout);
+			return RET_OK;
+			break;
+		case 'v':
+			/* verbose */
+			opt_verbose = 1;
+			break;
+		case 'p':
+			/* pretty */
+			opt_pretty = 1;
+			break;
+		case 't':
+			/* timeout */
+			if (atoi(optarg) < 0) {
+				nlctl_usage_print(stderr);
+				return RET_USAGE;
+			}
+			opt_timeout = atoi(optarg);
+			break;
+		case 'V':
+			/* version */
+			nlctl_ver_print(stdout);
+			return RET_OK;
+			break;
+		}
+	} while (arg_iter > 0);
 
-  /* perform any setup we have to do */
-  ret_val = nlbl_init();
-  if (ret_val < 0) {
-    fprintf(stderr, MSG_ERR("failed to initialize the NetLabel library\n"));
-    goto exit;
-  }
-  nlbl_comm_timeout(opt_timeout);
+	/* perform any setup we have to do */
+	ret_val = nlbl_init();
+	if (ret_val < 0) {
+		fprintf(stderr, MSG_ERR("failed to initialize the NetLabel library\n"));
+		goto exit;
+	}
+	nlbl_comm_timeout(opt_timeout);
 
-  module_name = argv[optind];
-  if (!module_name)
-    goto exit;
+	module_name = argv[optind];
+	if (!module_name)
+		goto exit;
 
-  /* transfer control to the module */
-  if (!strcmp(module_name, "mgmt")) {
-    module_main = mgmt_main;
-  } else if (!strcmp(module_name, "map")) {
-    module_main = map_main;
-  } else if (!strcmp(module_name, "unlbl")) {
-    module_main = unlbl_main;
-  } else if (!strcmp(module_name, "cipsov4")) {
-    module_main = cipsov4_main;
-  } else {
-    fprintf(stderr, MSG_ERR("unknown or missing module '%s'\n"), module_name);
-    goto exit;
-  }
-  ret_val = module_main(argc - optind - 1, argv + optind + 1);
-  if (ret_val < 0) {
-    fprintf(stderr, MSG_ERR("%s\n"), nlctl_strerror(-ret_val));
-    ret_val = RET_ERR;
-  } else
-    ret_val = RET_OK;
+	/* transfer control to the module */
+	if (!strcmp(module_name, "mgmt")) {
+		module_main = mgmt_main;
+	} else if (!strcmp(module_name, "map")) {
+		module_main = map_main;
+	} else if (!strcmp(module_name, "unlbl")) {
+		module_main = unlbl_main;
+	} else if (!strcmp(module_name, "cipsov4")) {
+		module_main = cipsov4_main;
+	} else {
+		fprintf(stderr, MSG_ERR("unknown or missing module '%s'\n"), module_name);
+		goto exit;
+	}
+	ret_val = module_main(argc - optind - 1, argv + optind + 1);
+	if (ret_val < 0) {
+		fprintf(stderr, MSG_ERR("%s\n"), nlctl_strerror(-ret_val));
+		ret_val = RET_ERR;
+	} else
+		ret_val = RET_OK;
 
-  nlbl_exit();
+	nlbl_exit();
 
 exit:
-  return ret_val;
+	return ret_val;
 }

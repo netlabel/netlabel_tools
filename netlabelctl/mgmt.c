@@ -41,43 +41,43 @@
  */
 int mgmt_protocols(void)
 {
-  int ret_val;
-  nlbl_proto *list = NULL;
-  size_t count;
-  uint32_t iter;
+	int ret_val;
+	nlbl_proto *list = NULL;
+	size_t count;
+	uint32_t iter;
 
-  ret_val = nlbl_mgmt_protocols(NULL, &list);
-  if (ret_val < 0)
-    return ret_val;
-  count = ret_val;
+	ret_val = nlbl_mgmt_protocols(NULL, &list);
+	if (ret_val < 0)
+		return ret_val;
+	count = ret_val;
 
-  printf(MSG("NetLabel protocols : ")); 
-  for (iter = 0; iter < count; iter++) {
-    switch (list[iter]) {
-    case NETLBL_NLTYPE_UNLABELED:
-      printf("UNLABELED");
-      break;
-    case NETLBL_NLTYPE_RIPSO:
-      printf("RIPSO");
-      break;
-    case NETLBL_NLTYPE_CIPSOV4:
-      printf("CIPSOv4");
-      break;
-    case NETLBL_NLTYPE_CIPSOV6:
-      printf("CIPSOv6");
-      break;
-    default:
-      printf("UNKNOWN(%u)", list[iter]);
-      break;
-    }
-    if (iter + 1 < count)
-      printf("%s", (opt_pretty ? " " : ","));
-  }
-  printf("\n");
+	printf(MSG("NetLabel protocols : ")); 
+	for (iter = 0; iter < count; iter++) {
+		switch (list[iter]) {
+		case NETLBL_NLTYPE_UNLABELED:
+			printf("UNLABELED");
+			break;
+		case NETLBL_NLTYPE_RIPSO:
+			printf("RIPSO");
+			break;
+		case NETLBL_NLTYPE_CIPSOV4:
+			printf("CIPSOv4");
+			break;
+		case NETLBL_NLTYPE_CIPSOV6:
+			printf("CIPSOv6");
+			break;
+		default:
+			printf("UNKNOWN(%u)", list[iter]);
+			break;
+		}
+		if (iter + 1 < count)
+			printf("%s", (opt_pretty ? " " : ","));
+	}
+	printf("\n");
 
-  if (list)
-    free(list);
-  return 0;
+	if (list)
+		free(list);
+	return 0;
 }
 
 /**
@@ -90,17 +90,17 @@ int mgmt_protocols(void)
  */
 int mgmt_version(void)
 {
-  int ret_val;
-  uint32_t version;
+	int ret_val;
+	uint32_t version;
 
-  ret_val = nlbl_mgmt_version(NULL, &version);
-  if (ret_val < 0)
-    return ret_val;
+	ret_val = nlbl_mgmt_version(NULL, &version);
+	if (ret_val < 0)
+		return ret_val;
 
-  printf(MSG("NetLabel protocol version : ")); 
-  printf("%u\n", version);
+	printf(MSG("NetLabel protocol version : ")); 
+	printf("%u\n", version);
 
-  return 0;
+	return 0;
 }
 
 /**
@@ -115,23 +115,23 @@ int mgmt_version(void)
  */
 int mgmt_main(int argc, char *argv[])
 {
-  int ret_val;
+	int ret_val;
 
-  /* sanity checks */
-  if (argc <= 0 || argv == NULL || argv[0] == NULL)
-    return -EINVAL;
+	/* sanity checks */
+	if (argc <= 0 || argv == NULL || argv[0] == NULL)
+		return -EINVAL;
 
-  /* handle the request */
-  if (strcmp(argv[0], "version") == 0) {
-    /* kernel version */
-    ret_val = mgmt_version();
-  } else if (strcmp(argv[0], "protocols") == 0) {
-    /* module list */
-    ret_val = mgmt_protocols();
-  } else {
-    /* unknown request */
-    ret_val = -EINVAL;
-  }
+	/* handle the request */
+	if (strcmp(argv[0], "version") == 0) {
+		/* kernel version */
+		ret_val = mgmt_version();
+	} else if (strcmp(argv[0], "protocols") == 0) {
+		/* module list */
+		ret_val = mgmt_protocols();
+	} else {
+		/* unknown request */
+		ret_val = -EINVAL;
+	}
 
-  return ret_val;
+	return ret_val;
 }

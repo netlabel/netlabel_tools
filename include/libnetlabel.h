@@ -62,15 +62,15 @@ typedef char *nlbl_netdev;
 /*** network address type */
 
 typedef struct nlbl_mgmt_netaddr_s {
-  short type;
-  union {
-    struct in_addr v4;
-    struct in6_addr v6;
-  } addr;
-  union {
-    struct in_addr v4;
-    struct in6_addr v6;
-  } mask;
+	short type;
+	union {
+		struct in_addr v4;
+		struct in6_addr v6;
+	} addr;
+	union {
+		struct in_addr v4;
+		struct in6_addr v6;
+	} mask;
 } nlbl_netaddr;
 
 /*** security label/context type */
@@ -87,42 +87,42 @@ typedef uint32_t nlbl_cv4_mtype;
 /* tags */
 typedef uint8_t nlbl_cv4_tag;
 typedef struct nlbl_cv4_tag_array_s {
-  nlbl_cv4_tag *array;
-  size_t size;
+	nlbl_cv4_tag *array;
+	size_t size;
 } nlbl_cv4_tag_a;
 
 /* mls sensitivity levels */
 typedef uint32_t nlbl_cv4_lvl;
 typedef struct nlbl_cv4_lvl_array_s {
-  nlbl_cv4_lvl *array;
-  size_t size;
+	nlbl_cv4_lvl *array;
+	size_t size;
 } nlbl_cv4_lvl_a;
 
 /* mls categories */
 typedef uint32_t nlbl_cv4_cat;
 typedef struct cv4_cat_array_s {
-  nlbl_cv4_cat *array;
-  size_t size;
+	nlbl_cv4_cat *array;
+	size_t size;
 } nlbl_cv4_cat_a;
 
 /*** management types */
 
 /* domain mapping */
 typedef struct nlbl_dommap_s {
-  char *domain;
-  nlbl_proto proto_type;
-  union {
-    struct {
-      nlbl_cv4_doi doi;
-    } cv4;
-  } proto;
+	char *domain;
+	nlbl_proto proto_type;
+	union {
+		struct {
+			nlbl_cv4_doi doi;
+		} cv4;
+	} proto;
 } nlbl_dommap;
 
 /* address mapping */
 typedef struct nlbl_addrmap_s {
-  nlbl_netdev dev;
-  nlbl_netaddr addr;
-  nlbl_secctx label;
+	nlbl_netdev dev;
+	nlbl_netaddr addr;
+	nlbl_secctx label;
 } nlbl_addrmap;
 
 /*
