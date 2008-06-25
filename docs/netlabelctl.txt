@@ -70,9 +70,23 @@ kernel.  The different commands are as follows:
 
 This command enables or disables the receipt of unlabeled packets.
 
+ # netlabelctl unlbl add default|interface:<dev> address:<addr>[/<mask>] \
+                                                 label:<label>
+
+This command adds a static label entry to the kernel.  Users can specify either
+a specific network interface by typing "interface:<dev>" or they can set the
+default, used when no other entries are matched by typing "default".  Both IPv4
+and IPv6 addresses are accepted and an optional mask length can be given to
+specify entire networks.
+
+ # netlabelctl unlbl del default|interface:<dev> address:<addr>[/<mask>]
+
+This command removes an existing static label entry from the kernel.
+
  # netlabelctl unlbl list
 
-This command displays the current unlabeled receive setting.
+This command displays the current unlabeled receive setting and any static
+label entries.
 
 * The CIPSO/IPv4 Module (cipsov4)
 

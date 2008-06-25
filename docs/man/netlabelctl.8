@@ -78,16 +78,24 @@ Display all of the configured LSM domain to NetLabel protocol mappings.
 .TP 5
 .B unlbl
 .P
-The unlabeled (unlbl) module controls the unlabeled labeling protocol which is
-used by domains for outbound traffic when packet labeling is not desired as
-well as when unlabeled packets are received by the system.  At present the
-unlabeled module is very simple, supporting only one configurable action:
-allow or disallow unlabeled packets to be delivered to user applications.  The
-different commands and their syntax are listed below.
+The unlabeled (unlbl) module controls the unlabeled protocol which is used both
+when labeling outgoing traffic is not desired as well as when unlabeled
+traffic is received by the system.  This module allows administrators to block
+all unlabeled packets from the system through the "accept" flag and assign
+static, or fallback, security labels to unlabeled traffic based on the inbound
+network interface and source address.
 .HP
 .I accept on|off
 .br
 Toggle the unlabeled traffic accept flag.
+.HP
+.I add default|interface:<dev> address:<addr>[/<mask>] label:<label>
+.br
+Add a new static/fallback entry.
+.HP
+.I del default|interface:<dev> address:<addr>[/<mask>]
+.br
+Delete an existing static/fallback entry.
 .HP
 .I list
 .br
@@ -182,6 +190,18 @@ Display all of the domain mappings in a human readable format.
 .br
 Delete the domain mapping for the "lsm_domain", packets sent from the
 "lsm_domain" will fallback to the default NetLabel mapping.
+.HP
+.I netlabelctl unlbl add interface:lo address:::1 label:foo
+.br
+Add a static/fallback label to assign the "foo" security label to unlabeled
+packets entering the system over the "lo" (loopback) interface with an IPv6
+source address of "::1" (localhost).
+.HP
+.I netlabelctl unlbl add default address:192.168.0.0/16 label:bar
+.br
+Add a static/fallback label to assign the "bar" security label to unlabeled
+packets entering the system over any interface with an IPv4 source address in
+the 192.168.0.0/16 network.
 .//////////////////////////////////////////////////////////////////////////////
 .SH "NOTES"
 .//////////////////////////////////////////////////////////////////////////////
