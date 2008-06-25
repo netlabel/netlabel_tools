@@ -254,9 +254,9 @@ init_return:
  */
 int nlbl_cipsov4_add_std(nlbl_handle *hndl,
                          nlbl_cv4_doi doi,
-                         nlbl_cv4_tag_a *tags,
-                         nlbl_cv4_lvl_a *lvls,
-                         nlbl_cv4_cat_a *cats)
+                         struct nlbl_cv4_tag_a *tags,
+                         struct nlbl_cv4_lvl_a *lvls,
+                         struct nlbl_cv4_cat_a *cats)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;
@@ -412,7 +412,7 @@ add_std_return:
  */
 int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
 			  nlbl_cv4_doi doi,
-			  nlbl_cv4_tag_a *tags)
+			  struct nlbl_cv4_tag_a *tags)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;
@@ -576,9 +576,9 @@ del_return:
 int nlbl_cipsov4_list(nlbl_handle *hndl,
                       nlbl_cv4_doi doi,
 		      nlbl_cv4_mtype *mtype,
-                      nlbl_cv4_tag_a *tags,
-                      nlbl_cv4_lvl_a *lvls,
-                      nlbl_cv4_cat_a *cats)
+                      struct nlbl_cv4_tag_a *tags,
+                      struct nlbl_cv4_lvl_a *lvls,
+                      struct nlbl_cv4_cat_a *cats)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;

@@ -61,7 +61,7 @@ typedef char *nlbl_netdev;
 
 /*** network address type */
 
-typedef struct nlbl_mgmt_netaddr_s {
+struct nlbl_netaddr {
 	short type;
 	union {
 		struct in_addr v4;
@@ -71,7 +71,7 @@ typedef struct nlbl_mgmt_netaddr_s {
 		struct in_addr v4;
 		struct in6_addr v6;
 	} mask;
-} nlbl_netaddr;
+};
 
 /*** security label/context type */
 
@@ -86,29 +86,29 @@ typedef uint32_t nlbl_cv4_mtype;
 
 /* tags */
 typedef uint8_t nlbl_cv4_tag;
-typedef struct nlbl_cv4_tag_array_s {
+struct nlbl_cv4_tag_a {
 	nlbl_cv4_tag *array;
 	size_t size;
-} nlbl_cv4_tag_a;
+};
 
 /* mls sensitivity levels */
 typedef uint32_t nlbl_cv4_lvl;
-typedef struct nlbl_cv4_lvl_array_s {
+struct nlbl_cv4_lvl_a {
 	nlbl_cv4_lvl *array;
 	size_t size;
-} nlbl_cv4_lvl_a;
+};
 
 /* mls categories */
 typedef uint32_t nlbl_cv4_cat;
-typedef struct cv4_cat_array_s {
+struct nlbl_cv4_cat_a {
 	nlbl_cv4_cat *array;
 	size_t size;
-} nlbl_cv4_cat_a;
+};
 
 /*** management types */
 
 /* domain mapping */
-typedef struct nlbl_dommap_s {
+struct nlbl_dommap {
 	char *domain;
 	nlbl_proto proto_type;
 	union {
@@ -116,14 +116,14 @@ typedef struct nlbl_dommap_s {
 			nlbl_cv4_doi doi;
 		} cv4;
 	} proto;
-} nlbl_dommap;
+};
 
 /* address mapping */
-typedef struct nlbl_addrmap_s {
+struct nlbl_addrmap {
 	nlbl_netdev dev;
-	nlbl_netaddr addr;
+	struct nlbl_netaddr addr;
 	nlbl_secctx label;
-} nlbl_addrmap;
+};
 
 /*
  * Functions
@@ -162,46 +162,46 @@ struct nlattr *nlbl_attr_find(nlbl_msg *msg, int nla_type);
 /* management */
 int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version);
 int nlbl_mgmt_protocols(nlbl_handle *hndl, nlbl_proto **protocols);
-int nlbl_mgmt_add(nlbl_handle *hndl, nlbl_dommap *domain);
-int nlbl_mgmt_adddef(nlbl_handle *hndl, nlbl_dommap *domain);
+int nlbl_mgmt_add(nlbl_handle *hndl, struct nlbl_dommap *domain);
+int nlbl_mgmt_adddef(nlbl_handle *hndl, struct nlbl_dommap *domain);
 int nlbl_mgmt_del(nlbl_handle *hndl, char *domain);
 int nlbl_mgmt_deldef(nlbl_handle *hndl);
-int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_dommap **domains);
-int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_dommap *domain);
+int nlbl_mgmt_listall(nlbl_handle *hndl, struct nlbl_dommap **domains);
+int nlbl_mgmt_listdef(nlbl_handle *hndl, struct nlbl_dommap *domain);
 
 /* unlabeled */
 int nlbl_unlbl_accept(nlbl_handle *hndl, uint8_t allow_flag);
 int nlbl_unlbl_list(nlbl_handle *hndl, uint8_t *allow_flag);
 int nlbl_unlbl_staticadd(nlbl_handle *hndl,
 			 nlbl_netdev dev,
-			 nlbl_netaddr *addr,
+			 struct nlbl_netaddr *addr,
 			 nlbl_secctx label);
 int nlbl_unlbl_staticadddef(nlbl_handle *hndl,
-			    nlbl_netaddr *addr,
+			    struct nlbl_netaddr *addr,
 			    nlbl_secctx label);
 int nlbl_unlbl_staticdel(nlbl_handle *hndl,
 			 nlbl_netdev dev,
-			 nlbl_netaddr *addr);
-int nlbl_unlbl_staticdeldef(nlbl_handle *hndl, nlbl_netaddr *addr);
-int nlbl_unlbl_staticlist(nlbl_handle *hndl, nlbl_addrmap **addrs);
-int nlbl_unlbl_staticlistdef(nlbl_handle *hndl, nlbl_addrmap **addrs);
+			 struct nlbl_netaddr *addr);
+int nlbl_unlbl_staticdeldef(nlbl_handle *hndl, struct nlbl_netaddr *addr);
+int nlbl_unlbl_staticlist(nlbl_handle *hndl, struct nlbl_addrmap **addrs);
+int nlbl_unlbl_staticlistdef(nlbl_handle *hndl, struct nlbl_addrmap **addrs);
 
 /* cipso/ipv4 */
 int nlbl_cipsov4_add_std(nlbl_handle *hndl,
                          nlbl_cv4_doi doi,
-                         nlbl_cv4_tag_a *tags,
-                         nlbl_cv4_lvl_a *lvls,
-                         nlbl_cv4_cat_a *cats);
+                         struct nlbl_cv4_tag_a *tags,
+                         struct nlbl_cv4_lvl_a *lvls,
+                         struct nlbl_cv4_cat_a *cats);
 int nlbl_cipsov4_add_pass(nlbl_handle *hndl,
 			  nlbl_cv4_doi doi,
-			  nlbl_cv4_tag_a *tags);
+			  struct nlbl_cv4_tag_a *tags);
 int nlbl_cipsov4_del(nlbl_handle *hndl, nlbl_cv4_doi doi);
 int nlbl_cipsov4_list(nlbl_handle *hndl,
                       nlbl_cv4_doi doi,
 		      nlbl_cv4_mtype *mtype,
-                      nlbl_cv4_tag_a *tags,
-                      nlbl_cv4_lvl_a *lvls,
-                      nlbl_cv4_cat_a *cats);
+                      struct nlbl_cv4_tag_a *tags,
+                      struct nlbl_cv4_lvl_a *lvls,
+                      struct nlbl_cv4_cat_a *cats);
 int nlbl_cipsov4_listall(nlbl_handle *hndl,
 			 nlbl_cv4_doi **dois,
 			 nlbl_cv4_mtype **mtypes);

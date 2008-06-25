@@ -81,9 +81,9 @@ int unlbl_list(void)
 {
 	int ret_val;
 	uint8_t flag;
-	nlbl_addrmap *addr_p = NULL;
-	nlbl_addrmap *addrdef_p = NULL;
-	nlbl_addrmap *iter_p;
+	struct nlbl_addrmap *addr_p = NULL;
+	struct nlbl_addrmap *addrdef_p = NULL;
+	struct nlbl_addrmap *iter_p;
 	size_t count;
 	uint32_t iter;
 	char addr_s[80];
@@ -109,10 +109,10 @@ int unlbl_list(void)
 	/* get the default static label mapping */
 	ret_val = nlbl_unlbl_staticlistdef(NULL, &addrdef_p);
 	if (ret_val > 0) {
-		addr_p = realloc(addr_p, sizeof(nlbl_addrmap) * (count + ret_val));
+		addr_p = realloc(addr_p, sizeof(struct nlbl_addrmap) * (count + ret_val));
 		if (addr_p == NULL)
 			goto list_return;
-		memcpy(&addr_p[count], addrdef_p, sizeof(nlbl_addrmap) * ret_val);
+		memcpy(&addr_p[count], addrdef_p, sizeof(struct nlbl_addrmap) * ret_val);
 		count += ret_val;
 	}
 
@@ -240,7 +240,7 @@ int unlbl_add(int argc, char *argv[])
 	uint32_t mask_iter;
 	uint8_t def_flag = 0;
 	nlbl_netdev dev = NULL;
-	nlbl_netaddr addr;
+	struct nlbl_netaddr addr;
 	nlbl_secctx label;
 
 	/* sanity checks */
@@ -322,7 +322,7 @@ int unlbl_del(int argc, char *argv[])
 	uint32_t mask_iter;
 	uint8_t def_flag = 0;
 	nlbl_netdev dev;
-	nlbl_netaddr addr;
+	struct nlbl_netaddr addr;
 
 	/* sanity checks */
 	if (argc <= 0 || argv == NULL || argv[0] == NULL)

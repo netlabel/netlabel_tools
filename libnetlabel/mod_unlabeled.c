@@ -405,7 +405,7 @@ list_return:
  */
 int nlbl_unlbl_staticadd(nlbl_handle *hndl,
 			 nlbl_netdev dev,
-			 nlbl_netaddr *addr,
+			 struct nlbl_netaddr *addr,
 			 nlbl_secctx label)
 {
 	int ret_val = -ENOMEM;
@@ -512,7 +512,7 @@ staticadd_return:
  *
  */
 int nlbl_unlbl_staticadddef(nlbl_handle *hndl,
-			    nlbl_netaddr *addr,
+			    struct nlbl_netaddr *addr,
 			    nlbl_secctx label)
 {
 	int ret_val = -ENOMEM;
@@ -617,7 +617,7 @@ staticadddef_return:
  */
 int nlbl_unlbl_staticdel(nlbl_handle *hndl,
 			 nlbl_netdev dev,
-			 nlbl_netaddr *addr)
+			 struct nlbl_netaddr *addr)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;
@@ -720,7 +720,7 @@ staticdel_return:
  *
  */
 int nlbl_unlbl_staticdeldef(nlbl_handle *hndl,
-			    nlbl_netaddr *addr)
+			    struct nlbl_netaddr *addr)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;
@@ -818,7 +818,7 @@ staticdeldef_return:
  * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_staticlist(nlbl_handle *hndl, nlbl_addrmap **addrs)
+int nlbl_unlbl_staticlist(nlbl_handle *hndl, struct nlbl_addrmap **addrs)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;
@@ -830,7 +830,7 @@ int nlbl_unlbl_staticlist(nlbl_handle *hndl, nlbl_addrmap **addrs)
 	struct nlattr *nla;
 	int data_len;
 	int data_attrlen;
-	nlbl_addrmap *addr_array = NULL;
+	struct nlbl_addrmap *addr_array = NULL;
 	uint32_t addr_count = 0;
 
 	/* sanity checks */
@@ -897,10 +897,10 @@ int nlbl_unlbl_staticlist(nlbl_handle *hndl, nlbl_addrmap **addrs)
       
 			/* resize the array */
 			addr_array = realloc(addr_array,
-					     sizeof(nlbl_addrmap) * (addr_count + 1));
+					     sizeof(struct nlbl_addrmap) * (addr_count + 1));
 			if (addr_array == NULL)
 				goto staticlist_return;
-			memset(&addr_array[addr_count], 0, sizeof(nlbl_addrmap));
+			memset(&addr_array[addr_count], 0, sizeof(struct nlbl_addrmap));
 
 			/* get the attribute information */
 			nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_IFACE);
@@ -991,7 +991,7 @@ staticlist_return:
  * Returns zero on success, negative values on failure.
  *
  */
-int nlbl_unlbl_staticlistdef(nlbl_handle *hndl, nlbl_addrmap **addrs)
+int nlbl_unlbl_staticlistdef(nlbl_handle *hndl, struct nlbl_addrmap **addrs)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;
@@ -1003,7 +1003,7 @@ int nlbl_unlbl_staticlistdef(nlbl_handle *hndl, nlbl_addrmap **addrs)
 	struct nlattr *nla;
 	int data_len;
 	int data_attrlen;
-	nlbl_addrmap *addr_array = NULL;
+	struct nlbl_addrmap *addr_array = NULL;
 	uint32_t addr_count = 0;
 
 	/* sanity checks */
@@ -1070,10 +1070,10 @@ int nlbl_unlbl_staticlistdef(nlbl_handle *hndl, nlbl_addrmap **addrs)
       
 			/* resize the array */
 			addr_array = realloc(addr_array,
-					     sizeof(nlbl_addrmap) * (addr_count + 1));
+					     sizeof(struct nlbl_addrmap) * (addr_count + 1));
 			if (addr_array == NULL)
 				goto staticlistdef_return;
-			memset(&addr_array[addr_count], 0, sizeof(nlbl_addrmap));
+			memset(&addr_array[addr_count], 0, sizeof(struct nlbl_addrmap));
 
 			/* get the attribute information */
 			nla = nla_find(nla_head, data_attrlen, NLBL_UNLABEL_A_SECCTX);

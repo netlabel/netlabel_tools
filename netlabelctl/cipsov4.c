@@ -48,12 +48,12 @@ int cipsov4_add(int argc, char *argv[])
 	uint32_t arg_iter;
 	uint32_t cipso_type = CIPSO_V4_MAP_UNKNOWN;
 	nlbl_cv4_doi doi = 0;
-	nlbl_cv4_tag_a tags = { .array = NULL,
-				.size = 0 };
-	nlbl_cv4_lvl_a lvls = { .array = NULL,
-				.size = 0 };
-	nlbl_cv4_cat_a cats = { .array = NULL,
-				.size = 0 };
+	struct nlbl_cv4_tag_a tags = { .array = NULL,
+				       .size = 0 };
+	struct nlbl_cv4_lvl_a lvls = { .array = NULL,
+				       .size = 0 };
+	struct nlbl_cv4_cat_a cats = { .array = NULL,
+				       .size = 0 };
 	char *token_ptr;
 
 	/* sanity checks */
@@ -275,12 +275,12 @@ static int cipsov4_list_doi(uint32_t doi)
 	nlbl_cv4_doi *doi_list = NULL;
 	nlbl_cv4_mtype *mtype_list = NULL;
 	nlbl_cv4_mtype maptype;
-	nlbl_cv4_tag_a tags = { .array = NULL,
-				.size = 0 };
-	nlbl_cv4_lvl_a lvls = { .array = NULL,
-				.size = 0 };
-	nlbl_cv4_cat_a cats = { .array = NULL,
-				.size = 0 };
+	struct nlbl_cv4_tag_a tags = { .array = NULL,
+				       .size = 0 };
+	struct nlbl_cv4_lvl_a lvls = { .array = NULL,
+				       .size = 0 };
+	struct nlbl_cv4_cat_a cats = { .array = NULL,
+				       .size = 0 };
 
 	ret_val = nlbl_cipsov4_list(NULL, doi, &maptype, &tags, &lvls, &cats);
 	if (ret_val < 0)

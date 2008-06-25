@@ -457,7 +457,7 @@ int nlbl_mgmt_version(nlbl_handle *hndl, uint32_t *version)
  * Returns zero on success, negative values on failure.
 			*
 			*/
-int nlbl_mgmt_add(nlbl_handle *hndl, nlbl_dommap *domain)
+int nlbl_mgmt_add(nlbl_handle *hndl, struct nlbl_dommap *domain)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;
@@ -536,7 +536,7 @@ add_return:
  * on failure.
  *
  */
-int nlbl_mgmt_adddef(nlbl_handle *hndl, nlbl_dommap *domain)
+int nlbl_mgmt_adddef(nlbl_handle *hndl, struct nlbl_dommap *domain)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;
@@ -740,7 +740,7 @@ deldef_return:
  * on failure.
  *
  */
-int nlbl_mgmt_listdef(nlbl_handle *hndl, nlbl_dommap *domain)
+int nlbl_mgmt_listdef(nlbl_handle *hndl, struct nlbl_dommap *domain)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;
@@ -835,7 +835,7 @@ listdef_return:
  * zero if no domains are specified, and negative values on failure.
  *
  */
-int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_dommap **domains)
+int nlbl_mgmt_listall(nlbl_handle *hndl, struct nlbl_dommap **domains)
 {
 	int ret_val = -ENOMEM;
 	nlbl_handle *p_hndl = hndl;
@@ -847,7 +847,7 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_dommap **domains)
 	struct nlattr *nla;
 	int data_len;
 	int data_attrlen;
-	nlbl_dommap *dmns = NULL;
+	struct nlbl_dommap *dmns = NULL;
 	uint32_t dmns_count = 0;
 
 	/* sanity checks */
@@ -915,10 +915,10 @@ int nlbl_mgmt_listall(nlbl_handle *hndl, nlbl_dommap **domains)
 	    data_attrlen = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(*genl_hdr));
 
 	    /* resize the array */
-	    dmns = realloc(dmns, sizeof(nlbl_dommap) * (dmns_count + 1));
+	    dmns = realloc(dmns, sizeof(struct nlbl_dommap) * (dmns_count + 1));
 	    if (dmns == NULL)
 		    goto listall_return;
-	    memset(&dmns[dmns_count], 0, sizeof(nlbl_dommap));
+	    memset(&dmns[dmns_count], 0, sizeof(struct nlbl_dommap));
 
 	    /* get the attribute information */
 	    nla = nla_find(nla_head, data_attrlen, NLBL_MGMT_A_DOMAIN);
