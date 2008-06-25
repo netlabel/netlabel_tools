@@ -24,6 +24,9 @@ o Renamed the CIPSOv4 'std' mapping to 'trans' to better reflect it's usage,
 o Merged the 'static-label' branch which provides fallback/static labeling
   support
 o Renamed the 'nlbl_mgmt_domain' structure to 'nlbl_dommap'
+o Converted the the same tab/ident spacing as the Linux kernel
+o Removed the structure typedefs in libnetlabel.h
+o Added some crude documentation to the types defined in libnetlabel.h
 
 * Release 0.17 (September 28, 2006)
 ------------------------------------------------------------------------------
