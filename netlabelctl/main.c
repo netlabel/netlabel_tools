@@ -111,7 +111,7 @@ static void nlctl_help_print(FILE *fp)
 		"    del default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
 		"    list\n"
 		"  cipsov4 : CIPSO/IPv4 packet handling\n"
-		"    add std doi:<DOI> tags:<T1>,<Tn>\n"
+		"    add trans doi:<DOI> tags:<T1>,<Tn>\n"
 		"            levels:<LL1>=<RL1>,<LLn>=<RLn>\n"
 		"            categories:<LC1>=<RC1>,<LCn>=<RCn>\n"
 		"    add pass doi:<DOI> tags:<T1>,<Tn>\n"
