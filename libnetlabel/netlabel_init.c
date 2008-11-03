@@ -49,20 +49,17 @@ int nlbl_init(void)
 
 	ret_val = nlbl_mgmt_init();
 	if (ret_val < 0)
-		goto init_failure;
+		return ret_val;
 
 	ret_val = nlbl_cipsov4_init();
 	if (ret_val < 0)
-		goto init_failure;
+		return ret_val;
 
 	ret_val = nlbl_unlbl_init();
 	if (ret_val < 0)
-		goto init_failure;
+		return ret_val;
 
 	return 0;
-
-init_failure:
-	return ret_val;
 }
 
 /**
