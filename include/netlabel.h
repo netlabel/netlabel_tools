@@ -31,8 +31,9 @@
 /* NetLabel NETLINK protocol version
  *  1: initial version
  *  2: added static labels for unlabeled connections
+ *  3: network selectors added to the NetLabel/LSM domain mapping
  */
-#define NETLBL_PROTO_VERSION            2
+#define NETLBL_PROTO_VERSION            3
 
 /* NetLabel NETLINK types/families */
 #define NETLBL_NLTYPE_NONE              0
@@ -46,6 +47,8 @@
 #define NETLBL_NLTYPE_CIPSOV6_NAME      "NLBL_CIPSOv6"
 #define NETLBL_NLTYPE_UNLABELED         5
 #define NETLBL_NLTYPE_UNLABELED_NAME    "NLBL_UNLBL"
+#define NETLBL_NLTYPE_ADDRSELECT        6
+#define NETLBL_NLTYPE_ADDRSELECT_NAME   "NLBL_ADRSEL"
 
 /*
  * MGMT
@@ -73,6 +76,12 @@ enum {
 	NLBL_MGMT_A_PROTOCOL,
 	NLBL_MGMT_A_VERSION,
 	NLBL_MGMT_A_CV4DOI,
+	NLBL_MGMT_A_IPV6ADDR,
+	NLBL_MGMT_A_IPV6MASK,
+	NLBL_MGMT_A_IPV4ADDR,
+	NLBL_MGMT_A_IPV4MASK,
+	NLBL_MGMT_A_ADDRSELECTOR,
+	NLBL_MGMT_A_SELECTORLIST,
 	__NLBL_MGMT_A_MAX,
 };
 #define NLBL_MGMT_A_MAX (__NLBL_MGMT_A_MAX - 1)
@@ -83,8 +92,9 @@ enum {
 
 /* CIPSOv4 DOI map types */
 #define CIPSO_V4_MAP_UNKNOWN          0
-#define CIPSO_V4_MAP_STD              1
+#define CIPSO_V4_MAP_TRANS            1
 #define CIPSO_V4_MAP_PASS             2
+#define CIPSO_V4_MAP_LOCAL            3
 
 /* NetLabel CIPSOv4 commands */
 enum {

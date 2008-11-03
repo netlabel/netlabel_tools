@@ -292,7 +292,7 @@ int nlbl_cipsov4_add_std(struct nlbl_handle *hndl,
 	if (ret_val != 0)
 		goto add_std_return;
 
-	ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_STD);
+	ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_TRANS);
 	if (ret_val != 0)
 		goto add_std_return;
 
@@ -492,6 +492,91 @@ add_pass_return:
 }
 
 /**
+ * nlbl_cipsov4_add_local - Add a local CIPSOv4 label mapping
+ * @hndl: the NetLabel handle
+ * @doi: the CIPSO DOI number
+ * 
+ * Description:
+ * Add the specified static CIPSO label mapping information to the NetLabel
+ * system.  If @hndl is NULL then the function will handle opening and closing
+ * it's own NetLabel handle.  Returns zero on success, negative values on
+ * failure.
+ *
+ */
+int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
+{
+	int ret_val = -ENOMEM;
+	struct nlbl_handle *p_hndl = hndl;
+	nlbl_msg *msg = NULL;
+	nlbl_msg *nest_msg = NULL;
+	nlbl_msg *ans_msg = NULL;
+
+	/* sanity checks */
+	if (doi == 0)
+		return -EINVAL;
+	if (nlbl_cipsov4_fid == 0)
+		return -ENOPROTOOPT;
+
+	/* open a handle if we need one */
+	if (p_hndl == NULL) {
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto add_local_return;
+	}
+
+	/* create a new message */
+	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_ADD, 0);
+	if (msg == NULL)
+		goto add_local_return;
+
+	/* add the required attributes to the message */
+
+	ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_DOI, doi);
+	if (ret_val != 0)
+		goto add_local_return;
+	ret_val = nla_put_u32(msg, NLBL_CIPSOV4_A_MTYPE, CIPSO_V4_MAP_LOCAL);
+	if (ret_val != 0)
+		goto add_local_return;
+
+	nest_msg = nlmsg_build(NULL);
+	if (nest_msg == NULL) {
+		ret_val = -ENOMEM;
+		goto add_local_return;
+	}
+	ret_val = nla_put_u8(nest_msg, NLBL_CIPSOV4_A_TAG, 128);
+	if (ret_val != 0)
+		goto add_local_return;
+	nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg);
+
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto add_local_return;
+	}
+
+	/* read the response */
+	ret_val = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto add_local_return;
+	}
+
+	/* process the response */
+	ret_val = nlbl_cipsov4_parse_ack(ans_msg);
+
+add_local_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(nest_msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
+}
+
+/**
  * nlbl_cipsov4_del - Delete a CIPSOv4 label mapping
  * @hndl: the NetLabel handle
  * @doi: the CIPSO DOI number
@@ -673,7 +758,7 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 			tags->array[tags->size++] = nla_get_u8(nla_b);
 		}
 
-	if (*mtype == CIPSO_V4_MAP_STD) {
+	if (*mtype == CIPSO_V4_MAP_TRANS) {
 		nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSLVLLST);
 		if (nla_a == NULL)
 			goto list_return;

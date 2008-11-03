@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <arpa/inet.h>
 
 #include <libnetlabel.h>
 #include <version.h>
@@ -101,8 +102,9 @@ static void nlctl_help_print(FILE *fp)
 		"    version\n"
 		"    protocols\n"
 		"  map : Domain/Protocol mapping\n"
-		"    add default|domain:<domain> protocol:<protocol>[,<extra>]\n"
-		"    del default|domain:<domain>\n"
+		"    add default|domain:<domain> [address:<ADDR>[/<MASK>]]\n"
+		"                                protocol:<protocol>[,<extra>]\n"
+		"    del default|domain:<domain> [address:<ADDR>[/<MASK>]]\n"
 		"    list\n"
 		"  unlbl : Unlabeled packet handling\n"
 		"    accept on|off\n"
@@ -115,6 +117,7 @@ static void nlctl_help_print(FILE *fp)
 		"            levels:<LL1>=<RL1>,<LLn>=<RLn>\n"
 		"            categories:<LC1>=<RC1>,<LCn>=<RCn>\n"
 		"    add pass doi:<DOI> tags:<T1>,<Tn>\n"
+		"    add local doi:<DOI>\n"
 		"    del doi:<DOI>\n"
 		"    list [doi:<DOI>]\n"
 		"\n",
@@ -167,6 +170,51 @@ static char *nlctl_strerror(int ret_val)
 	}
   
 	return str;
+}
+
+/**
+ * nlctl_addr_print - Display a network address
+ * @addr: the IP address to display
+ *
+ * Description:
+ * Print the IP address and mask, specified in @addr, to STDIO.
+ *
+ */
+void nlctl_addr_print(const struct nlbl_netaddr *addr)
+{
+	char addr_s[80];
+	socklen_t addr_s_len = 80;
+	struct in_addr mask4;
+	struct in6_addr mask6;
+	uint32_t mask_size;
+	uint32_t mask_off;
+
+	switch (addr->type) {
+	case AF_INET:
+		mask4.s_addr = ntohl(addr->mask.v4.s_addr);
+		for (mask_size = 0; mask4.s_addr != 0; mask_size++)
+			mask4.s_addr <<= 1;
+		printf("%s/%u",
+		       inet_ntop(AF_INET, &addr->addr.v4, addr_s, addr_s_len),
+		       mask_size);
+		break;
+	case AF_INET6:
+		for (mask_size = 0, mask_off = 0; mask_off < 4; mask_off++) {
+			mask6.s6_addr32[mask_off] =
+				      ntohl(addr->mask.v6.s6_addr32[mask_off]);
+			while (mask6.s6_addr32[mask_off] != 0) {
+				mask_size++;
+				mask6.s6_addr32[mask_off] <<= 1;
+			}
+		}
+		printf("%s/%u",
+		       inet_ntop(AF_INET6, &addr->addr.v6, addr_s, addr_s_len),
+		       mask_size);
+		break;
+	default:
+		printf("UNKNOWN(%u)", addr->type);
+		break;
+	}
 }
 
 /**

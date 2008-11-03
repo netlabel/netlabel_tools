@@ -45,6 +45,9 @@ extern uint32_t opt_pretty;
 #define MSG(_x) (opt_pretty?_x:"")
 #define MSG_V(_x) (opt_verbose?_x"")
 
+/* network address display */
+void nlctl_addr_print(const struct nlbl_netaddr *addr);
+
 /* module entry points */
 typedef int main_function_t(int argc, char *argv[]);
 int mgmt_main(int argc, char *argv[]);

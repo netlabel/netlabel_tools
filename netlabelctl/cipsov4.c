@@ -64,13 +64,15 @@ int cipsov4_add(int argc, char *argv[])
 	arg_iter = 0;
 	while (arg_iter < argc && argv[arg_iter] != NULL) {
 		if (strcmp(argv[arg_iter], "trans") == 0) {
-			cipso_type = CIPSO_V4_MAP_STD;
+			cipso_type = CIPSO_V4_MAP_TRANS;
 		} else if (strcmp(argv[arg_iter], "std") == 0) {
 			fprintf(stderr,
 				MSG_OLD("use 'trans' instead of 'std'\n"));
-			cipso_type = CIPSO_V4_MAP_STD;
+			cipso_type = CIPSO_V4_MAP_TRANS;
 		} else if (strcmp(argv[arg_iter], "pass") == 0) {
 			cipso_type = CIPSO_V4_MAP_PASS;
+		} else if (strcmp(argv[arg_iter], "local") == 0) {
+			cipso_type = CIPSO_V4_MAP_LOCAL;
 		} else if (strncmp(argv[arg_iter], "doi:", 4) == 0) {
 			/* doi */
 			doi = (nlbl_cv4_doi)atoi(argv[arg_iter] + 4);
@@ -126,13 +128,17 @@ int cipsov4_add(int argc, char *argv[])
 
 	/* add the cipso mapping */
 	switch (cipso_type) {
-	case CIPSO_V4_MAP_STD:
-		/* standard mapping */
+	case CIPSO_V4_MAP_TRANS:
+		/* translated mapping */
 		ret_val = nlbl_cipsov4_add_std(NULL, doi, &tags, &lvls, &cats);
 		break;
 	case CIPSO_V4_MAP_PASS:
 		/* pass through mapping */
 		ret_val = nlbl_cipsov4_add_pass(NULL, doi, &tags);
+		break;
+	case CIPSO_V4_MAP_LOCAL:
+		/* local mapping */
+		ret_val = nlbl_cipsov4_add_local(NULL, doi);
 		break;
 	default:
 		ret_val = -EINVAL;
@@ -217,11 +223,14 @@ static int cipsov4_list_all(void)
 			/* map type */
 			printf("   mapping type : ");
 			switch (mtype_list[iter]) {
-			case CIPSO_V4_MAP_STD:
-				printf("STANDARD\n");
+			case CIPSO_V4_MAP_TRANS:
+				printf("TRANSLATED\n");
 				break;
 			case CIPSO_V4_MAP_PASS:
 				printf("PASS_THROUGH\n");
+				break;
+			case CIPSO_V4_MAP_LOCAL:
+				printf("LOCAL\n");
 				break;
 			default:
 				printf("UNKNOWN(%u)\n", mtype_list[iter]);
@@ -234,11 +243,14 @@ static int cipsov4_list_all(void)
 			printf("%u,", doi_list[iter]);
 			/* map type */
 			switch (mtype_list[iter]) {
-			case CIPSO_V4_MAP_STD:
-				printf("STANDARD");
+			case CIPSO_V4_MAP_TRANS:
+				printf("TRANSLATED");
 				break;
 			case CIPSO_V4_MAP_PASS:
 				printf("PASS_THROUGH");
+				break;
+			case CIPSO_V4_MAP_LOCAL:
+				printf("LOCAL");
 				break;
 			default:
 				printf("UNKNOWN(%u)", mtype_list[iter]);
@@ -307,13 +319,16 @@ static int cipsov4_list_doi(uint32_t doi)
 			case 7:
 				printf("   FREEFORM\n");
 				break;
+			case 128:
+				printf("   LOCAL\n");
+				break;
 			default:
 				printf("   UNKNOWN(%u)\n", tags.array[iter]);
 				break;
 			}
 		}
 		switch (maptype) {
-		case CIPSO_V4_MAP_STD:
+		case CIPSO_V4_MAP_TRANS:
 			/* levels */
 			printf(" levels (%zu): \n", lvls.size);
 			for (iter = 0; iter < lvls.size; iter++)
@@ -337,7 +352,7 @@ static int cipsov4_list_doi(uint32_t doi)
 				printf(",");
 		}
 		switch (maptype) {
-		case CIPSO_V4_MAP_STD:
+		case CIPSO_V4_MAP_TRANS:
 			/* levels */
 			printf(" levels:");
 			for (iter = 0; iter < lvls.size; iter++) {

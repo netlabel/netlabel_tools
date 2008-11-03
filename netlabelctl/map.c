@@ -6,7 +6,7 @@
  */
 
 /*
- * (c) Copyright Hewlett-Packard Development Company, L.P., 2006
+ * (c) Copyright Hewlett-Packard Development Company, L.P., 2006, 2008
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License as
@@ -26,6 +26,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <libnetlabel.h>
 
@@ -45,8 +48,11 @@ int map_add(int argc, char *argv[])
 {
 	int ret_val;
 	uint32_t iter;
+	char *mask;
+	uint32_t mask_iter;
 	uint8_t def_flag = 0;
 	struct nlbl_dommap domain;
+	struct nlbl_netaddr addr;
 	char *domain_proto_extra = NULL;
 
 	/* sanity checks */
@@ -54,12 +60,53 @@ int map_add(int argc, char *argv[])
 		return -EINVAL;
 
 	memset(&domain, 0, sizeof(domain));
+	memset(&addr, 0, sizeof(addr));
 
 	/* parse the arguments */
 	iter = 0;
 	while (iter < argc && argv[iter] != NULL) {
 		if (strncmp(argv[iter], "domain:", 7) == 0) {
 			domain.domain = argv[iter] + 7;
+		} else if (strncmp(argv[iter], "address:", 8) == 0) {
+			mask = strstr(argv[iter] + 8, "/");
+			if (mask != NULL) {
+				mask[0] = '\0';
+				mask++;
+			}
+			ret_val = inet_pton(AF_INET,
+					    argv[iter] + 8, &addr.addr.v4);
+			if (ret_val > 0) {
+				addr.type = AF_INET;
+				mask_iter = (mask ? atoi(mask) : 32);
+				for (; mask_iter > 0; mask_iter--) {
+					addr.mask.v4.s_addr >>= 1;
+					addr.mask.v4.s_addr |= 0x80000000;
+				}
+				addr.mask.v4.s_addr = htonl(addr.mask.v4.s_addr);
+			} else {
+				ret_val = inet_pton(AF_INET6,
+						    argv[iter] + 8,
+						    &addr.addr.v6);
+				if (ret_val > 0) {
+					uint32_t tmp_iter;
+					addr.type = AF_INET6;
+					mask_iter = (mask ? atoi(mask) : 128);
+					for (tmp_iter = 0;
+					     mask_iter > 0 && tmp_iter < 4;
+					     tmp_iter++) {
+						for (; mask_iter > 0 &&
+							     addr.mask.v6.s6_addr32[tmp_iter] < 0xffffffff;
+						     mask_iter--) {
+							addr.mask.v6.s6_addr32[tmp_iter] >>= 1;
+							addr.mask.v6.s6_addr32[tmp_iter] |= 0x80000000;
+						}
+						addr.mask.v6.s6_addr32[tmp_iter] =
+							htonl(addr.mask.v6.s6_addr32[tmp_iter]);
+					}
+				}
+			}
+			if (ret_val <= 0)
+				return -EINVAL;
 		} else if (strncmp(argv[iter], "protocol:", 9) == 0) {
 			/* protocol specifics */
 			if (strncmp(argv[iter] + 9, "cipsov4", 7) == 0)
@@ -85,15 +132,15 @@ int map_add(int argc, char *argv[])
 	case NETLBL_NLTYPE_CIPSOV4:
 		if (domain_proto_extra == NULL)
 			return -EINVAL;
-		domain.proto.cv4.doi = (nlbl_cv4_doi)atoi(domain_proto_extra);
+		domain.proto.cv4_doi = (nlbl_cv4_doi)atoi(domain_proto_extra);
 		break;
 	}
 
 	/* add the mapping */
 	if (def_flag)
-		ret_val = nlbl_mgmt_adddef(NULL, &domain);
+		ret_val = nlbl_mgmt_adddef(NULL, &domain, &addr);
 	else
-		ret_val = nlbl_mgmt_add(NULL, &domain);
+		ret_val = nlbl_mgmt_add(NULL, &domain, &addr);
 
 	return ret_val;
 }
@@ -156,6 +203,7 @@ int map_list(int argc, char *argv[])
 {
 	int ret_val;
 	struct nlbl_dommap *domain_p = NULL;
+	struct nlbl_dommap_addr *iter_addr;
 	size_t count;
 	uint32_t iter;
 
@@ -189,14 +237,36 @@ int map_list(int argc, char *argv[])
 			else
 				printf("DEFAULT\n");
 			/* protocol */
-			printf("   protocol: ");
 			switch (domain_p[iter].proto_type) {
 			case NETLBL_NLTYPE_UNLABELED:
-				printf("UNLABELED\n");
+				printf("   protocol: UNLABELED\n");
 				break;
 			case NETLBL_NLTYPE_CIPSOV4:
-				printf("CIPSOv4, DOI = %u\n",
-				       domain_p[iter].proto.cv4.doi);
+				printf("   protocol: CIPSOv4, DOI = %u\n",
+				       domain_p[iter].proto.cv4_doi);
+				break;
+			case NETLBL_NLTYPE_ADDRSELECT:
+				iter_addr = domain_p[iter].proto.addrsel;
+				while (iter_addr) {
+					printf("   address: ");
+					nlctl_addr_print(&iter_addr->addr);
+					printf("\n"
+					       "    protocol: ");
+					switch (iter_addr->proto_type) {
+					case NETLBL_NLTYPE_UNLABELED:
+						printf("UNLABELED\n");
+						break;
+					case NETLBL_NLTYPE_CIPSOV4:
+						printf("CIPSOv4, DOI = %u\n",
+						       iter_addr->proto.cv4_doi);
+						break;
+					default:
+						printf("UNKNOWN(%u)\n",
+						       iter_addr->proto_type);
+						break;
+					}
+					iter_addr = iter_addr->next;
+				}
 				break;
 			default:
 				printf("UNKNOWN(%u)\n",
@@ -219,7 +289,29 @@ int map_list(int argc, char *argv[])
 				break;
 			case NETLBL_NLTYPE_CIPSOV4:
 				printf("CIPSOv4,%u",
-				       domain_p[iter].proto.cv4.doi);
+				       domain_p[iter].proto.cv4_doi);
+				break;
+			case NETLBL_NLTYPE_ADDRSELECT:
+				iter_addr = domain_p[iter].proto.addrsel;
+				while (iter_addr) {
+					printf("address:");
+					nlctl_addr_print(&iter_addr->addr);
+					printf(",protocol:");
+					switch (iter_addr->proto_type) {
+					case NETLBL_NLTYPE_UNLABELED:
+						printf("UNLABELED");
+						break;
+					case NETLBL_NLTYPE_CIPSOV4:
+						printf("CIPSOv4,%u",
+						       iter_addr->proto.cv4_doi);
+						break;
+					default:
+						printf("UNKNOWN(%u)",
+						       iter_addr->proto_type);
+						break;
+					}
+					iter_addr = iter_addr->next;
+				}
 				break;
 			default:
 				printf("UNKNOWN(%u)",

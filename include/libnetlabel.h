@@ -217,10 +217,32 @@ struct nlbl_cv4_cat_a {
 /* lsm/domain mapping types */
 
 /**
+ * struct nlbl_dommmap_addr - NetLabel LSM/Domain address selector structure
+ * @addr: IP address
+ * @proto_type: labeling protocol
+ * @proto.cv4_doi: CIPSOv4 DOI
+ * @next: next address selector
+ *
+ * Description:
+ * XXX
+ *
+ */
+struct nlbl_dommap_addr {
+	struct nlbl_netaddr addr;
+	nlbl_proto proto_type;
+	union {
+		nlbl_cv4_doi cv4_doi;
+	} proto;
+
+	struct nlbl_dommap_addr *next;
+};
+
+/**
  * struct nlbl_dommap - NetLabel LSM/Domain mapping structure
  * @domain: LSM domain
  * @proto_type: labeling protocol
- * @proto.cv4.doi: CIPSOv4 DOI
+ * @proto.cv4_doi: CIPSOv4 DOI
+ * @proto.addrsel: IP address selector(s)
  *
  * Description:
  * XXX
@@ -230,9 +252,8 @@ struct nlbl_dommap {
 	char *domain;
 	nlbl_proto proto_type;
 	union {
-		struct {
-			nlbl_cv4_doi doi;
-		} cv4;
+		nlbl_cv4_doi cv4_doi;
+		struct nlbl_dommap_addr *addrsel;
 	} proto;
 };
 
@@ -289,8 +310,12 @@ struct nlattr *nlbl_attr_find(nlbl_msg *msg, int nla_type);
 /* management */
 int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version);
 int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols);
-int nlbl_mgmt_add(struct nlbl_handle *hndl, struct nlbl_dommap *domain);
-int nlbl_mgmt_adddef(struct nlbl_handle *hndl, struct nlbl_dommap *domain);
+int nlbl_mgmt_add(struct nlbl_handle *hndl,
+		  struct nlbl_dommap *domain,
+		  struct nlbl_netaddr *addr);
+int nlbl_mgmt_adddef(struct nlbl_handle *hndl,
+		     struct nlbl_dommap *domain,
+		     struct nlbl_netaddr *addr);
 int nlbl_mgmt_del(struct nlbl_handle *hndl, char *domain);
 int nlbl_mgmt_deldef(struct nlbl_handle *hndl);
 int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains);
@@ -325,6 +350,7 @@ int nlbl_cipsov4_add_std(struct nlbl_handle *hndl,
 int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 			  nlbl_cv4_doi doi,
 			  struct nlbl_cv4_tag_a *tags);
+int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi);
 int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi);
 int nlbl_cipsov4_list(struct nlbl_handle *hndl,
                       nlbl_cv4_doi doi,

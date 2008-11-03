@@ -86,10 +86,6 @@ int unlbl_list(void)
 	struct nlbl_addrmap *iter_p;
 	size_t count;
 	uint32_t iter;
-	char addr_s[80];
-	socklen_t addr_s_len = 80;
-	uint32_t mask_size;
-	uint32_t mask_off;
 
 	/* display the accept flag */
 	ret_val = nlbl_unlbl_list(NULL, &flag);
@@ -136,40 +132,8 @@ int unlbl_list(void)
 			}
 			/* address */
 			printf("   address: ");
-			switch (iter_p->addr.type) {
-			case AF_INET:
-				iter_p->addr.mask.v4.s_addr = ntohl(iter_p->addr.mask.v4.s_addr);
-				for (mask_size = 0;
-				     iter_p->addr.mask.v4.s_addr != 0;
-				     mask_size++)
-					iter_p->addr.mask.v4.s_addr <<= 1;
-				printf("%s/%u\n",
-				       inet_ntop(AF_INET,
-						 &iter_p->addr.addr.v4,
-						 addr_s, addr_s_len),
-				       mask_size);
-				break;
-			case AF_INET6:
-				for (mask_size = 0, mask_off = 0;
-				     mask_off < 4;
-				     mask_off++) {
-					iter_p->addr.mask.v6.s6_addr32[mask_off] =
-						ntohl(iter_p->addr.mask.v6.s6_addr32[mask_off]);
-					while (iter_p->addr.mask.v6.s6_addr32[mask_off] != 0) {
-						mask_size++;
-						iter_p->addr.mask.v6.s6_addr32[mask_off] <<= 1;
-					}
-				}
-				printf("%s/%u\n",
-				       inet_ntop(AF_INET6,
-						 &iter_p->addr.addr.v6,
-						 addr_s, addr_s_len),
-				       mask_size);
-				break;
-			default:
-				printf("UNKNOWN(%u)\n", iter_p->addr.type);
-				break;
-			}
+			nlctl_addr_print(&iter_p->addr);
+			printf("\n");
 			/* label */
 			printf("    label: \"%s\"\n", iter_p->label);
 		}
@@ -186,40 +150,8 @@ int unlbl_list(void)
 				printf("DEFAULT,");
 			/* address */
 			printf("address:");
-			switch (iter_p->addr.type) {
-			case AF_INET:
-				iter_p->addr.mask.v4.s_addr = ntohl(iter_p->addr.mask.v4.s_addr);
-				for (mask_size = 0;
-				     iter_p->addr.mask.v4.s_addr != 0;
-				     mask_size++)
-					iter_p->addr.mask.v4.s_addr <<= 1;
-				printf("%s/%u,",
-				       inet_ntop(AF_INET,
-						 &iter_p->addr.addr.v4,
-						 addr_s, addr_s_len),
-				       mask_size);
-				break;
-			case AF_INET6:
-				for (mask_size = 0, mask_off = 0;
-				     mask_off < 4;
-				     mask_off++) {
-					iter_p->addr.mask.v6.s6_addr32[mask_off] =
-						ntohl(iter_p->addr.mask.v6.s6_addr32[mask_off]);
-					while (iter_p->addr.mask.v6.s6_addr32[mask_off] != 0) {
-						mask_size++;
-						iter_p->addr.mask.v6.s6_addr32[mask_off] <<= 1;
-					}
-				}
-				printf("%s/%u,",
-				       inet_ntop(AF_INET6,
-						 &iter_p->addr.addr.v6,
-						 addr_s, addr_s_len),
-				       mask_size);
-				break;
-			default:
-				printf("UNKNOWN(%u),", iter_p->addr.type);
-				break;
-			}
+			nlctl_addr_print(&iter_p->addr);
+			printf(",");
 			/* label */
 			printf("label:\"%s\"", iter_p->label);
 			if (iter + 1 < count)
