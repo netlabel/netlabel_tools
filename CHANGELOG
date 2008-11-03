@@ -3,7 +3,8 @@ NetLabel Tools CHANGELOG
 
 * Release X.XX (XXXXXX)
 ------------------------------------------------------------------------------
-
+o Added support for address selectors
+o Added support for the new CIPSO_V4_MAP_LOCAL CIPSO mapping type
 
 * Release 0.18 (June 25, 2008)
 ------------------------------------------------------------------------------
