@@ -36,7 +36,22 @@
  * Allocation Functions
  */
 
-/** 
+/**
+ * nlbl_msg_free - Free a NetLabel message
+ * @msg: the NetLabel message
+ *
+ * Description:
+ * Free the memory associated with a NetLabel message.
+ *
+ */
+void nlbl_msg_free(nlbl_msg *msg)
+{
+	if (msg == NULL)
+		return;
+	nlmsg_free(msg);
+}
+
+/**
  * nlb_new_msg - Create a new NetLabel message
  *
  * Description:
@@ -68,23 +83,8 @@ nlbl_msg *nlbl_msg_new(void)
 	return msg;
 
 msg_new_failure:
-	if (msg)
-		nlmsg_free(msg);
+	nlbl_msg_free(msg);
 	return NULL;
-}
-
-/**
- * nlbl_msg_free - Free a NetLabel message
- * @msg: the NetLabel message
- *
- * Description:
- * Free the memory associated with a NetLabel message.
- *
- */
-void nlbl_msg_free(nlbl_msg *msg)
-{
-	if (msg)
-		return nlmsg_free(msg);
 }
 
 /*
@@ -101,10 +101,9 @@ void nlbl_msg_free(nlbl_msg *msg)
  */
 struct nlmsghdr *nlbl_msg_nlhdr(nlbl_msg *msg)
 {
-	if (msg != NULL)
-		return nlmsg_hdr(msg);
-	else
+	if (msg == NULL)
 		return NULL;
+	return nlmsg_hdr(msg);
 }
 
 /**
