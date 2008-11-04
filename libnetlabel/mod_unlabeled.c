@@ -100,7 +100,7 @@ static int nlbl_unlbl_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 	ret_val = nlbl_comm_recv(hndl, msg);
 	if (ret_val <= 0)
 		goto recv_failure;
-  
+
 	/* process the response */
 	nl_hdr = nlbl_msg_nlhdr(*msg);
 	if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_unlbl_fid &&
@@ -109,12 +109,11 @@ static int nlbl_unlbl_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 		ret_val = -EBADMSG;
 		goto recv_failure;
 	}
-  
+
 	return ret_val;
-  
+
 recv_failure:
-	if (ret_val > 0)
-		nlbl_msg_free(*msg);
+	nlbl_msg_free(*msg);
 	return ret_val;
 }
 
@@ -176,7 +175,7 @@ int nlbl_unlbl_init(void)
 	if (nl_hdr == NULL)
 		goto init_return;
 	nl_hdr->nlmsg_type = GENL_ID_CTRL;
-  
+
 	/* setup the generic netlink header */
 	genl_hdr = nlbl_msg_genlhdr(msg);
 	if (genl_hdr == NULL)
@@ -206,7 +205,7 @@ int nlbl_unlbl_init(void)
 			ret_val = -ENODATA;
 		goto init_return;
 	}
-  
+
 	/* process the response */
 	genl_hdr = nlbl_msg_genlhdr(ans_msg);
 	if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
@@ -223,9 +222,9 @@ int nlbl_unlbl_init(void)
 		ret_val = -EBADMSG;
 		goto init_return;
 	}
-  
+
 	ret_val = 0;
-  
+
 init_return:
 	nlbl_comm_close(hndl);
 	nlbl_msg_free(msg);
@@ -366,10 +365,7 @@ int nlbl_unlbl_list(struct nlbl_handle *hndl, uint8_t *allow_flag)
 	if (ret_val < 0 && ret_val != -ENOMSG)
 		goto list_return;
 	genl_hdr = nlbl_msg_genlhdr(ans_msg);
-	if (genl_hdr == NULL) {
-		ret_val = -EBADMSG;
-		goto list_return;
-	} else if (genl_hdr->cmd != NLBL_UNLABEL_C_LIST) {
+	if (genl_hdr == NULL || genl_hdr->cmd != NLBL_UNLABEL_C_LIST) {
 		ret_val = -EBADMSG;
 		goto list_return;
 	}
@@ -899,10 +895,11 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
 			nla_head = (struct nlattr *)(&genl_hdr[1]);
 			data_attrlen = nlmsg_len(nl_hdr) -
 				NLMSG_ALIGN(sizeof(*genl_hdr));
-      
+
 			/* resize the array */
 			addr_array = realloc(addr_array,
-					     sizeof(struct nlbl_addrmap) * (addr_count + 1));
+					     sizeof(struct nlbl_addrmap) *
+					     (addr_count + 1));
 			if (addr_array == NULL)
 				goto staticlist_return;
 			memset(&addr_array[addr_count], 0,
@@ -976,7 +973,7 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
 				addr_array[addr_count].addr.type = AF_INET6;
 			}
 			addr_count++;
-      
+
 			/* next message */
 			nl_hdr = nlmsg_next(nl_hdr, &data_len);
 		}
@@ -986,6 +983,8 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
 	ret_val = addr_count;
 
 staticlist_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
 	if (ret_val < 0 && addr_array) {
 		do {
 			if (addr_array[addr_count].dev)
@@ -995,8 +994,6 @@ staticlist_return:
 		} while (addr_count-- > 0);
 		free(addr_array);
 	}
-	if (hndl == NULL)
-		nlbl_comm_close(p_hndl);
 	nlbl_msg_free(msg);
 	return ret_val;
 }
@@ -1093,10 +1090,11 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 			nla_head = (struct nlattr *)(&genl_hdr[1]);
 			data_attrlen = nlmsg_len(nl_hdr) -
 				NLMSG_ALIGN(sizeof(*genl_hdr));
-      
+
 			/* resize the array */
 			addr_array = realloc(addr_array,
-					     sizeof(struct nlbl_addrmap) * (addr_count + 1));
+					     sizeof(struct nlbl_addrmap) *
+					     (addr_count + 1));
 			if (addr_array == NULL)
 				goto staticlistdef_return;
 			memset(&addr_array[addr_count], 0,
@@ -1161,7 +1159,7 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 				addr_array[addr_count].addr.type = AF_INET6;
 			}
 			addr_count++;
-      
+
 			/* next message */
 			nl_hdr = nlmsg_next(nl_hdr, &data_len);
 		}
@@ -1171,6 +1169,8 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 	ret_val = addr_count;
 
 staticlistdef_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
 	if (ret_val < 0 && addr_array) {
 		do {
 			if (addr_array[addr_count].label)
@@ -1178,8 +1178,6 @@ staticlistdef_return:
 		} while (addr_count-- > 0);
 		free(addr_array);
 	}
-	if (hndl == NULL)
-		nlbl_comm_close(p_hndl);
 	nlbl_msg_free(msg);
 	return ret_val;
 }
