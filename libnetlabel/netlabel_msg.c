@@ -206,6 +206,6 @@ struct nlattr *nlbl_attr_find(nlbl_msg *msg, int nla_type)
 		return NULL;
 
 	rem = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(struct genlmsghdr));
-  
+
 	return nla_find(nla_head, rem, nla_type);
 }
