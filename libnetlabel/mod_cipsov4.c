@@ -722,10 +722,7 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 	if (ret_val < 0 && ret_val != -ENOMSG)
 		goto list_return;
 	genl_hdr = nlbl_msg_genlhdr(ans_msg);
-	if (genl_hdr == NULL) {
-		ret_val = -EBADMSG;
-		goto list_return;
-	} else if (genl_hdr->cmd != NLBL_CIPSOV4_C_LIST) {
+	if (genl_hdr == NULL || genl_hdr->cmd != NLBL_CIPSOV4_C_LIST) {
 		ret_val = -EBADMSG;
 		goto list_return;
 	}
