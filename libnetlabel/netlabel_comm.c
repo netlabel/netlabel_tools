@@ -116,15 +116,14 @@ struct nlbl_handle *nlbl_comm_open(void)
 
 	/* connect to the generic netlink subsystem in the kernel */
 	if (nl_connect(hndl->nl_hndl, NETLINK_GENERIC) != 0)
-		goto open_failure;
+		goto open_failure_handle;
 
 	return hndl;
 
+open_failure_handle:
+	nl_close(hndl->nl_hndl);
+	nl_handle_destroy(hndl->nl_hndl);
 open_failure:
-	if (hndl->nl_hndl) {
-		nl_close(hndl->nl_hndl);
-		nl_handle_destroy(hndl->nl_hndl);
-	}
 	free(hndl);
 	return NULL;
 }
@@ -319,9 +318,9 @@ int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 	return ret_val;
 
 recv_failure:
-	if (data)
+	if (data != NULL)
 		free(data);
-	if (creds)
+	if (creds != NULL)
 		free(creds);
 	return ret_val;
 }
