@@ -97,7 +97,7 @@ struct nlbl_handle *nlbl_comm_open(void)
 	/* allocate the handle memory */
 	hndl = calloc(1, sizeof(*hndl));
 	if (hndl == NULL)
-		goto open_failure;
+		return NULL;
 
 	/* create a new netlink handle */
 	hndl->nl_hndl = nl_handle_alloc();
@@ -121,13 +121,11 @@ struct nlbl_handle *nlbl_comm_open(void)
 	return hndl;
 
 open_failure:
-	if (hndl) {
-		if (hndl->nl_hndl) {
-			nl_close(hndl->nl_hndl);
-			nl_handle_destroy(hndl->nl_hndl);
-		}
-		free(hndl);
+	if (hndl->nl_hndl) {
+		nl_close(hndl->nl_hndl);
+		nl_handle_destroy(hndl->nl_hndl);
 	}
+	free(hndl);
 	return NULL;
 }
 
@@ -220,7 +218,7 @@ int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data)
 	return ret_val;
 
 recv_raw_failure:
-	if (*data) {
+	if (*data != NULL) {
 		free(*data);
 		*data = NULL;
 	}

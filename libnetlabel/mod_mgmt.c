@@ -100,7 +100,7 @@ static int nlbl_mgmt_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 	ret_val = nlbl_comm_recv(hndl, msg);
 	if (ret_val <= 0)
 		goto recv_failure;
-  
+
 	/* process the response */
 	nl_hdr = nlbl_msg_nlhdr(*msg);
 	if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_mgmt_fid &&
@@ -109,9 +109,9 @@ static int nlbl_mgmt_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 		ret_val = -EBADMSG;
 		goto recv_failure;
 	}
-  
+
 	return ret_val;
-  
+
 recv_failure:
 	nlbl_msg_free(*msg);
 	return ret_val;
@@ -275,7 +275,7 @@ int nlbl_mgmt_init(void)
 	if (nl_hdr == NULL)
 		goto init_return;
 	nl_hdr->nlmsg_type = GENL_ID_CTRL;
-  
+	
 	/* setup the generic netlink header */
 	genl_hdr = nlbl_msg_genlhdr(msg);
 	if (genl_hdr == NULL)
@@ -305,7 +305,7 @@ int nlbl_mgmt_init(void)
 			ret_val = -ENODATA;
 		goto init_return;
 	}
-  
+	
 	/* process the response */
 	genl_hdr = nlbl_msg_genlhdr(ans_msg);
 	if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
@@ -322,9 +322,9 @@ int nlbl_mgmt_init(void)
 		ret_val = -EBADMSG;
 		goto init_return;
 	}
- 
+
 	ret_val = 0;
- 
+
 init_return:
 	nlbl_comm_close(hndl);
 	nlbl_msg_free(msg);
@@ -528,7 +528,7 @@ int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version)
 		ret_val = -EBADMSG;
 		goto version_return;
 	}
-	
+
 	/* process the response */
 	nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_VERSION);
 	if (nla == NULL) {
@@ -536,9 +536,9 @@ int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version)
 		goto version_return;
 	}
 	*version = nla_get_u32(nla);
-	
+
 	ret_val = 0;
-	
+
 version_return:
 	if (hndl == NULL)
 		nlbl_comm_close(p_hndl);
@@ -639,7 +639,7 @@ int nlbl_mgmt_add(struct nlbl_handle *hndl,
 	default:
 		ret_val = -EINVAL;
 		goto add_return;
-	}	
+	}
 
 	/* send the request */
 	ret_val = nlbl_comm_send(p_hndl, msg);
@@ -758,7 +758,7 @@ int nlbl_mgmt_adddef(struct nlbl_handle *hndl,
 	default:
 		ret_val = -EINVAL;
 		goto adddef_return;
-	}	
+	}
 
 	/* send the request */
 	ret_val = nlbl_comm_send(p_hndl, msg);
