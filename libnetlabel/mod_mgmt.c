@@ -113,8 +113,7 @@ static int nlbl_mgmt_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 	return ret_val;
   
 recv_failure:
-	if (ret_val > 0)
-		nlbl_msg_free(*msg);
+	nlbl_msg_free(*msg);
 	return ret_val;
 }
 
@@ -158,6 +157,7 @@ static int nlbl_mgmt_list_addr(const struct nlattr *nla_head,
 
 	domain->proto_type = NETLBL_NLTYPE_ADDRSELECT;
 
+	/* parse the attributes */
 	nla_for_each_attr(nla_a,
 			  nla_data(nla_head), nla_len(nla_head),
 			  nla_a_rem)
@@ -322,9 +322,9 @@ int nlbl_mgmt_init(void)
 		ret_val = -EBADMSG;
 		goto init_return;
 	}
-  
+ 
 	ret_val = 0;
-  
+ 
 init_return:
 	nlbl_comm_close(hndl);
 	nlbl_msg_free(msg);
@@ -393,7 +393,7 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 
 	/* read all of the messages (multi-message response) */
 	do {
-		if (data) {
+		if (data != NULL) {
 			free(data);
 			data = NULL;
 		}
@@ -433,7 +433,7 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 
 			/* resize the array */
 			protos = realloc(protos,
-					 sizeof(nlbl_proto) * (protos_count + 1));
+				       sizeof(nlbl_proto) * (protos_count + 1));
 			if (protos == NULL)
 				goto protocols_return;
 
@@ -443,7 +443,6 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 			if (nla == NULL)
 				goto protocols_return;
 			protos[protos_count] = nla_get_u32(nla);
-
 			protos_count++;
 
 			/* next message */
@@ -459,7 +458,7 @@ protocols_return:
 		free(protos);
 	if (hndl == NULL)
 		nlbl_comm_close(p_hndl);
-	if (data)
+	if (data != NULL)
 		free(data);
 	nlbl_msg_free(msg);
 	return ret_val;
@@ -494,61 +493,58 @@ int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version)
 
 	/* open a handle if we need one */
 	if (p_hndl == NULL) {
-    p_hndl = nlbl_comm_open();
-    if (p_hndl == NULL)
-      goto version_return;
-  }
+		p_hndl = nlbl_comm_open();
+		if (p_hndl == NULL)
+			goto version_return;
+	}
 
-  /* create a new message */
-  msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_VERSION, 0);
-  if (msg == NULL)
-    goto version_return;
+	/* create a new message */
+	msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_VERSION, 0);
+	if (msg == NULL)
+		goto version_return;
 
-  /* send the request */
-  ret_val = nlbl_comm_send(p_hndl, msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto version_return;
-  }
-
-  /* read the response */
-  ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-  if (ret_val <= 0) {
-    if (ret_val == 0)
-      ret_val = -ENODATA;
-    goto version_return;
-  }
-
-  /* check the response */
-  ret_val = nlbl_mgmt_parse_ack(ans_msg);
-  if (ret_val < 0 && ret_val != -ENOMSG)
-    goto version_return;
-  genl_hdr = nlbl_msg_genlhdr(ans_msg);
-  if (genl_hdr == NULL) {
-    ret_val = -EBADMSG;
-    goto version_return;
-  } else if (genl_hdr->cmd != NLBL_MGMT_C_VERSION) {
-    ret_val = -EBADMSG;
-    goto version_return;
-  }
-
-  /* process the response */
-  nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_VERSION);
-  if (nla == NULL) {
-    ret_val = -EBADMSG;
-    goto version_return;
-  }
-  *version = nla_get_u32(nla);
-
-  ret_val = 0;
-
- version_return:
-  if (hndl == NULL)
-    nlbl_comm_close(p_hndl);
-  nlbl_msg_free(msg);
-  nlbl_msg_free(ans_msg);
-  return ret_val;
+	/* send the request */
+	ret_val = nlbl_comm_send(p_hndl, msg);
+	if (ret_val == 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto version_return;
+	}
+	
+	/* read the response */
+	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (ret_val <= 0) {
+		if (ret_val == 0)
+			ret_val = -ENODATA;
+		goto version_return;
+	}
+	
+	/* check the response */
+	ret_val = nlbl_mgmt_parse_ack(ans_msg);
+	if (ret_val < 0 && ret_val != -ENOMSG)
+		goto version_return;
+	genl_hdr = nlbl_msg_genlhdr(ans_msg);
+	if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_VERSION) {
+		ret_val = -EBADMSG;
+		goto version_return;
+	}
+	
+	/* process the response */
+	nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_VERSION);
+	if (nla == NULL) {
+		ret_val = -EBADMSG;
+		goto version_return;
+	}
+	*version = nla_get_u32(nla);
+	
+	ret_val = 0;
+	
+version_return:
+	if (hndl == NULL)
+		nlbl_comm_close(p_hndl);
+	nlbl_msg_free(msg);
+	nlbl_msg_free(ans_msg);
+	return ret_val;
 }
 
 /**
@@ -979,10 +975,7 @@ int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 	if (ret_val < 0 && ret_val != -ENOMSG)
 		goto listdef_return;
 	genl_hdr = nlbl_msg_genlhdr(ans_msg);
-	if (genl_hdr == NULL) {
-		ret_val = -EBADMSG;
-		goto listdef_return;
-	} else if (genl_hdr->cmd != NLBL_MGMT_C_LISTDEF) {
+	if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTDEF) {
 		ret_val = -EBADMSG;
 		goto listdef_return;
 	}
@@ -1075,7 +1068,7 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 
 	/* read all of the messages (multi-message response) */
 	do {
-		if (data) {
+		if (data != NULL) {
 			free(data);
 			data = NULL;
 		}
@@ -1186,8 +1179,8 @@ listall_return:
 	}
 	if (hndl == NULL)
 		nlbl_comm_close(p_hndl);
-	nlbl_msg_free(msg);
 	if (data)
 		free(data);
+	nlbl_msg_free(msg);
 	return ret_val;
 }
