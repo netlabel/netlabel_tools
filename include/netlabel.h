@@ -1,8 +1,8 @@
-/*
- * NetLabel System
+/** @file
+ * NetLabel userspace/kernel interface API.
  *
- * The NetLabel system manages static and dynamic label mappings for network 
- * protocols such as CIPSO and RIPSO.
+ * The NetLabel system manages static and dynamic security label mappings for
+ * network protocols such as CIPSO and RIPSO.
  * 
  * Author: Paul Moore <paul.moore@hp.com>
  *
@@ -54,7 +54,9 @@
  * MGMT
  */
 
-/* NetLabel Management commands */
+/**
+ * NetLabel Management commands
+ */
 enum {
 	NLBL_MGMT_C_UNSPEC,
 	NLBL_MGMT_C_ADD,
@@ -69,7 +71,9 @@ enum {
 };
 #define NLBL_MGMT_C_MAX (__NLBL_MGMT_C_MAX - 1)
 
-/* NetLabel Management attributes */
+/**
+ * NetLabel Management attributes
+ */
 enum {
 	NLBL_MGMT_A_UNSPEC,
 	NLBL_MGMT_A_DOMAIN,
@@ -96,7 +100,9 @@ enum {
 #define CIPSO_V4_MAP_PASS             2
 #define CIPSO_V4_MAP_LOCAL            3
 
-/* NetLabel CIPSOv4 commands */
+/**
+ * NetLabel CIPSOv4 commands
+ */
 enum {
 	NLBL_CIPSOV4_C_UNSPEC,
 	NLBL_CIPSOV4_C_ADD,
@@ -107,7 +113,9 @@ enum {
 };
 #define NLBL_CIPSOV4_C_MAX (__NLBL_CIPSOV4_C_MAX - 1)
 
-/* NetLabel CIPSOv4 attributes */
+/**
+ * NetLabel CIPSOv4 attributes
+ */
 enum {
 	NLBL_CIPSOV4_A_UNSPEC,
 	NLBL_CIPSOV4_A_DOI,
@@ -130,7 +138,9 @@ enum {
  * UNLABELED
  */
 
-/* NetLabel Unlabeled commands */
+/**
+ * NetLabel Unlabeled commands
+ */
 enum {
 	NLBL_UNLABEL_C_UNSPEC,
 	NLBL_UNLABEL_C_ACCEPT,
@@ -145,7 +155,9 @@ enum {
 };
 #define NLBL_UNLABEL_C_MAX (__NLBL_UNLABEL_C_MAX - 1)
 
-/* NetLabel Unlabeled attributes */
+/**
+ * NetLabel Unlabeled attributes
+ */
 enum {
 	NLBL_UNLABEL_A_UNSPEC,
 	NLBL_UNLABEL_A_ACPTFLG,

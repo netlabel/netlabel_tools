@@ -50,7 +50,7 @@ GROUP = root
 
 SUBDIRS = libnetlabel netlabelctl
 
-.PHONY: tarball install clean $(SUBDIRS)
+.PHONY: tarball install docs clean $(SUBDIRS)
 
 all: $(SUBDIRS)
 
@@ -75,6 +75,11 @@ install: $(SUBDIRS)
 	@install -o $(OWNER) -g $(GROUP) -m 644 docs/man/netlabelctl.8 \
 	 $(INSTALL_MAN_DIR)/man8
 
+docs:
+	@echo "INFO: running doxygen"
+	@test -d docs/doxygen || mkdir docs/doxygen
+	@doxygen docs/doxyfile
+
 $(VERSION_HDR): version_info
 	@echo "INFO: creating the version header file"
 	@hdr="$(VERSION_HDR)"; \
@@ -94,6 +99,8 @@ $(SUBDIRS): $(VERSION_HDR)
 	@$(MAKE) -s -C $@
 
 clean:
+	@echo "INFO: removing the doxygen generated documentation"; \
+	rm -rf docs/doxygen
 	@echo "INFO: removing the version header file"; \
 	rm -f $(VERSION_HDR)
 	@for dir in $(SUBDIRS); do \

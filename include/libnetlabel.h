@@ -1,5 +1,8 @@
-/*
- * Header file for libnetlabel.a
+/** @file
+ * NetLabel userspace configuration library API.
+ *
+ * The NetLabel system manages static and dynamic security label mappings for
+ * network protocols such as CIPSO and RIPSO.
  *
  * Author: Paul Moore <paul.moore@hp.com>
  *
@@ -48,59 +51,53 @@
 /* general types */
 
 /**
- * struct nlbl_handle - NetLabel communications handle
+ * NetLabel communications handle
  *
- * Description:
  * XXX
  *
  */
 struct nlbl_handle;
 
 /**
- * nlbl_msg - NetLabel message
+ * NetLabel message
  *
- * Description:
  * XXX
  *
  */
 typedef struct nl_msg nlbl_msg;
 
 /**
- * nlbl_cmd - NetLabel command
+ * NetLabel command
  *
- * Description:
  * XXX
  *
  */
 typedef uint16_t nlbl_cmd;
 
 /**
- * nlbl_proto - NetLabel labeling protocol
+ * NetLabel labeling protocol
  *
- * Description:
  * XXX
  *
  */
 typedef uint32_t nlbl_proto;
 
 /**
- * nlbl_netdev - NetLabel network device
+ * NetLabel network device
  *
- * Description:
  * XXX
  *
  */
 typedef char *nlbl_netdev;
 
 /**
- * struct nlbl_netaddr - NetLabel network address structure
- * @type: address family
- * @addr.v4: IPv4 address
- * @addr.v6: IPv6 address
- * @mask.v4: IPv4 address mask
- * @mask.v6: IPv6 address mask
+ * NetLabel network address structure
+ * @param type address family
+ * @param addr.v4 IPv4 address
+ * @param addr.v6 IPv6 address
+ * @param mask.v4 IPv4 address mask
+ * @param mask.v6 IPv6 address mask
  *
- * Description:
  * XXX
  *
  */
@@ -117,9 +114,8 @@ struct nlbl_netaddr {
 };
 
 /**
- * nlbl_secctx - NetLabel security label
+ * NetLabel security label
  *
- * Description:
  * XXX
  *
  */
@@ -128,38 +124,34 @@ typedef char *nlbl_secctx;
 /* CIPSOv4 types */
 
 /**
- * nlbl_cv4_doi - NetLabel CIPSOv4 Domain Of Interpretation (DOI) value
+ * NetLabel CIPSOv4 Domain Of Interpretation (DOI) value
  *
- * Description:
  * XXX
  *
  */
 typedef uint32_t nlbl_cv4_doi;
 
 /**
- * nlbl_cv4_mtype - NetLabel CIPSOv4 mapping type
+ * NetLabel CIPSOv4 mapping type
  *
- * Description:
  * XXX
  *
  */
 typedef uint32_t nlbl_cv4_mtype;
 
 /**
- * nlbl_cv4_tag - NetLabel CIPSOv4 tag type
+ * NetLabel CIPSOv4 tag type
  *
- * Description:
  * XXX
  *
  */
 typedef uint8_t nlbl_cv4_tag;
 
 /**
- * struct nlbl_cv4_tag_a - NetLabel CIPSOv4 tag array
- * @array: array of tag types
- * @size: size of array
+ * NetLabel CIPSOv4 tag array
+ * @param array array of tag types
+ * @param size size of array
  *
- * Description:
  * XXX
  *
  */
@@ -169,20 +161,18 @@ struct nlbl_cv4_tag_a {
 };
 
 /**
- * nlbl_cv4_lvl - NetLabel CIPSOv4 MLS level
+ * NetLabel CIPSOv4 MLS level
  *
- * Description:
  * XXX
  *
  */
 typedef uint32_t nlbl_cv4_lvl;
 
 /**
- * struct nlbl_cv4_lvl_a - NetLabel CIPSOv4 MLS level array
- * @array: array of MLS levels
- * @size: size of array
+ * NetLabel CIPSOv4 MLS level array
+ * @param array array of MLS levels
+ * @param size size of array
  *
- * Description:
  * XXX
  *
  */
@@ -192,20 +182,18 @@ struct nlbl_cv4_lvl_a {
 };
 
 /**
- * nlbl_cv4_cat - NetLabel CIPSOv4 MLS category
+ * NetLabel CIPSOv4 MLS category
  *
- * Description:
  * XXX
  *
  */
 typedef uint32_t nlbl_cv4_cat;
 
 /**
- * struct nlbl_cv4_cat_a - NetLabel CIPSOv4 MLS category array
- * @array: array of MLS categories
- * @size: size of array
+ * NetLabel CIPSOv4 MLS category array
+ * @param array array of MLS categories
+ * @param size size of array
  *
- * Description:
  * XXX
  *
  */
@@ -217,13 +205,12 @@ struct nlbl_cv4_cat_a {
 /* lsm/domain mapping types */
 
 /**
- * struct nlbl_dommmap_addr - NetLabel LSM/Domain address selector structure
- * @addr: IP address
- * @proto_type: labeling protocol
- * @proto.cv4_doi: CIPSOv4 DOI
- * @next: next address selector
+ * NetLabel LSM/Domain address selector structure
+ * @param addr IP address
+ * @param proto_type labeling protocol
+ * @param proto.cv4_doi CIPSOv4 DOI
+ * @param next next address selector
  *
- * Description:
  * XXX
  *
  */
@@ -238,13 +225,12 @@ struct nlbl_dommap_addr {
 };
 
 /**
- * struct nlbl_dommap - NetLabel LSM/Domain mapping structure
- * @domain: LSM domain
- * @proto_type: labeling protocol
- * @proto.cv4_doi: CIPSOv4 DOI
- * @proto.addrsel: IP address selector(s)
+ * NetLabel LSM/Domain mapping structure
+ * @param domain LSM domain
+ * @param proto_type labeling protocol
+ * @param proto.cv4_doi CIPSOv4 DOI
+ * @param proto.addrsel IP address selector(s)
  *
- * Description:
  * XXX
  *
  */
@@ -258,12 +244,11 @@ struct nlbl_dommap {
 };
 
 /**
- * struct nlbl_addrmap - NetLabel network address mapping structure
- * @dev: network device
- * @addr: network address
- * @label: security label
+ * NetLabel network address mapping structure
+ * @param dev network device
+ * @param addr network address
+ * @param label security label
  *
- * Description:
  * XXX
  *
  */
