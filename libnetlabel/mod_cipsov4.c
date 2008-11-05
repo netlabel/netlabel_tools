@@ -1,4 +1,4 @@
-/*
+/** @file
  * CIPSO/IPv4 Module Functions
  *
  * Author: Paul Moore <paul.moore@hp.com>
@@ -40,10 +40,9 @@ static uint16_t nlbl_cipsov4_fid = 0;
  */
 
 /**
- * nlbl_cipsov4_msg_new - Create a new NetLabel CIPSOv4 message
- * @command: the NetLabel management command
+ * Create a new NetLabel CIPSOv4 message
+ * @param command the NetLabel management command
  *
- * Description:
  * This function creates a new NetLabel CIPSOv4 message using @command and
  * @flags.  Returns a pointer to the new message on success, or NULL on
  * failure.
@@ -81,11 +80,10 @@ msg_new_failure:
 }
 
 /**
- * nlbl_cipsov4_recv - Read a NetLbel CIPSOv4 message
- * @hndl: the NetLabel handle
- * @msg: the message
+ * Read a NetLbel CIPSOv4 message
+ * @param hndl the NetLabel handle
+ * @param msg the message
  *
- * Description:
  * Try to read a NetLabel CIPSOv4 message and return the message in @msg.
  * Returns the number of bytes read on success, zero on EOF, and negative
  * values on failure.
@@ -118,10 +116,9 @@ recv_failure:
 }
 
 /**
- * nlbl_cipsov4_parse_ack - Parse an ACK message
- * @msg: the message
+ * Parse an ACK message
+ * @param msg the message
  *
- * Description:
  * Parse the ACK message in @msg and return the error code specified in the
  * ACK.
  *
@@ -142,9 +139,8 @@ static int nlbl_cipsov4_parse_ack(nlbl_msg *msg)
  */
 
 /**
- * nlbl_cipsov4_init - Perform any setup needed
+ * Perform any setup needed
  *
- * Description:
  * Do any setup needed for the CIPSOv4 component, including determining the
  * NetLabel CIPSOv4 Generic Netlink family ID.  Returns zero on success,
  * negative values on error.
@@ -237,14 +233,13 @@ init_return:
  */
 
 /**
- * nlbl_cipsov4_add_std - Add a standard CIPSOv4 label mapping
- * @hndl: the NetLabel handle
- * @doi: the CIPSO DOI number
- * @tags: array of tags
- * @lvls: array of level mappings
- * @cats: array of category mappings, may be NULL
- * 
- * Description:
+ * Add a standard CIPSOv4 label mapping
+ * @param hndl the NetLabel handle
+ * @param doi the CIPSO DOI number
+ * @param tags array of tags
+ * @param lvls array of level mappings
+ * @param cats array of category mappings, may be NULL
+ *
  * Add the specified static CIPSO label mapping information to the NetLabel
  * system.  If @hndl is NULL then the function will handle opening and closing
  * it's own NetLabel handle.  Returns zero on success, negative values on
@@ -398,12 +393,11 @@ add_std_return:
 }
 
 /**
- * nlbl_cipsov4_add_pass - Add a pass-through CIPSOv4 label mapping
- * @hndl: the NetLabel handle
- * @doi: the CIPSO DOI number
- * @tags: array of tags
- * 
- * Description:
+ * Add a pass-through CIPSOv4 label mapping
+ * @param hndl the NetLabel handle
+ * @param doi the CIPSO DOI number
+ * @param tags array of tags
+ *
  * Add the specified static CIPSO label mapping information to the NetLabel
  * system.  If @hndl is NULL then the function will handle opening and closing
  * it's own NetLabel handle.  Returns zero on success, negative values on
@@ -491,11 +485,10 @@ add_pass_return:
 }
 
 /**
- * nlbl_cipsov4_add_local - Add a local CIPSOv4 label mapping
- * @hndl: the NetLabel handle
- * @doi: the CIPSO DOI number
- * 
- * Description:
+ * Add a local CIPSOv4 label mapping
+ * @param hndl the NetLabel handle
+ * @param doi the CIPSO DOI number
+ *
  * Add the specified static CIPSO label mapping information to the NetLabel
  * system.  If @hndl is NULL then the function will handle opening and closing
  * it's own NetLabel handle.  Returns zero on success, negative values on
@@ -576,11 +569,10 @@ add_local_return:
 }
 
 /**
- * nlbl_cipsov4_del - Delete a CIPSOv4 label mapping
- * @hndl: the NetLabel handle
- * @doi: the CIPSO DOI number
+ * Delete a CIPSOv4 label mapping
+ * @param hndl the NetLabel handle
+ * @param doi the CIPSO DOI number
  *
- * Description:
  * Remove the CIPSO label mapping with the DOI value matching @doi.  If @hndl
  * is NULL then the function will handle opening and closing it's own NetLabel
  * handle.  Returns zero on success, negative values on failure. 
@@ -644,15 +636,14 @@ del_return:
 }
 
 /**
- * nlbl_cipsov4_list - List the details of a specific CIPSOv4 label mapping
- * @hndl: the NetLabel handle
- * @doi: the CIPSO DOI number
- * @mtype: the DOI mapping type
- * @tags: array of tag numbers
- * @lvls: array of level mappings
- * @cats: array of category mappings
+ * List the details of a specific CIPSOv4 label mapping
+ * @param hndl the NetLabel handle
+ * @param doi the CIPSO DOI number
+ * @param mtype the DOI mapping type
+ * @param tags array of tag numbers
+ * @param lvls array of level mappings
+ * @param cats array of category mappings
  *
- * Description:
  * Query the kernel for the specified CIPSOv4 mapping specified by @doi and
  * return the details of the mapping to the caller.  If @hndl is NULL then the
  * function will handle opening and closing it's own NetLabel handle.  Returns
@@ -823,12 +814,11 @@ list_return:
 }
 
 /**
- * nlbl_cipsov4_listall - List the CIPSOv4 label mappings
- * @hndl: the NetLabel handle
- * @dois: an array of DOI values
- * @mtypes: an array of the mapping types
+ * List the CIPSOv4 label mappings
+ * @param hndl the NetLabel handle
+ * @param dois an array of DOI values
+ * @param mtypes an array of the mapping types
  *
- * Description:
  * Query the kernel for the configured CIPSOv4 mappings and return two arrays;
  * @dois which contains the DOI values and @mtypes which contains the
  * type of mapping.  If @hndl is NULL then the function will handle opening

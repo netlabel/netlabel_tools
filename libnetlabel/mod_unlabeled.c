@@ -1,4 +1,4 @@
-/*
+/** @file
  * Unlabeled Module Functions
  *
  * Author: Paul Moore <paul.moore@hp.com>
@@ -40,10 +40,9 @@ static uint16_t nlbl_unlbl_fid = 0;
  */
 
 /**
- * nlbl_unlbl_msg_new - Create a new NetLabel unlbl message
- * @command: the NetLabel unlbl command
+ * Create a new NetLabel unlbl message
+ * @param command the NetLabel unlbl command
  *
- * Description:
  * This function creates a new NetLabel unlbl message using @command and
  * @flags.  Returns a pointer to the new message on success, or NULL on
  * failure.
@@ -81,11 +80,10 @@ msg_new_failure:
 }
 
 /**
- * nlbl_unlbl_recv - Read a NetLbel unlbl message
- * @hndl: the NetLabel handle
- * @msg: the message
+ * Read a NetLbel unlbl message
+ * @param hndl the NetLabel handle
+ * @param msg the message
  *
- * Description:
  * Try to read a NetLabel unlbl message and return the message in @msg.
  * Returns the number of bytes read on success, zero on EOF, and negative
  * values on failure.
@@ -118,10 +116,9 @@ recv_failure:
 }
 
 /**
- * nlbl_unlbl_parse_ack - Parse an ACK message
- * @msg: the message
+ * Parse an ACK message
+ * @param msg the message
  *
- * Description:
  * Parse the ACK message in @msg and return the error code specified in the
  * ACK.
  *
@@ -142,9 +139,8 @@ static int nlbl_unlbl_parse_ack(nlbl_msg *msg)
  */
 
 /**
- * nlbl_unlbl_init - Perform any setup needed
+ * Perform any setup needed
  *
- * Description:
  * Do any setup needed for the unlbl component, including determining the
  * NetLabel unlbl Generic Netlink family ID.  Returns zero on success,
  * negative values on error.
@@ -237,11 +233,10 @@ init_return:
  */
 
 /**
- * nlbl_unlbl_accept - Set the unlbl accept flag
- * @hndl: the NetLabel handle
- * @allow_flag: the desired accept flag setting
+ * Set the unlbl accept flag
+ * @param hndl the NetLabel handle
+ * @param allow_flag the desired accept flag setting
  *
- * Description:
  * Set the unlbl accept flag in the NetLabel system; if @allow_flag is
  * true then set the accept flag, otherwise clear the flag.  If @hndl is NULL
  * then the function will handle opening and closing it's own NetLabel handle.
@@ -307,11 +302,10 @@ accept_return:
 }
 
 /**
- * nlbl_unlabeled_list - Query the unlbl accept flag
- * @hndl: the NetLabel handle
- * @allow_flag: the current accept flag setting
+ * Query the unlbl accept flag
+ * @param hndl the NetLabel handle
+ * @param allow_flag the current accept flag setting
  *
- * Description:
  * Query the unlbl accept flag in the NetLabel system.  If @hndl is NULL then
  * the function will handle opening and closing it's own NetLabel handle.
  * Returns zero on success, negative values on failure.
@@ -387,13 +381,12 @@ list_return:
 }
 
 /**
- * nlbl_unlbl_staticadd - Add a static label configuration
- * @hndl: the NetLabel handle
- * @dev: the network interface
- * @addr: the network IP address
- * @label: the security label
+ * Add a static label configuration
+ * @param hndl the NetLabel handle
+ * @param dev the network interface
+ * @param addr the network IP address
+ * @param label the security label
  *
- * Description:
  * Add a new static label configuration to the NetLabel system.  If @hndl is
  * NULL then the function will handle opening and closing it's own NetLabel
  * handle.  Returns zero on success, negative values on failure.
@@ -496,12 +489,11 @@ staticadd_return:
 }
 
 /**
- * nlbl_unlbl_staticadddef - Set the default static label configuration
- * @hndl: the NetLabel handle
- * @addr: the network IP address
- * @label: the security label
+ * Set the default static label configuration
+ * @param hndl the NetLabel handle
+ * @param addr the network IP address
+ * @param label the security label
  *
- * Description:
  * Set the default static label configuration to the NetLabel system.  If
  * @hndl is NULL then the function will handle opening and closing it's own
  * NetLabel handle.  Returns zero on success, negative values on failure.
@@ -600,12 +592,11 @@ staticadddef_return:
 }
 
 /**
- * nlbl_unlbl_staticdel - Delete a static label configuration
- * @hndl: the NetLabel handle
- * @dev: the network interface
- * @addr: the network IP address
+ * Delete a static label configuration
+ * @param hndl the NetLabel handle
+ * @param dev the network interface
+ * @param addr the network IP address
  *
- * Description:
  * Delete a new static label configuration to the NetLabel system.  If @hndl is
  * NULL then the function will handle opening and closing it's own NetLabel
  * handle.  Returns zero on success, negative values on failure.
@@ -704,12 +695,10 @@ staticdel_return:
 }
 
 /**
- * nlbl_unlbl_staticdeldef - Delete the default static label configuration
- * @hndl: the NetLabel handle
- * @dev: the network interface
- * @addr: the network IP address
+ * Delete the default static label configuration
+ * @param hndl the NetLabel handle
+ * @param addr the network IP address
  *
- * Description:
  * Delete the default static label configuration to the NetLabel system.  If
  * @hndl is NULL then the function will handle opening and closing it's own
  * NetLabel handle.  Returns zero on success, negative values on failure.
@@ -804,11 +793,10 @@ staticdeldef_return:
 }
 
 /**
- * nlbl_unlbl_staticlist - Dump the static label configuration
- * @hndl: the NetLabel handle
- * @addrs: the static label address mappings
+ * Dump the static label configuration
+ * @param hndl the NetLabel handle
+ * @param addrs the static label address mappings
  *
- * Description:
  * Dump the NetLabel static label configuration.  If @hndl is NULL then the
  * function will handle opening and closing it's own NetLabel handle.
  * Returns zero on success, negative values on failure.
@@ -999,11 +987,10 @@ staticlist_return:
 }
 
 /**
- * nlbl_unlbl_staticlist - Dump the default static label configuration
- * @hndl: the NetLabel handle
- * @addrs: the static label address mappings
+ * Dump the default static label configuration
+ * @param hndl the NetLabel handle
+ * @param addrs the static label address mappings
  *
- * Description:
  * Dump the NetLabel default static label configuration.  If @hndl is NULL
  * then the function will handle opening and closing it's own NetLabel handle.
  * Returns zero on success, negative values on failure.

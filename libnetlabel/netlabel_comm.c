@@ -1,4 +1,4 @@
-/*
+/** @file
  * NetLabel Low-Level Communication Functions
  *
  * Author: Paul Moore <paul.moore@hp.com>
@@ -48,10 +48,9 @@ static uint32_t nlcomm_read_timeout = 10;
  */
 
 /**
- * nlbl_comm_hndl_valid - Validate a NetLabel handle
- * @hndl: the NetLabel handle
+ * Validate a NetLabel handle
+ * @param hndl the NetLabel handle
  *
- * Description:
  * Return true if @hndl is valid, false otherwise.
  *
  */
@@ -65,10 +64,9 @@ static int nlbl_comm_hndl_valid(struct nlbl_handle *hndl)
  */
 
 /**
- * nlbl_comm_timeout - Set the NetLabel timeout
- * @seconds: the timeout in seconds
+ * Set the NetLabel timeout
+ * @param seconds the timeout in seconds
  *
- * Description:
  * Set the timeout value used by the NetLabel communications layer.
  *
  */
@@ -82,9 +80,8 @@ void nlbl_comm_timeout(uint32_t seconds)
  */
 
 /**
- * nlbl_comm_open - Create and bind a NetLabel handle
+ * Create and bind a NetLabel handle
  *
- * Description:
  * Create a new NetLabel handle, bind it to the running process, and connect to
  * the Generic Netlink subsystem.  Returns a pointer to the NetLabel handle
  * structure.
@@ -129,10 +126,9 @@ open_failure:
 }
 
 /**
- * nlbl_comm_close - Close and destroy a NetLabel handle
- * @hndl: the NetLabel handle
+ * Close and destroy a NetLabel handle
+ * @param hndl the NetLabel handle
  *
- * Description:
  * Closes the given NetLabel socket.  Returns zero on success, negative values
  * on failure.
  *
@@ -154,11 +150,10 @@ int nlbl_comm_close(struct nlbl_handle *hndl)
 }
 
 /**
- * nlbl_comm_recv_raw - Read a message from a NetLabel handle
- * @hndl: the NetLabel handle
- * @data: the message buffer
+ * Read a message from a NetLabel handle
+ * @param hndl the NetLabel handle
+ * @param data the message buffer
  *
- * Description:
  * Reads a message from the NetLabel handle and stores it the pointer returned
  * in @msg.  This function allocates space for @msg, making the caller
  * responsibile for freeing @msg later.  Returns the number of bytes read on
@@ -225,11 +220,10 @@ recv_raw_failure:
 }
 
 /**
- * nlbl_comm_recv - Read a message from a NetLabel handle
- * @hndl: the NetLabel handle
- * @msg: the message buffer
+ * Read a message from a NetLabel handle
+ * @param hndl the NetLabel handle
+ * @param msg the message buffer
  *
- * Description:
  * Reads a message from the NetLabel handle and stores it the pointer returned
  * in @msg.  This function allocates space for @msg, making the caller
  * responsibile for freeing @msg later.  Returns the number of bytes read on
@@ -326,11 +320,10 @@ recv_failure:
 }
 
 /**
- * nlbl_comm_send - Write a message to a NetLabel handle
- * @hndl: the NetLabel handle
- * @msg: the message
+ * Write a message to a NetLabel handle
+ * @param hndl the NetLabel handle
+ * @param msg the message
  *
- * Description:
  * Write the message in @msg to the NetLabel handle @hndl.  Returns the number
  * of bytes written on success, or negative values on failure.
  *

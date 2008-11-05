@@ -1,4 +1,4 @@
-/*
+/** @file
  * NetLabel Message Functions
  *
  * Author: Paul Moore <paul.moore@hp.com>
@@ -37,10 +37,9 @@
  */
 
 /**
- * nlbl_msg_free - Free a NetLabel message
- * @msg: the NetLabel message
+ * Free a NetLabel message
+ * @param msg the NetLabel message
  *
- * Description:
  * Free the memory associated with a NetLabel message.
  *
  */
@@ -52,9 +51,8 @@ void nlbl_msg_free(nlbl_msg *msg)
 }
 
 /**
- * nlb_new_msg - Create a new NetLabel message
+ * Create a new NetLabel message
  *
- * Description:
  * Creates a new NetLabel message and allocates space for both the Netlink and
  * Generic Netlink headers.
  *
@@ -92,10 +90,9 @@ msg_new_failure:
  */
 
 /**
- * nlbl_msg_nlhdr - Get the Netlink header from the NetLabel message
- * @msg: the NetLabel message
+ * Get the Netlink header from the NetLabel message
+ * @param msg the NetLabel message
  *
- * Description:
  * Returns the Netlink header on success, or NULL on failure.
  *
  */
@@ -107,10 +104,9 @@ struct nlmsghdr *nlbl_msg_nlhdr(nlbl_msg *msg)
 }
 
 /**
- * nlbl_msg_genlhdr - Get the Generic Netlink header from the NetLabel message
- * @msg: the NetLabel message
+ * Get the Generic Netlink header from the NetLabel message
+ * @param msg the NetLabel message
  *
- * Description:
  * Returns the Generic Netlink header on success, or NULL on failure.
  *
  */
@@ -133,10 +129,9 @@ struct genlmsghdr *nlbl_msg_genlhdr(nlbl_msg *msg)
  */
 
 /**
- * nlbl_msg_err - Return the nlmsgerr struct in the Netlink message
- * @msg: the NetLabel message
+ * Return the nlmsgerr struct in the Netlink message
+ * @param msg the NetLabel message
  *
- * Description:
  * Returns a pointer to the nlmsgerr struct in a NLMSG_ERROR Netlink message
  * or NULL on failure.
  *
@@ -156,10 +151,9 @@ struct nlmsgerr *nlbl_msg_err(nlbl_msg *msg)
  */
 
 /**
- * nlbl_attr_head - Get the head of the Netlink attributes from a NetLabel msg
- * @msg: the NetLabel message
+ * Get the head of the Netlink attributes from a NetLabel msg
+ * @param msg the NetLabel message
  *
- * Description:
  * Returns the head of the Netlink attributes from a NetLabel message on
  * success, or NULL on failure.
  *
@@ -179,11 +173,10 @@ struct nlattr *nlbl_attr_head(nlbl_msg *msg)
 }
 
 /**
- * nlbl_attr_find - Find an attribute in a NetLabel message
- * @msg: the NetLabel message
- * @nla_type: the attribute type
+ * Find an attribute in a NetLabel message
+ * @param msg the NetLabel message
+ * @param nla_type the attribute type
  *
- * Description:
  * Search @msg looking for the @nla_type attribute.  Return the attribute on
  * success, or NULL on failure.
  *

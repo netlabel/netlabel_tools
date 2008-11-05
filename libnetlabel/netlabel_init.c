@@ -1,4 +1,4 @@
-/*
+/** @file
  * NetLabel Library init/exit Functions
  *
  * Author: Paul Moore <paul.moore@hp.com>
@@ -36,9 +36,8 @@
 #include "mod_cipsov4.h"
 
 /**
- * nlbl_init - Handle any NetLabel setup needed
+ * Handle any NetLabel setup needed
  *
- * Description:
  * Initialize the NetLabel communication link, but do not open any general use
  * NetLabel handles.  Returns zero on success, negative values on failure.
  *
@@ -63,9 +62,8 @@ int nlbl_init(void)
 }
 
 /**
- * nlbl_exit - Handle any NetLabel cleanup
+ * Handle any NetLabel cleanup
  *
- * Description:
  * Perform any cleanup duties for the NetLabel communication link, does not
  * close any handles.
  *

@@ -1,4 +1,4 @@
-/*
+/** @file
  * Management Module Functions
  *
  * Author: Paul Moore <paul.moore@hp.com>
@@ -40,10 +40,9 @@ static uint16_t nlbl_mgmt_fid = 0;
  */
 
 /**
- * nlbl_mgmt_msg_new - Create a new NetLabel management message
- * @command: the NetLabel management command
+ * Create a new NetLabel management message
+ * @param command the NetLabel management command
  *
- * Description:
  * This function creates a new NetLabel management message using @command and
  * @flags.  Returns a pointer to the new message on success, or NULL on
  * failure.
@@ -81,11 +80,10 @@ msg_new_failure:
 }
 
 /**
- * nlbl_mgmt_recv - Read a NetLbel management message
- * @hndl: the NetLabel handle
- * @msg: the message
+ * Read a NetLabel management message
+ * @param hndl the NetLabel handle
+ * @param msg the message
  *
- * Description:
  * Try to read a NetLabel management message and return the message in @msg.
  * Returns the number of bytes read on success, zero on EOF, and negative
  * values on failure.
@@ -118,10 +116,9 @@ recv_failure:
 }
 
 /**
- * nlbl_mgmt_parse_ack - Parse an ACK message
- * @msg: the message
+ * Parse an ACK message
+ * @param msg the message
  *
- * Description:
  * Parse the ACK message in @msg and return the error code specified in the
  * ACK.
  *
@@ -138,11 +135,10 @@ static int nlbl_mgmt_parse_ack(nlbl_msg *msg)
 }
 
 /**
- * nlbl_mgmt_list_addr - Parse a LIST message with address selectors
- * @nla_head: the NLBL_MGMT_A_SELECTORLIST attribute
- * @domain: the domain mapping entry
+ * Parse a LIST message with address selectors
+ * @param nla_head the NLBL_MGMT_A_SELECTORLIST attribute
+ * @param domain the domain mapping entry
  *
- * Description:
  * Parse the NLBL_MGMT_A_SELECTORLIST attribute and populate @domain with
  * the information.  Returns zero on success, negative values on failure.
  *
@@ -242,9 +238,8 @@ static int nlbl_mgmt_list_addr(const struct nlattr *nla_head,
  */
 
 /**
- * nlbl_mgmt_init - Perform any setup needed
+ * Perform any setup needed
  *
- * Description:
  * Do any setup needed for the management component, including determining the
  * NetLabel Mangement Generic Netlink family ID.  Returns zero on success,
  * negative values on error.
@@ -337,11 +332,10 @@ init_return:
  */
 
 /**
- * nlbl_mgmt_protocols - Determine the supported list of NetLabel protocols
- * @hndl: the NetLabel handle
- * @protocols: protocol array
+ * Determine the supported list of NetLabel protocols
+ * @param hndl the NetLabel handle
+ * @param protocols protocol array
  *
- * Description:
  * Query the NetLabel subsystem and return the supported protocols in
  * @protocols.  If @hndl is NULL then the function will handle opening and
  * closing it's own NetLabel handle.  Returns the number of protocols on
@@ -465,11 +459,10 @@ protocols_return:
 }
 
 /**
- * nlbl_mgmt_version - Determine the kernel's NetLabel protocol version
- * @hndl: the NetLabel handle
- * @version: the protocol version
+ * Determine the kernel's NetLabel protocol version
+ * @param hndl the NetLabel handle
+ * @param version the protocol version
  *
- * Description:
  * Request the NetLabel protocol version from the kernel and return the result
  * to the caller.  If @hndl is NULL then the function will handle opening and
  * closing it's own NetLabel handle.  Returns zero on success, negative values
@@ -548,12 +541,11 @@ version_return:
 }
 
 /**
- * nlbl_mgmt_add - Add a domain mapping to the NetLabel system
- * @hndl: the NetLabel handle
- * @domain: the NetLabel domain map
- * @addr: the network IP address
+ * Add a domain mapping to the NetLabel system
+ * @param hndl the NetLabel handle
+ * @param domain the NetLabel domain map
+ * @param addr the network IP address
  *
- * Description:
  * Add the domain mapping in @domain to the NetLabel system.  If @hndl is NULL
  * then the function will handle opening and closing it's own NetLabel handle.
  * Returns zero on success, negative values on failure.
@@ -669,12 +661,11 @@ add_return:
 }
 
 /**
- * nlbl_mgmt_adddef - Add the default domain mapping to the NetLabel system
- * @hndl: the NetLabel handle
- * @domain: the NetLabel domain map
- * @addr: the network IP address
+ * Add the default domain mapping to the NetLabel system
+ * @param hndl the NetLabel handle
+ * @param domain the NetLabel domain map
+ * @param addr the network IP address
  *
- * Description:
  * Add the domain mapping in @domain to the NetLabel system as the default
  * mapping.  If @hndl is NULL then the function will handle opening and
  * closing it's own NetLabel handle.  Returns zero on success, negative values
@@ -788,11 +779,10 @@ adddef_return:
 }
 
 /**
- * nlbl_mgmt_del - Remove a domain mapping from the NetLabel system
- * @hndl: the NetLabel handle
- * @domain: the domain
+ * Remove a domain mapping from the NetLabel system
+ * @param hndl the NetLabel handle
+ * @param domain the domain
  *
- * Description:
  * Remove the domain mapping specified by @domain from the NetLabel system.
  * If @hndl is NULL then the function will handle opening and closing it's own
  * NetLabel handle.  Returns zero on success, negative values on failure.
@@ -856,13 +846,12 @@ del_return:
 }
 
 /**
- * nlbl_mgmt_deldef - Remove the default domain mapping from NetLabel
- * @hndl: the NetLabel handle
+ * Remove the default domain mapping from NetLabel
+ * @param hndl the NetLabel handle
  *
- * Description:
  * Remove the default domain mapping from the NetLabel system.  If @hndl is
  * NULL then the function will handle opening and closing it's own NetLabel
- *  handle.  Returns zero on success, negative values on failure.
+ * handle.  Returns zero on success, negative values on failure.
  *
  */
 int nlbl_mgmt_deldef(struct nlbl_handle *hndl)
@@ -916,11 +905,10 @@ deldef_return:
 }
 
 /**
- * nlbl_mgmt_listdef - List the default NetLabel domain mapping
- * @hndl: the NetLabel handle
- * @domain: the default domain map
+ * List the default NetLabel domain mapping
+ * @param hndl the NetLabel handle
+ * @param domain the default domain map
  *
- * Description:
  * Query the NetLabel subsystem and return the default domain mapping in
  * @domain.  If @hndl is NULL then the function will handle opening and
  * closing it's own NetLabel handle.  Returns zero on success, negative values
@@ -1012,11 +1000,10 @@ listdef_return:
 }
 
 /**
- * nlbl_mgmt_listall - List all of the configured NetLabel domain mappings
- * @hndl: the NetLabel handle
- * @domains: domain mapping array
+ * List all of the configured NetLabel domain mappings
+ * @param hndl the NetLabel handle
+ * @param domains domain mapping array
  *
- * Description:
  * Query the NetLabel subsystem and return the configured domain mappings in
  * @domains.  If @hndl is NULL then the function will handle opening and
  * closing it's own NetLabel handle.  Returns the number of domains on success,
