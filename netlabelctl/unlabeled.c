@@ -36,11 +36,10 @@
 #include "netlabelctl.h"
 
 /**
- * unlbl_accept - Set the NetLabel accept flag
- * @argc: the number of arguments
- * @argv: the argument list
+ * Set the NetLabel accept flag
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * Set the kernel's unlabeled packet allow flag.  Returns zero on success,
  * negative values on failure.
  *
@@ -70,9 +69,8 @@ int unlbl_accept(int argc, char *argv[])
 }
 
 /**
- * unlbl_list - Query the NetLabel unlabeled module and display the results
+ * Query the NetLabel unlabeled module and display the results
  *
- * Description:
  * Query the unlabeled module and display the results.  Returns zero on
  * success, negative values on failure.
  *
@@ -174,11 +172,10 @@ list_return:
 }
 
 /**
- * unlbl_add - Add a static/fallback label configuration
- * @argc: the number of arguments
- * @argv: the argument list
+ * Add a static/fallback label configuration
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * Add a fallback label configuration to the kernel.  Returns zero on success,
  * negative values on failure.
  *
@@ -261,11 +258,10 @@ int unlbl_add(int argc, char *argv[])
 }
 
 /**
- * unlbl_add - Delete a static/fallback label configuration
- * @argc: the number of arguments
- * @argv: the argument list
+ * Delete a static/fallback label configuration
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * Deletes a fallback label configuration to the kernel.  Returns zero on
  * success, negative values on failure.
  *
@@ -344,11 +340,10 @@ int unlbl_del(int argc, char *argv[])
 }
 
 /**
- * unlbl_main - Entry point for the NetLabel unlabeled functions
- * @argc: the number of arguments
- * @argv: the argument list
+ * Entry point for the NetLabel unlabeled functions
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * Parses the argument list and performs the requested operation.  Returns zero
  * on success, negative values on failure.
  *

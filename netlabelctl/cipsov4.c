@@ -33,11 +33,10 @@
 #include "netlabelctl.h"
 
 /**
- * cipsov4_add - Add a CIPSOv4 label mapping
- * @argc: the number of arguments
- * @argv: the argument list
+ * Add a CIPSOv4 label mapping
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * Add a CIPSOv4 label mapping to the NetLabel system.  Returns zero on
  * success, negative values on failure.
  *
@@ -156,11 +155,10 @@ add_return:
 }
 
 /**
- * cipsov4_del - Remove a CIPSOv4 label mapping
- * @argc: the number of arguments
- * @argv: the argument list
+ * Remove a CIPSOv4 label mapping
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * Remove a CIPSOv4 label mapping from the NetLabel system.  Returns zero on
  * success, negative values on failure.
  *
@@ -193,11 +191,10 @@ int cipsov4_del(int argc, char *argv[])
 }
 
 /**
- * cipsov4_list_all - List all of the CIPSOv4 label mappings
- * @argc: the number of arguments
- * @argv: the argument list
+ * List all of the CIPSOv4 label mappings
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * List the configured CIPSOv4 label mappings.  Returns zero on success,
  * negative values on failure.
  *
@@ -273,10 +270,9 @@ list_all_return:
 }
 
 /**
- * cipsov4_list_doi - List a specific CIPSOv4 DOI label mapping
- * @doi: the DOI value
+ * List a specific CIPSOv4 DOI label mapping
+ * @param doi the DOI value
  *
- * Description:
  * List the configured CIPSOv4 label mapping.  Returns zero on success,
  * negative values on failure.
  *
@@ -387,11 +383,10 @@ list_doi_return:
 }
 
 /**
- * cipsov4_list - List the CIPSOv4 label mappings
- * @argc: the number of arguments
- * @argv: the argument list
+ * List the CIPSOv4 label mappings
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * List the configured CIPSOv4 label mappings.  Returns zero on success,
  * negative values on failure.
  *
@@ -424,11 +419,10 @@ int cipsov4_list(int argc, char *argv[])
 }
 
 /**
- * cipsov4_main - Entry point for the NetLabel CIPSO/IPv4 functions
- * @argc: the number of arguments
- * @argv: the argument list
+ * Entry point for the NetLabel CIPSO/IPv4 functions
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * Parses the argument list and performs the requested operation.  Returns zero
  * on success, negative values on failure.
  *

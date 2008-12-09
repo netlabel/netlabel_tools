@@ -32,9 +32,8 @@
 #include "netlabelctl.h"
 
 /**
- * mgmt_protocols - Display a list of the kernel's NetLabel protocols
+ * Display a list of the kernel's NetLabel protocols
  *
- * Description:
  * Request the kernel's supported NetLabel protocols and display the list to
  * the user.  Returns zero on success, negative values on failure.
  *
@@ -81,9 +80,8 @@ int mgmt_protocols(void)
 }
 
 /**
- * mgmt_version - Display the kernel's NetLabel version
+ * Display the kernel's NetLabel version
  *
- * Description:
  * Request the kernel's NetLabel version string and display it to the user.
  * Returns zero on success, negative values on failure.
  *
@@ -104,9 +102,9 @@ int mgmt_version(void)
 }
 
 /**
- * mgmt_main - Entry point for the NetLabel management functions
- * @argc: the number of arguments
- * @argv: the argument list
+ * Entry point for the NetLabel management functions
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
  * Description:
  * Parses the argument list and performs the requested operation.  Returns zero

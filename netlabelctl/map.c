@@ -35,11 +35,10 @@
 #include "netlabelctl.h"
 
 /**
- * map_add - Add a domain mapping to NetLabel
- * @argc: the number of arguments
- * @argv: the argument list
+ * Add a domain mapping to NetLabel
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * Add the specified domain mapping to the NetLabel system.  Returns zero on
  * success, negative values on failure.
  *
@@ -146,9 +145,9 @@ int map_add(int argc, char *argv[])
 }
 
 /**
- * map_del - Delete a domain mapping from NetLabel
- * @argc: the number of arguments
- * @argv: the argument list
+ * Delete a domain mapping from NetLabel
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
  * Description:
  * Remove the specified domain mapping from the NetLabel system.  Returns zero
@@ -190,11 +189,10 @@ int map_del(int argc, char *argv[])
 }
 
 /**
- * map_list - List the NetLabel domains mappings
- * @argc: the number of arguments
- * @argv: the argument list
+ * List the NetLabel domains mappings
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * List the configured NetLabel domain mappings.  Returns zero on success,
  * negative values on failure.
  *
@@ -335,11 +333,10 @@ list_return:
 }
 
 /**
- * map_main - Entry point for the NetLabel mapping functions
- * @argc: the number of arguments
- * @argv: the argument list
+ * Entry point for the NetLabel mapping functions
+ * @param argc the number of arguments
+ * @param argv the argument list
  *
- * Description:
  * Parses the argument list and performs the requested operation.  Returns zero
  * on success, negative values on failure.
  *

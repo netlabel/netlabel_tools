@@ -49,12 +49,11 @@ uint32_t opt_pretty = 0;
 char *nlctl_name = NULL;
 
 /**
- * nlctl_usage_print - Display usage information
- * @fp: the output file pointer
+ * Display usage information
+ * @param fp the output file pointer
  *
- * Description:
  * Display brief usage information.
- * 
+ *
  */
 static void nlctl_usage_print(FILE *fp)
 {
@@ -62,10 +61,9 @@ static void nlctl_usage_print(FILE *fp)
 }
 
 /**
- * nlctl_ver_print - Display version information
- * @fp: the output file pointer
+ * Display version information
+ * @param fp the output file pointer
  *
- * Description:
  * Display the version string.
  *
  */
@@ -78,12 +76,11 @@ static void nlctl_ver_print(FILE *fp)
 }
 
 /**
- * nlctl_help_print - Display help information
- * @fp: the output file pointer
+ * Display help information
+ * @param fp the output file pointer
  *
- * Description:
  * Display help and usage information.
- * 
+ *
  */
 static void nlctl_help_print(FILE *fp)
 {
@@ -125,10 +122,9 @@ static void nlctl_help_print(FILE *fp)
 }
 
 /**
- * nlctl_strerror - Convert a errno value into a human readable string
- * @ret_val: the errno return value
+ * Convert a errno value into a human readable string
+ * @param ret_val the errno return value
  *
- * Description:
  * Return a pointer to a human readable string describing the error in
  * @ret_val.
  *
@@ -173,10 +169,9 @@ static char *nlctl_strerror(int ret_val)
 }
 
 /**
- * nlctl_addr_print - Display a network address
- * @addr: the IP address to display
+ * Display a network address
+ * @param addr the IP address to display
  *
- * Description:
  * Print the IP address and mask, specified in @addr, to STDIO.
  *
  */
@@ -217,7 +212,7 @@ void nlctl_addr_print(const struct nlbl_netaddr *addr)
 	}
 }
 
-/**
+/*
  * main
  */
 int main(int argc, char *argv[])
