@@ -74,7 +74,7 @@ int mgmt_protocols(void)
 	}
 	printf("\n");
 
-	if (list)
+	if (list != NULL)
 		free(list);
 	return 0;
 }
@@ -95,7 +95,7 @@ int mgmt_version(void)
 	if (ret_val < 0)
 		return ret_val;
 
-	printf(MSG("NetLabel protocol version : ")); 
+	printf(MSG("NetLabel protocol version : "));
 	printf("%u\n", version);
 
 	return 0;

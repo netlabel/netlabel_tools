@@ -70,9 +70,9 @@ static void nlctl_usage_print(FILE *fp)
 static void nlctl_ver_print(FILE *fp)
 {
 	fprintf(fp,
-		"NetLabel Control Utility, version %s (libnetlabel %s)\n",
-		VERSION_NETLABELCTL,
-		NETLBL_VER_STRING);
+	"NetLabel Control Utility, version %s (libnetlabel %s)\n",
+	VERSION_NETLABELCTL,
+	NETLBL_VER_STRING);
 }
 
 /**
@@ -86,39 +86,39 @@ static void nlctl_help_print(FILE *fp)
 {
 	nlctl_ver_print(fp);
 	fprintf(fp,
-		" Usage: %s [<flags>] <module> [<commands>]\n"
-		"\n"
-		" Flags:\n"
-		"   -h        : help/usage message\n"
-		"   -p        : make the output pretty\n"
-		"   -t <secs> : timeout\n"
-		"   -v        : verbose mode\n"
-		"\n"
-		" Modules and Commands:\n"
-		"  mgmt : NetLabel management\n"
-		"    version\n"
-		"    protocols\n"
-		"  map : Domain/Protocol mapping\n"
-		"    add default|domain:<domain> [address:<ADDR>[/<MASK>]]\n"
-		"                                protocol:<protocol>[,<extra>]\n"
-		"    del default|domain:<domain> [address:<ADDR>[/<MASK>]]\n"
-		"    list\n"
-		"  unlbl : Unlabeled packet handling\n"
-		"    accept on|off\n"
-		"    add default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
-		"                                label:<LABEL>\n"
-		"    del default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
-		"    list\n"
-		"  cipsov4 : CIPSO/IPv4 packet handling\n"
-		"    add trans doi:<DOI> tags:<T1>,<Tn>\n"
-		"            levels:<LL1>=<RL1>,<LLn>=<RLn>\n"
-		"            categories:<LC1>=<RC1>,<LCn>=<RCn>\n"
-		"    add pass doi:<DOI> tags:<T1>,<Tn>\n"
-		"    add local doi:<DOI>\n"
-		"    del doi:<DOI>\n"
-		"    list [doi:<DOI>]\n"
-		"\n",
-		nlctl_name);
+	" Usage: %s [<flags>] <module> [<commands>]\n"
+	"\n"
+	" Flags:\n"
+	"   -h        : help/usage message\n"
+	"   -p        : make the output pretty\n"
+	"   -t <secs> : timeout\n"
+	"   -v        : verbose mode\n"
+	"\n"
+	" Modules and Commands:\n"
+	"  mgmt : NetLabel management\n"
+	"    version\n"
+	"    protocols\n"
+	"  map : Domain/Protocol mapping\n"
+	"    add default|domain:<domain> [address:<ADDR>[/<MASK>]]\n"
+	"                                protocol:<protocol>[,<extra>]\n"
+	"    del default|domain:<domain> [address:<ADDR>[/<MASK>]]\n"
+	"    list\n"
+	"  unlbl : Unlabeled packet handling\n"
+	"    accept on|off\n"
+	"    add default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
+	"                                label:<LABEL>\n"
+	"    del default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
+	"    list\n"
+	"  cipsov4 : CIPSO/IPv4 packet handling\n"
+	"    add trans doi:<DOI> tags:<T1>,<Tn>\n"
+	"            levels:<LL1>=<RL1>,<LLn>=<RLn>\n"
+	"            categories:<LC1>=<RC1>,<LCn>=<RCn>\n"
+	"    add pass doi:<DOI> tags:<T1>,<Tn>\n"
+	"    add local doi:<DOI>\n"
+	"    del doi:<DOI>\n"
+	"    list [doi:<DOI>]\n"
+	"\n",
+	nlctl_name);
 }
 
 /**
@@ -278,11 +278,9 @@ int main(int argc, char *argv[])
 		goto exit;
 	}
 	nlbl_comm_timeout(opt_timeout);
-
 	module_name = argv[optind];
 	if (!module_name)
 		goto exit;
-
 	/* transfer control to the module */
 	if (!strcmp(module_name, "mgmt")) {
 		module_main = mgmt_main;
@@ -304,9 +302,7 @@ int main(int argc, char *argv[])
 		ret_val = RET_ERR;
 	} else
 		ret_val = RET_OK;
-
-	nlbl_exit();
-
 exit:
+	nlbl_exit();
 	return ret_val;
 }

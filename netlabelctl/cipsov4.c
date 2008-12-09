@@ -47,12 +47,9 @@ int cipsov4_add(int argc, char *argv[])
 	uint32_t arg_iter;
 	uint32_t cipso_type = CIPSO_V4_MAP_UNKNOWN;
 	nlbl_cv4_doi doi = 0;
-	struct nlbl_cv4_tag_a tags = { .array = NULL,
-				       .size = 0 };
-	struct nlbl_cv4_lvl_a lvls = { .array = NULL,
-				       .size = 0 };
-	struct nlbl_cv4_cat_a cats = { .array = NULL,
-				       .size = 0 };
+	struct nlbl_cv4_tag_a tags = { .array = NULL, .size = 0 };
+	struct nlbl_cv4_lvl_a lvls = { .array = NULL, .size = 0 };
+	struct nlbl_cv4_cat_a cats = { .array = NULL, .size = 0 };
 	char *token_ptr;
 
 	/* sanity checks */
@@ -74,18 +71,19 @@ int cipsov4_add(int argc, char *argv[])
 			cipso_type = CIPSO_V4_MAP_LOCAL;
 		} else if (strncmp(argv[arg_iter], "doi:", 4) == 0) {
 			/* doi */
-			doi = (nlbl_cv4_doi)atoi(argv[arg_iter] + 4);
+			doi = atoi(argv[arg_iter] + 4);
 		} else if (strncmp(argv[arg_iter], "tags:", 5) == 0) {
 			/* tags */
 			token_ptr = strtok(argv[arg_iter] + 5, ",");
 			while (token_ptr != NULL) {
 				tags.array = realloc(tags.array,
-						     sizeof(nlbl_cv4_tag) * (tags.size + 1));
+						     sizeof(nlbl_cv4_tag) *
+						     (tags.size + 1));
 				if (tags.array == NULL) {
 					ret_val = -ENOMEM;
 					goto add_return;
 				}
-				tags.array[tags.size++] = (nlbl_cv4_tag)atoi(token_ptr);
+				tags.array[tags.size++] = atoi(token_ptr);
 				token_ptr = strtok(NULL, ",");
 			}
 		} else if (strncmp(argv[arg_iter], "levels:", 7) == 0) {
@@ -93,14 +91,16 @@ int cipsov4_add(int argc, char *argv[])
 			token_ptr = strtok(argv[arg_iter] + 7, "=");
 			while (token_ptr != NULL) {
 				lvls.array = realloc(lvls.array,
-						     sizeof(nlbl_cv4_lvl) * 2 * (lvls.size + 1));
+						     sizeof(nlbl_cv4_lvl) * 2 *
+						     (lvls.size + 1));
 				if (lvls.array == NULL) {
 					ret_val = -ENOMEM;
 					goto add_return;
 				}
-				lvls.array[lvls.size * 2] = (nlbl_cv4_lvl)atoi(token_ptr);
+				/* XXX - should be more robust for bad input */
+				lvls.array[lvls.size * 2] = atoi(token_ptr);
 				token_ptr = strtok(NULL, ",");
-				lvls.array[lvls.size * 2 + 1] = (nlbl_cv4_lvl)atoi(token_ptr);
+				lvls.array[lvls.size * 2 + 1] = atoi(token_ptr);
 				token_ptr = strtok(NULL, "=");
 				lvls.size++;
 			}
@@ -109,14 +109,16 @@ int cipsov4_add(int argc, char *argv[])
 			token_ptr = strtok(argv[arg_iter] + 11, "=");
 			while (token_ptr != NULL) {
 				cats.array = realloc(cats.array,
-						     sizeof(nlbl_cv4_cat) * 2 * (cats.size + 1));
+						     sizeof(nlbl_cv4_cat) * 2 *
+						     (cats.size + 1));
 				if (cats.array == NULL) {
 					ret_val = -ENOMEM;
 					goto add_return;
 				}
-				cats.array[cats.size * 2] = (nlbl_cv4_cat)atoi(token_ptr);
+				/* XXX - should be more robust for bad input */
+				cats.array[cats.size * 2] = atoi(token_ptr);
 				token_ptr = strtok(NULL, ",");
-				cats.array[cats.size * 2 + 1] = (nlbl_cv4_cat)atoi(token_ptr);
+				cats.array[cats.size * 2 + 1] = atoi(token_ptr);
 				token_ptr = strtok(NULL, "=");
 				cats.size++;
 			}
@@ -143,13 +145,12 @@ int cipsov4_add(int argc, char *argv[])
 		ret_val = -EINVAL;
 	}
 
-	/* cleanup and return */
 add_return:
-	if (tags.array)
+	if (tags.array != NULL)
 		free(tags.array);
-	if (lvls.array)
+	if (lvls.array != NULL)
 		free(lvls.array);
-	if (cats.array)
+	if (cats.array != NULL)
 		free(cats.array);
 	return ret_val;
 }
@@ -165,7 +166,6 @@ add_return:
  */
 int cipsov4_del(int argc, char *argv[])
 {
-	int ret_val;
 	uint32_t arg_iter;
 	nlbl_cv4_doi doi = 0;
 
@@ -178,16 +178,14 @@ int cipsov4_del(int argc, char *argv[])
 	while (arg_iter < argc && argv[arg_iter] != NULL) {
 		if (strncmp(argv[arg_iter], "doi:", 4) == 0) {
 			/* doi */
-			doi = (nlbl_cv4_doi)atoi(argv[arg_iter] + 4);
+			doi = atoi(argv[arg_iter] + 4);
 		} else
 			return -EINVAL;
 		arg_iter++;
 	}
 
 	/* delete the mapping */
-	ret_val = nlbl_cipsov4_del(NULL, doi);
-
-	return 0;
+	return nlbl_cipsov4_del(NULL, doi);
 }
 
 /**
@@ -262,9 +260,9 @@ static int cipsov4_list_all(void)
 	ret_val = 0;
 
 list_all_return:
-	if (doi_list)
+	if (doi_list != NULL)
 		free(doi_list);
-	if (mtype_list)
+	if (mtype_list != NULL)
 		free(mtype_list);
 	return ret_val;
 }
@@ -284,12 +282,9 @@ static int cipsov4_list_doi(uint32_t doi)
 	nlbl_cv4_doi *doi_list = NULL;
 	nlbl_cv4_mtype *mtype_list = NULL;
 	nlbl_cv4_mtype maptype;
-	struct nlbl_cv4_tag_a tags = { .array = NULL,
-				       .size = 0 };
-	struct nlbl_cv4_lvl_a lvls = { .array = NULL,
-				       .size = 0 };
-	struct nlbl_cv4_cat_a cats = { .array = NULL,
-				       .size = 0 };
+	struct nlbl_cv4_tag_a tags = { .array = NULL, .size = 0 };
+	struct nlbl_cv4_lvl_a lvls = { .array = NULL, .size = 0 };
+	struct nlbl_cv4_cat_a cats = { .array = NULL, .size = 0 };
 
 	ret_val = nlbl_cipsov4_list(NULL, doi, &maptype, &tags, &lvls, &cats);
 	if (ret_val < 0)
@@ -328,7 +323,7 @@ static int cipsov4_list_doi(uint32_t doi)
 			/* levels */
 			printf(" levels (%zu): \n", lvls.size);
 			for (iter = 0; iter < lvls.size; iter++)
-				printf("   %u = %u\n", 
+				printf("   %u = %u\n",
 				       lvls.array[iter * 2],
 				       lvls.array[iter * 2 + 1]);
 			/* categories */
@@ -375,9 +370,9 @@ static int cipsov4_list_doi(uint32_t doi)
 	ret_val = 0;
 
 list_doi_return:
-	if (doi_list)
+	if (doi_list != NULL)
 		free(doi_list);
-	if (mtype_list)
+	if (mtype_list != NULL)
 		free(mtype_list);
 	return ret_val;
 }
@@ -393,7 +388,6 @@ list_doi_return:
  */
 int cipsov4_list(int argc, char *argv[])
 {
-	int ret_val;
 	uint32_t iter;
 	uint32_t doi_flag = 0;
 	nlbl_cv4_doi doi = 0;
@@ -403,19 +397,17 @@ int cipsov4_list(int argc, char *argv[])
 	while (iter < argc && argv[iter] != NULL) {
 		if (strncmp(argv[iter], "doi:", 4) == 0) {
 			/* doi */
-			doi = (nlbl_cv4_doi)atoi(argv[iter] + 4);
+			doi = atoi(argv[iter] + 4);
 			doi_flag = 1;
 		} else
 			return -EINVAL;
 		iter++;
 	}
 
-	if (doi_flag)
-		ret_val = cipsov4_list_doi(doi);
+	if (doi_flag != 0)
+		return cipsov4_list_doi(doi);
 	else
-		ret_val = cipsov4_list_all();
-
-	return ret_val;
+		return cipsov4_list_all();
 }
 
 /**
