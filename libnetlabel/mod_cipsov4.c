@@ -42,6 +42,7 @@ static uint16_t nlbl_cipsov4_fid = 0;
 /**
  * Create a new NetLabel CIPSOv4 message
  * @param command the NetLabel management command
+ * @param flags the message flags
  *
  * This function creates a new NetLabel CIPSOv4 message using @command and
  * @flags.  Returns a pointer to the new message on success, or NULL on

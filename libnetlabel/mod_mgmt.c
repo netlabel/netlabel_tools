@@ -42,6 +42,7 @@ static uint16_t nlbl_mgmt_fid = 0;
 /**
  * Create a new NetLabel management message
  * @param command the NetLabel management command
+ * @param flags the message flags
  *
  * This function creates a new NetLabel management message using @command and
  * @flags.  Returns a pointer to the new message on success, or NULL on

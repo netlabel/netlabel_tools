@@ -42,6 +42,7 @@ static uint16_t nlbl_unlbl_fid = 0;
 /**
  * Create a new NetLabel unlbl message
  * @param command the NetLabel unlbl command
+ * @param flags the message flags
  *
  * This function creates a new NetLabel unlbl message using @command and
  * @flags.  Returns a pointer to the new message on success, or NULL on
