@@ -329,21 +329,21 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 
 /* CIPSOv4 Protocol */
 int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
-                           nlbl_cv4_doi doi,
-                           struct nlbl_cv4_tag_a *tags,
-                           struct nlbl_cv4_lvl_a *lvls,
-                           struct nlbl_cv4_cat_a *cats);
+			   nlbl_cv4_doi doi,
+			   struct nlbl_cv4_tag_a *tags,
+			   struct nlbl_cv4_lvl_a *lvls,
+			   struct nlbl_cv4_cat_a *cats);
 int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 			  nlbl_cv4_doi doi,
 			  struct nlbl_cv4_tag_a *tags);
 int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi);
 int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi);
 int nlbl_cipsov4_list(struct nlbl_handle *hndl,
-                      nlbl_cv4_doi doi,
+		      nlbl_cv4_doi doi,
 		      nlbl_cv4_mtype *mtype,
-                      struct nlbl_cv4_tag_a *tags,
-                      struct nlbl_cv4_lvl_a *lvls,
-                      struct nlbl_cv4_cat_a *cats);
+		      struct nlbl_cv4_tag_a *tags,
+		      struct nlbl_cv4_lvl_a *lvls,
+		      struct nlbl_cv4_cat_a *cats);
 int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 			 nlbl_cv4_doi **dois,
 			 nlbl_cv4_mtype **mtypes);
