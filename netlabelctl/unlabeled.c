@@ -89,7 +89,7 @@ int unlbl_list(void)
 	ret_val = nlbl_unlbl_list(NULL, &flag);
 	if (ret_val < 0)
 		return ret_val;
-	if (opt_pretty)
+	if (opt_pretty != 0)
 		printf("Accept unlabeled packets : %s\n",
 		       (flag ? "on" : "off"));
 	else
@@ -98,23 +98,20 @@ int unlbl_list(void)
 	/* get the static label mappings */
 	ret_val = nlbl_unlbl_staticlist(NULL, &addr_p);
 	if (ret_val < 0)
-		goto list_return;
+		return ret_val;
 	count = ret_val;
-
-	/* get the default static label mapping */
 	ret_val = nlbl_unlbl_staticlistdef(NULL, &addrdef_p);
 	if (ret_val > 0) {
-		addr_p = realloc(addr_p,
-				 sizeof(struct nlbl_addrmap) * (count + ret_val));
+		count += ret_val;
+		addr_p = realloc(addr_p, sizeof(struct nlbl_addrmap) * count);
 		if (addr_p == NULL)
 			goto list_return;
 		memcpy(&addr_p[count], addrdef_p,
 		       sizeof(struct nlbl_addrmap) * ret_val);
-		count += ret_val;
 	}
 
 	/* display the static label mappings */
-	if (opt_pretty) {
+	if (opt_pretty != 0) {
 		printf("Configured NetLabel address mappings (%zu)\n", count);
 		for (iter = 0; iter < count; iter++) {
 			iter_p = &addr_p[iter];
@@ -159,11 +156,11 @@ int unlbl_list(void)
 	}
 
 list_return:
-	if (addr_p) {
+	if (addr_p != NULL) {
 		for (iter = 0; iter < count; iter++) {
-			if (addr_p[iter].dev)
+			if (addr_p[iter].dev != NULL)
 				free(addr_p[iter].dev);
-			if (addr_p[iter].label)
+			if (addr_p[iter].label != NULL)
 				free(addr_p[iter].label);
 		}
 		free(addr_p);
@@ -182,10 +179,7 @@ list_return:
  */
 int unlbl_add(int argc, char *argv[])
 {
-	int ret_val;
 	uint32_t iter;
-	char *mask;
-	uint32_t mask_iter;
 	uint8_t def_flag = 0;
 	nlbl_netdev dev = NULL;
 	struct nlbl_netaddr addr;
@@ -198,8 +192,7 @@ int unlbl_add(int argc, char *argv[])
 	memset(&addr, 0, sizeof(addr));
 
 	/* parse the arguments */
-	iter = 0;
-	while (iter < argc && argv[iter] != NULL) {
+	for (iter = 0; iter < argc && argv[iter] != NULL; iter++) {
 		if (strncmp(argv[iter], "interface:", 10) == 0) {
 			dev = argv[iter] + 10;
 		} else if (strncmp(argv[iter], "default", 7) == 0) {
@@ -207,51 +200,13 @@ int unlbl_add(int argc, char *argv[])
 		} else if (strncmp(argv[iter], "label:", 6) == 0) {
 			label = argv[iter] + 6;
 		} else if (strncmp(argv[iter], "address:", 8) == 0) {
-			mask = strstr(argv[iter] + 8, "/");
-			if (mask != NULL) {
-				mask[0] = '\0';
-				mask++;
-			}
-			ret_val = inet_pton(AF_INET,
-					    argv[iter] + 8, &addr.addr.v4);
-			if (ret_val > 0) {
-				addr.type = AF_INET;
-				mask_iter = (mask ? atoi(mask) : 32);
-				for (; mask_iter > 0; mask_iter--) {
-					addr.mask.v4.s_addr >>= 1;
-					addr.mask.v4.s_addr |= 0x80000000;
-				}
-				addr.mask.v4.s_addr = htonl(addr.mask.v4.s_addr);
-			} else {
-				ret_val = inet_pton(AF_INET6,
-						    argv[iter] + 8,
-						    &addr.addr.v6);
-				if (ret_val > 0) {
-					uint32_t tmp_iter;
-					addr.type = AF_INET6;
-					mask_iter = (mask ? atoi(mask) : 128);
-					for (tmp_iter = 0;
-					     mask_iter > 0 && tmp_iter < 4;
-					     tmp_iter++) {
-						for (; mask_iter > 0 &&
-							     addr.mask.v6.s6_addr32[tmp_iter] < 0xffffffff;
-						     mask_iter--) {
-							addr.mask.v6.s6_addr32[tmp_iter] >>= 1;
-							addr.mask.v6.s6_addr32[tmp_iter] |= 0x80000000;
-						}
-						addr.mask.v6.s6_addr32[tmp_iter] =
-							htonl(addr.mask.v6.s6_addr32[tmp_iter]);
-					}
-				}
-			}
-			if (ret_val <= 0)
+			if (nlctl_addr_parse(argv[iter] + 8, &addr) != 0)
 				return -EINVAL;
 		}
-		iter++;
 	}
 
 	/* add the mapping */
-	if (def_flag)
+	if (def_flag != 0)
 		return nlbl_unlbl_staticadddef(NULL, &addr, label);
 	else
 		return nlbl_unlbl_staticadd(NULL, dev, &addr, label);
@@ -268,10 +223,7 @@ int unlbl_add(int argc, char *argv[])
  */
 int unlbl_del(int argc, char *argv[])
 {
-	int ret_val;
 	uint32_t iter;
-	char *mask;
-	uint32_t mask_iter;
 	uint8_t def_flag = 0;
 	nlbl_netdev dev;
 	struct nlbl_netaddr addr;
@@ -283,57 +235,19 @@ int unlbl_del(int argc, char *argv[])
 	memset(&addr, 0, sizeof(addr));
 
 	/* parse the arguments */
-	iter = 0;
-	while (iter < argc && argv[iter] != NULL) {
+	for (iter = 0; iter < argc && argv[iter] != NULL; iter++) {
 		if (strncmp(argv[iter], "interface:", 10) == 0) {
 			dev = argv[iter] + 10;
 		} else if (strncmp(argv[iter], "default", 7) == 0) {
 			def_flag = 1;
 		} else if (strncmp(argv[iter], "address:", 8) == 0) {
-			mask = strstr(argv[iter] + 8, "/");
-			if (mask != NULL) {
-				mask[0] = '\0';
-				mask++;
-			}
-			ret_val = inet_pton(AF_INET,
-					    argv[iter] + 8, &addr.addr.v4);
-			if (ret_val > 0) {
-				addr.type = AF_INET;
-				mask_iter = (mask ? atoi(mask) : 32);
-				for (; mask_iter > 0; mask_iter--) {
-					addr.mask.v4.s_addr >>= 1;
-					addr.mask.v4.s_addr |= 0x80000000;
-				}
-				addr.mask.v4.s_addr = htonl(addr.mask.v4.s_addr);
-			} else {
-				ret_val = inet_pton(AF_INET6,
-						    argv[iter] + 8,
-						    &addr.addr.v6);
-				if (ret_val > 0) {
-					uint32_t tmp_iter;
-					addr.type = AF_INET6;
-					mask_iter = (mask ? atoi(mask) : 128);
-					for (tmp_iter = 0;
-					     mask_iter > 0 && tmp_iter < 4;
-					     tmp_iter++)
-						for (; mask_iter > 0 &&
-							     addr.mask.v6.s6_addr32[tmp_iter] < 0xffffffff;
-						     mask_iter--) {
-							addr.mask.v6.s6_addr32[tmp_iter] >>= 1;
-							addr.mask.v6.s6_addr32[tmp_iter] |= 0x80000000;
-						}
-					addr.mask.v6.s6_addr32[tmp_iter] =
-						htonl(addr.mask.v6.s6_addr32[tmp_iter]);
-				}
-			}
-			if (ret_val <= 0)
+			if (nlctl_addr_parse(argv[iter] + 8, &addr) != 0)
 				return -EINVAL;
 		}
-		iter++;
 	}
 
 	/* add the mapping */
-	if (def_flag)
+	if (def_flag != 0)
 		return nlbl_unlbl_staticdeldef(NULL, &addr);
 	else
 		return nlbl_unlbl_staticdel(NULL, dev, &addr);

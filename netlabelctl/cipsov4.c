@@ -44,7 +44,7 @@
 int cipsov4_add(int argc, char *argv[])
 {
 	int ret_val;
-	uint32_t arg_iter;
+	uint32_t iter;
 	uint32_t cipso_type = CIPSO_V4_MAP_UNKNOWN;
 	nlbl_cv4_doi doi = 0;
 	struct nlbl_cv4_tag_a tags = { .array = NULL, .size = 0 };
@@ -57,24 +57,23 @@ int cipsov4_add(int argc, char *argv[])
 		return -EINVAL;
   
 	/* parse the arguments */
-	arg_iter = 0;
-	while (arg_iter < argc && argv[arg_iter] != NULL) {
-		if (strcmp(argv[arg_iter], "trans") == 0) {
+	for (iter = 0; iter < argc && argv[iter] != NULL; iter++) {
+		if (strcmp(argv[iter], "trans") == 0) {
 			cipso_type = CIPSO_V4_MAP_TRANS;
-		} else if (strcmp(argv[arg_iter], "std") == 0) {
+		} else if (strcmp(argv[iter], "std") == 0) {
 			fprintf(stderr,
 				MSG_OLD("use 'trans' instead of 'std'\n"));
 			cipso_type = CIPSO_V4_MAP_TRANS;
-		} else if (strcmp(argv[arg_iter], "pass") == 0) {
+		} else if (strcmp(argv[iter], "pass") == 0) {
 			cipso_type = CIPSO_V4_MAP_PASS;
-		} else if (strcmp(argv[arg_iter], "local") == 0) {
+		} else if (strcmp(argv[iter], "local") == 0) {
 			cipso_type = CIPSO_V4_MAP_LOCAL;
-		} else if (strncmp(argv[arg_iter], "doi:", 4) == 0) {
+		} else if (strncmp(argv[iter], "doi:", 4) == 0) {
 			/* doi */
-			doi = atoi(argv[arg_iter] + 4);
-		} else if (strncmp(argv[arg_iter], "tags:", 5) == 0) {
+			doi = atoi(argv[iter] + 4);
+		} else if (strncmp(argv[iter], "tags:", 5) == 0) {
 			/* tags */
-			token_ptr = strtok(argv[arg_iter] + 5, ",");
+			token_ptr = strtok(argv[iter] + 5, ",");
 			while (token_ptr != NULL) {
 				tags.array = realloc(tags.array,
 						     sizeof(nlbl_cv4_tag) *
@@ -86,9 +85,9 @@ int cipsov4_add(int argc, char *argv[])
 				tags.array[tags.size++] = atoi(token_ptr);
 				token_ptr = strtok(NULL, ",");
 			}
-		} else if (strncmp(argv[arg_iter], "levels:", 7) == 0) {
+		} else if (strncmp(argv[iter], "levels:", 7) == 0) {
 			/* levels */
-			token_ptr = strtok(argv[arg_iter] + 7, "=");
+			token_ptr = strtok(argv[iter] + 7, "=");
 			while (token_ptr != NULL) {
 				lvls.array = realloc(lvls.array,
 						     sizeof(nlbl_cv4_lvl) * 2 *
@@ -104,9 +103,9 @@ int cipsov4_add(int argc, char *argv[])
 				token_ptr = strtok(NULL, "=");
 				lvls.size++;
 			}
-		} else if (strncmp(argv[arg_iter], "categories:", 11) == 0) {
+		} else if (strncmp(argv[iter], "categories:", 11) == 0) {
 			/* categories */
-			token_ptr = strtok(argv[arg_iter] + 11, "=");
+			token_ptr = strtok(argv[iter] + 11, "=");
 			while (token_ptr != NULL) {
 				cats.array = realloc(cats.array,
 						     sizeof(nlbl_cv4_cat) * 2 *
@@ -124,7 +123,6 @@ int cipsov4_add(int argc, char *argv[])
 			}
 		} else
 			return -EINVAL;
-		arg_iter++;
 	}
 
 	/* add the cipso mapping */
@@ -166,22 +164,20 @@ add_return:
  */
 int cipsov4_del(int argc, char *argv[])
 {
-	uint32_t arg_iter;
+	uint32_t iter;
 	nlbl_cv4_doi doi = 0;
 
 	/* sanity checks */
 	if (argc <= 0 || argv == NULL || argv[0] == NULL)
 		return -EINVAL;
-  
+
 	/* parse the arguments */
-	arg_iter = 0;
-	while (arg_iter < argc && argv[arg_iter] != NULL) {
-		if (strncmp(argv[arg_iter], "doi:", 4) == 0) {
+	for (iter = 0; iter < argc && argv[iter] != NULL; iter++) {
+		if (strncmp(argv[iter], "doi:", 4) == 0) {
 			/* doi */
-			doi = atoi(argv[arg_iter] + 4);
+			doi = atoi(argv[iter] + 4);
 		} else
 			return -EINVAL;
-		arg_iter++;
 	}
 
 	/* delete the mapping */
@@ -210,7 +206,7 @@ static int cipsov4_list_all(void)
 		goto list_all_return;
 	count = ret_val;
 
-	if (opt_pretty) {
+	if (opt_pretty != 0) {
 		printf("Configured CIPSOv4 mappings (%zu)\n", count);
 		for (iter = 0; iter < count; iter++) {
 			/* doi value */
@@ -290,7 +286,7 @@ static int cipsov4_list_doi(uint32_t doi)
 	if (ret_val < 0)
 		goto list_doi_return;
 
-	if (opt_pretty) {
+	if (opt_pretty != 0) {
 		printf("Configured CIPSOv4 mapping (DOI = %u)\n", doi);
 		printf(" tags (%zu): \n", tags.size);
 		for (iter = 0; iter < tags.size; iter++) {
@@ -393,15 +389,13 @@ int cipsov4_list(int argc, char *argv[])
 	nlbl_cv4_doi doi = 0;
 
 	/* parse the arguments */
-	iter = 0;
-	while (iter < argc && argv[iter] != NULL) {
+	for (iter = 0; iter < argc && argv[iter] != NULL; iter++) {
 		if (strncmp(argv[iter], "doi:", 4) == 0) {
 			/* doi */
 			doi = atoi(argv[iter] + 4);
 			doi_flag = 1;
 		} else
 			return -EINVAL;
-		iter++;
 	}
 
 	if (doi_flag != 0)

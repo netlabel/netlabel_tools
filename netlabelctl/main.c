@@ -212,6 +212,67 @@ void nlctl_addr_print(const struct nlbl_netaddr *addr)
 	}
 }
 
+/**
+ * Add a domain mapping to NetLabel
+ * @param addr_str the IP address/mask in string format
+ * @param addr the IP address/mask in native NetLabel format
+ *
+ * Parse the IP address/mask string into the given nlbl_netaddr structure.
+ * Returns zero on success, negative values on failure.
+ *
+ */
+int nlctl_addr_parse(char *addr_str, struct nlbl_netaddr *addr)
+{
+	int ret_val;
+	char *mask;
+	uint32_t iter_a;
+	uint32_t iter_b;
+
+	/* sanity checks */
+	if (addr_str == NULL || addr_str[0] == '\0')
+		return -EINVAL;
+
+	/* separate the address mask */
+	mask = strstr(addr_str, "/");
+	if (mask != NULL) {
+		mask[0] = '\0';
+		mask++;
+	}
+
+	/* ipv4 */
+	ret_val = inet_pton(AF_INET, addr_str, &addr->addr.v4);
+	if (ret_val > 0) {
+		addr->type = AF_INET;
+		iter_a = (mask ? atoi(mask) : 32);
+		for (; iter_a > 0; iter_a--) {
+			addr->mask.v4.s_addr >>= 1;
+			addr->mask.v4.s_addr |= 0x80000000;
+		}
+		addr->mask.v4.s_addr = htonl(addr->mask.v4.s_addr);
+		return 0;
+	}
+
+	/* ipv6 */
+	ret_val = inet_pton(AF_INET6, addr_str, &addr->addr.v6);
+	if (ret_val > 0) {
+		addr->type = AF_INET6;
+		iter_a = (mask ? atoi(mask) : 128);
+		for (iter_b = 0; iter_a > 0 && iter_b < 4; iter_b++) {
+			for (; iter_a > 0 &&
+			       addr->mask.v6.s6_addr32[iter_b] < 0xffffffff;
+			     iter_a--) {
+				addr->mask.v6.s6_addr32[iter_b] >>= 1;
+				addr->mask.v6.s6_addr32[iter_b] |= 0x80000000;
+			}
+			addr->mask.v6.s6_addr32[iter_b] =
+					htonl(addr->mask.v6.s6_addr32[iter_b]);
+		}
+		return 0;
+	}
+
+	return -EINVAL;
+}
+
 /*
  * main
  */

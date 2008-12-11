@@ -45,10 +45,7 @@
  */
 int map_add(int argc, char *argv[])
 {
-	int ret_val;
 	uint32_t iter;
-	char *mask;
-	uint32_t mask_iter;
 	uint8_t def_flag = 0;
 	struct nlbl_dommap domain;
 	struct nlbl_netaddr addr;
@@ -62,49 +59,11 @@ int map_add(int argc, char *argv[])
 	memset(&addr, 0, sizeof(addr));
 
 	/* parse the arguments */
-	iter = 0;
-	while (iter < argc && argv[iter] != NULL) {
+	for (iter = 0; iter < argc && argv[iter] != NULL; iter++) {
 		if (strncmp(argv[iter], "domain:", 7) == 0) {
 			domain.domain = argv[iter] + 7;
 		} else if (strncmp(argv[iter], "address:", 8) == 0) {
-			mask = strstr(argv[iter] + 8, "/");
-			if (mask != NULL) {
-				mask[0] = '\0';
-				mask++;
-			}
-			ret_val = inet_pton(AF_INET,
-					    argv[iter] + 8, &addr.addr.v4);
-			if (ret_val > 0) {
-				addr.type = AF_INET;
-				mask_iter = (mask ? atoi(mask) : 32);
-				for (; mask_iter > 0; mask_iter--) {
-					addr.mask.v4.s_addr >>= 1;
-					addr.mask.v4.s_addr |= 0x80000000;
-				}
-				addr.mask.v4.s_addr = htonl(addr.mask.v4.s_addr);
-			} else {
-				ret_val = inet_pton(AF_INET6,
-						    argv[iter] + 8,
-						    &addr.addr.v6);
-				if (ret_val > 0) {
-					uint32_t tmp_iter;
-					addr.type = AF_INET6;
-					mask_iter = (mask ? atoi(mask) : 128);
-					for (tmp_iter = 0;
-					     mask_iter > 0 && tmp_iter < 4;
-					     tmp_iter++) {
-						for (; mask_iter > 0 &&
-							     addr.mask.v6.s6_addr32[tmp_iter] < 0xffffffff;
-						     mask_iter--) {
-							addr.mask.v6.s6_addr32[tmp_iter] >>= 1;
-							addr.mask.v6.s6_addr32[tmp_iter] |= 0x80000000;
-						}
-						addr.mask.v6.s6_addr32[tmp_iter] =
-							htonl(addr.mask.v6.s6_addr32[tmp_iter]);
-					}
-				}
-			}
-			if (ret_val <= 0)
+			if (nlctl_addr_parse(argv[iter] + 8, &addr) != 0)
 				return -EINVAL;
 		} else if (strncmp(argv[iter], "protocol:", 9) == 0) {
 			/* protocol specifics */
@@ -121,7 +80,6 @@ int map_add(int argc, char *argv[])
 			def_flag = 1;
 		} else
 			return -EINVAL;
-		iter++;
 	}
 	if (domain.domain == NULL && def_flag == 0)
 		return -EINVAL;
@@ -131,17 +89,15 @@ int map_add(int argc, char *argv[])
 	case NETLBL_NLTYPE_CIPSOV4:
 		if (domain_proto_extra == NULL)
 			return -EINVAL;
-		domain.proto.cv4_doi = (nlbl_cv4_doi)atoi(domain_proto_extra);
+		domain.proto.cv4_doi = atoi(domain_proto_extra);
 		break;
 	}
 
 	/* add the mapping */
-	if (def_flag)
-		ret_val = nlbl_mgmt_adddef(NULL, &domain, &addr);
+	if (def_flag != 0)
+		return nlbl_mgmt_adddef(NULL, &domain, &addr);
 	else
-		ret_val = nlbl_mgmt_add(NULL, &domain, &addr);
-
-	return ret_val;
+		return nlbl_mgmt_add(NULL, &domain, &addr);
 }
 
 /**
@@ -156,7 +112,6 @@ int map_add(int argc, char *argv[])
  */
 int map_del(int argc, char *argv[])
 {
-	int ret_val;
 	uint32_t iter;
 	uint32_t def_flag = 0;
 	char *domain = NULL;
@@ -166,26 +121,142 @@ int map_del(int argc, char *argv[])
 		return -EINVAL;
 
 	/* parse the arguments */
-	iter = 0;
-	while (iter < argc && argv[iter] != NULL) {
+	for (iter = 0; iter < argc && argv[iter] != NULL; iter++) {
 		if (strncmp(argv[iter], "domain:", 7) == 0) {
 			domain = argv[iter] + 7;
 		} else if (strncmp(argv[iter], "default", 7) == 0) {
 			def_flag = 1;
 		} else
 			return -EINVAL;
-		iter++;
 	}
 	if (domain == NULL && def_flag == 0)
 		return -EINVAL;
 
 	/* remove the mapping */
-	if (def_flag)
-		ret_val = nlbl_mgmt_deldef(NULL);
+	if (def_flag != 0)
+		return nlbl_mgmt_deldef(NULL);
 	else
-		ret_val = nlbl_mgmt_del(NULL, domain);
+		return nlbl_mgmt_del(NULL, domain);
+}
 
-	return ret_val;
+/**
+ * Output the NetLabel domain mappings
+ * @param mapping the domain mappings
+ * @param count the number of domain mappings
+ *
+ * Helper function to be called by map_list().
+ *
+ */
+static void map_list_print(struct nlbl_dommap *mapping, size_t count)
+{
+	uint32_t iter_a;
+	struct nlbl_dommap_addr *iter_b;
+
+	for (iter_a = 0; iter_a < count; iter_a++) {
+		/* domain string */
+		printf("domain:");
+		if (mapping[iter_a].domain != NULL)
+			printf("\"%s\",", mapping[iter_a].domain);
+		else
+			printf("DEFAULT,");
+		/* protocol */
+		switch (mapping[iter_a].proto_type) {
+		case NETLBL_NLTYPE_UNLABELED:
+			printf("UNLABELED");
+			break;
+		case NETLBL_NLTYPE_CIPSOV4:
+			printf("CIPSOv4,%u", mapping[iter_a].proto.cv4_doi);
+			break;
+		case NETLBL_NLTYPE_ADDRSELECT:
+			iter_b = mapping[iter_a].proto.addrsel;
+			while (iter_b) {
+				printf("address:");
+				nlctl_addr_print(&iter_b->addr);
+				printf(",protocol:");
+				switch (iter_b->proto_type) {
+				case NETLBL_NLTYPE_UNLABELED:
+					printf("UNLABELED");
+					break;
+				case NETLBL_NLTYPE_CIPSOV4:
+					printf("CIPSOv4,%u",
+					       iter_b->proto.cv4_doi);
+					break;
+				default:
+					printf("UNKNOWN(%u)",
+					       iter_b->proto_type);
+					break;
+				}
+				iter_b = iter_b->next;
+			}
+			break;
+		default:
+			printf("UNKNOWN(%u)", mapping[iter_a].proto_type);
+			break;
+		}
+		if (iter_a + 1 < count)
+			printf(" ");
+	}
+	printf("\n");
+}
+
+/**
+ * Output the NetLabel domain mappings in human readable format
+ * @param mapping the domain mappings
+ * @param count the number of domain mappings
+ *
+ * Helper function to be called by map_list().
+ *
+ */
+static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
+{
+	uint32_t iter_a;
+	struct nlbl_dommap_addr *iter_b;
+
+	printf("Configured NetLabel domain mappings (%zu)\n", count);
+	for (iter_a = 0; iter_a < count; iter_a++) {
+		/* domain string */
+		printf(" domain: ");
+		if (mapping[iter_a].domain != NULL)
+			printf("\"%s\"\n", mapping[iter_a].domain);
+		else
+			printf("DEFAULT\n");
+		/* protocol */
+		switch (mapping[iter_a].proto_type) {
+		case NETLBL_NLTYPE_UNLABELED:
+			printf("   protocol: UNLABELED\n");
+			break;
+		case NETLBL_NLTYPE_CIPSOV4:
+			printf("   protocol: CIPSOv4, DOI = %u\n",
+			       mapping[iter_a].proto.cv4_doi);
+			break;
+		case NETLBL_NLTYPE_ADDRSELECT:
+			iter_b = mapping[iter_a].proto.addrsel;
+			while (iter_b) {
+				printf("   address: ");
+				nlctl_addr_print(&iter_b->addr);
+				printf("\n"
+				       "    protocol: ");
+				switch (iter_b->proto_type) {
+				case NETLBL_NLTYPE_UNLABELED:
+					printf("UNLABELED\n");
+					break;
+				case NETLBL_NLTYPE_CIPSOV4:
+					printf("CIPSOv4, DOI = %u\n",
+					       iter_b->proto.cv4_doi);
+					break;
+				default:
+					printf("UNKNOWN(%u)\n",
+					       iter_b->proto_type);
+					break;
+				}
+				iter_b = iter_b->next;
+			}
+			break;
+		default:
+			printf("UNKNOWN(%u)\n", mapping[iter_a].proto_type);
+			break;
+		}
+	}
 }
 
 /**
@@ -200,23 +271,22 @@ int map_del(int argc, char *argv[])
 int map_list(int argc, char *argv[])
 {
 	int ret_val;
-	struct nlbl_dommap *domain_p = NULL;
-	struct nlbl_dommap_addr *iter_addr;
+	struct nlbl_dommap *mapping;
 	size_t count;
 	uint32_t iter;
 
 	/* get the list of mappings */
-	ret_val = nlbl_mgmt_listall(NULL, &domain_p);
+	ret_val = nlbl_mgmt_listall(NULL, &mapping);
 	if (ret_val < 0)
-		goto list_return;
+		return ret_val;
 	count = ret_val;
 
 	/* get the default mapping */
-	domain_p = realloc(domain_p, sizeof(struct nlbl_dommap) * (count + 1));
-	if (domain_p == NULL)
+	mapping = realloc(mapping, sizeof(struct nlbl_dommap) * (count + 1));
+	if (mapping == NULL)
 		goto list_return;
-	memset(&domain_p[count], 0, sizeof(struct nlbl_dommap));
-	ret_val = nlbl_mgmt_listdef(NULL, &domain_p[count]);
+	memset(&mapping[count], 0, sizeof(struct nlbl_dommap));
+	ret_val = nlbl_mgmt_listdef(NULL, &mapping[count]);
 	if (ret_val < 0 && ret_val != -ENOENT)
 		goto list_return;
 	else if (ret_val == 0)
@@ -225,109 +295,17 @@ int map_list(int argc, char *argv[])
 		ret_val = 0;
 
 	/* display the results */
-	if (opt_pretty) {
-		printf("Configured NetLabel domain mappings (%zu)\n", count);
-		for (iter = 0; iter < count; iter++) {
-			/* domain string */
-			printf(" domain: ");
-			if (domain_p[iter].domain != NULL)
-				printf("\"%s\"\n", domain_p[iter].domain);
-			else
-				printf("DEFAULT\n");
-			/* protocol */
-			switch (domain_p[iter].proto_type) {
-			case NETLBL_NLTYPE_UNLABELED:
-				printf("   protocol: UNLABELED\n");
-				break;
-			case NETLBL_NLTYPE_CIPSOV4:
-				printf("   protocol: CIPSOv4, DOI = %u\n",
-				       domain_p[iter].proto.cv4_doi);
-				break;
-			case NETLBL_NLTYPE_ADDRSELECT:
-				iter_addr = domain_p[iter].proto.addrsel;
-				while (iter_addr) {
-					printf("   address: ");
-					nlctl_addr_print(&iter_addr->addr);
-					printf("\n"
-					       "    protocol: ");
-					switch (iter_addr->proto_type) {
-					case NETLBL_NLTYPE_UNLABELED:
-						printf("UNLABELED\n");
-						break;
-					case NETLBL_NLTYPE_CIPSOV4:
-						printf("CIPSOv4, DOI = %u\n",
-						       iter_addr->proto.cv4_doi);
-						break;
-					default:
-						printf("UNKNOWN(%u)\n",
-						       iter_addr->proto_type);
-						break;
-					}
-					iter_addr = iter_addr->next;
-				}
-				break;
-			default:
-				printf("UNKNOWN(%u)\n",
-				       domain_p[iter].proto_type);
-				break;
-			}
-		}
-	} else {
-		for (iter = 0; iter < count; iter++) {
-			/* domain string */
-			printf("domain:");
-			if (domain_p[iter].domain != NULL)
-				printf("\"%s\",", domain_p[iter].domain);
-			else
-				printf("DEFAULT,");
-			/* protocol */
-			switch (domain_p[iter].proto_type) {
-			case NETLBL_NLTYPE_UNLABELED:
-				printf("UNLABELED");
-				break;
-			case NETLBL_NLTYPE_CIPSOV4:
-				printf("CIPSOv4,%u",
-				       domain_p[iter].proto.cv4_doi);
-				break;
-			case NETLBL_NLTYPE_ADDRSELECT:
-				iter_addr = domain_p[iter].proto.addrsel;
-				while (iter_addr) {
-					printf("address:");
-					nlctl_addr_print(&iter_addr->addr);
-					printf(",protocol:");
-					switch (iter_addr->proto_type) {
-					case NETLBL_NLTYPE_UNLABELED:
-						printf("UNLABELED");
-						break;
-					case NETLBL_NLTYPE_CIPSOV4:
-						printf("CIPSOv4,%u",
-						       iter_addr->proto.cv4_doi);
-						break;
-					default:
-						printf("UNKNOWN(%u)",
-						       iter_addr->proto_type);
-						break;
-					}
-					iter_addr = iter_addr->next;
-				}
-				break;
-			default:
-				printf("UNKNOWN(%u)",
-				       domain_p[iter].proto_type);
-				break;
-			}
-			if (iter + 1 < count)
-				printf(" ");
-		}
-		printf("\n");
-	}
+	if (opt_pretty != 0)
+		map_list_print_pretty(mapping, count);
+	else
+		map_list_print(mapping, count);
 
 list_return:
-	if (domain_p) {
+	if (mapping != NULL) {
 		for (iter = 0; iter < count; iter++)
-			if (domain_p[iter].domain)
-				free(domain_p[iter].domain);
-		free(domain_p);
+			if (mapping[iter].domain != NULL)
+				free(mapping[iter].domain);
+		free(mapping);
 	}
 	return ret_val;
 }
