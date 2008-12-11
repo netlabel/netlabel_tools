@@ -1,8 +1,10 @@
 /** @file
  * NetLabel userspace configuration library API.
  *
- * The NetLabel system manages static and dynamic security label mappings for
- * network protocols such as CIPSO and RIPSO.
+ * The Linux NetLabel subsystem manages network security labels for explicit
+ * labeling protocols such as CIPSO as well as static security labels for
+ * "unlabeled" network traffic.  More information on NetLabel can be found at
+ * the NetLabel SourceForge project site, http://netlabel.sf.net.
  *
  * Author: Paul Moore <paul.moore@hp.com>
  *
@@ -48,12 +50,13 @@
  * Types
  */
 
-/* general types */
+/* General Types */
 
 /**
  * NetLabel communications handle
  *
- * XXX
+ * Handle used for communicating with the NetLabel subsystem in the kernel via
+ * generic netlink.
  *
  */
 struct nlbl_handle;
@@ -61,23 +64,16 @@ struct nlbl_handle;
 /**
  * NetLabel message
  *
- * XXX
+ * NetLabel type used for sending and receiving messages with the NetLabel
+ * kernel subsystem.
  *
  */
 typedef struct nl_msg nlbl_msg;
 
 /**
- * NetLabel command
- *
- * XXX
- *
- */
-typedef uint16_t nlbl_cmd;
-
-/**
  * NetLabel labeling protocol
  *
- * XXX
+ * NetLabel type used to specify network labeling protocols.
  *
  */
 typedef uint32_t nlbl_proto;
@@ -85,7 +81,7 @@ typedef uint32_t nlbl_proto;
 /**
  * NetLabel network device
  *
- * XXX
+ * NetLabel type used to specify network interfaces.
  *
  */
 typedef char *nlbl_netdev;
@@ -98,7 +94,8 @@ typedef char *nlbl_netdev;
  * @param mask.v4 IPv4 address mask
  * @param mask.v6 IPv6 address mask
  *
- * XXX
+ * NetLabel type used to represent IP addresses.  It can represent both single
+ * hosts and entire networks using both IPv4 and IPv6.
  *
  */
 struct nlbl_netaddr {
@@ -116,17 +113,19 @@ struct nlbl_netaddr {
 /**
  * NetLabel security label
  *
- * XXX
+ * NetLabel type used to represent security labels.  NetLabel itself does not
+ * interpret the security labels, the individual LSMs are used to parse and
+ * interpret the security labels.
  *
  */
 typedef char *nlbl_secctx;
 
-/* CIPSOv4 types */
+/* CIPSOv4 Types */
 
 /**
  * NetLabel CIPSOv4 Domain Of Interpretation (DOI) value
  *
- * XXX
+ * NetLabel type used to represent a CIPSO Domian of Interpretation (DOI).
  *
  */
 typedef uint32_t nlbl_cv4_doi;
@@ -134,7 +133,7 @@ typedef uint32_t nlbl_cv4_doi;
 /**
  * NetLabel CIPSOv4 mapping type
  *
- * XXX
+ * NetLabel type used to represent the CIPSOv4 security label mapping method.
  *
  */
 typedef uint32_t nlbl_cv4_mtype;
@@ -142,7 +141,7 @@ typedef uint32_t nlbl_cv4_mtype;
 /**
  * NetLabel CIPSOv4 tag type
  *
- * XXX
+ * NetLabel type used to represent CIPSOv4 tag types.
  *
  */
 typedef uint8_t nlbl_cv4_tag;
@@ -152,7 +151,8 @@ typedef uint8_t nlbl_cv4_tag;
  * @param array array of tag types
  * @param size size of array
  *
- * XXX
+ * NetLabel type used to represent an array of CIPSOv4 tags in decreasing order
+ * of preference.
  *
  */
 struct nlbl_cv4_tag_a {
@@ -163,7 +163,7 @@ struct nlbl_cv4_tag_a {
 /**
  * NetLabel CIPSOv4 MLS level
  *
- * XXX
+ * NetLabel type used to represent the CIPSOv4 MLS sensitivity level.
  *
  */
 typedef uint32_t nlbl_cv4_lvl;
@@ -173,7 +173,7 @@ typedef uint32_t nlbl_cv4_lvl;
  * @param array array of MLS levels
  * @param size size of array
  *
- * XXX
+ * NetLabel type used to represent an array of CIPSOv4 MLS sensitivity levels.
  *
  */
 struct nlbl_cv4_lvl_a {
@@ -184,7 +184,7 @@ struct nlbl_cv4_lvl_a {
 /**
  * NetLabel CIPSOv4 MLS category
  *
- * XXX
+ * NetLabel type used to represent the CIPSOv4 MLS category/compartment.
  *
  */
 typedef uint32_t nlbl_cv4_cat;
@@ -194,7 +194,7 @@ typedef uint32_t nlbl_cv4_cat;
  * @param array array of MLS categories
  * @param size size of array
  *
- * XXX
+ * NetLabel type used to represent an array of CIPSOv4 MLS categories.
  *
  */
 struct nlbl_cv4_cat_a {
@@ -202,16 +202,16 @@ struct nlbl_cv4_cat_a {
 	size_t size;
 };
 
-/* lsm/domain mapping types */
+/* NetLabel and LSM Mapping Types */
 
 /**
- * NetLabel LSM/Domain address selector structure
+ * NetLabel IP address selector structure
  * @param addr IP address
  * @param proto_type labeling protocol
  * @param proto.cv4_doi CIPSOv4 DOI
  * @param next next address selector
  *
- * XXX
+ * NetLabel type used to map IP addresses to labeling protocol configurations.
  *
  */
 struct nlbl_dommap_addr {
@@ -231,7 +231,7 @@ struct nlbl_dommap_addr {
  * @param proto.cv4_doi CIPSOv4 DOI
  * @param proto.addrsel IP address selector(s)
  *
- * XXX
+ * NetLabel type used to map LSM domains to labeling protocol configurations.
  *
  */
 struct nlbl_dommap {
@@ -249,7 +249,8 @@ struct nlbl_dommap {
  * @param addr network address
  * @param label security label
  *
- * XXX
+ * NetLabel type used to map network interfaces and addresses to security
+ * labels.
  *
  */
 struct nlbl_addrmap {
@@ -262,37 +263,37 @@ struct nlbl_addrmap {
  * Functions
  */
 
-/* init/exit */
+/* Initialization and Termination */
 
 int nlbl_init(void);
 void nlbl_exit(void);
 
-/* low-level communications */
+/* Low Level Communications */
 
-/* control */
+/* Communications Control */
 void nlbl_comm_timeout(uint32_t seconds);
 
-/* netlabel handle i/o */
+/* Raw NetLabel I/O API */
 struct nlbl_handle *nlbl_comm_open(void);
 int nlbl_comm_close(struct nlbl_handle *hndl);
 int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg);
 int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data);
 int nlbl_comm_send(struct nlbl_handle *hndl, nlbl_msg *msg);
 
-/* netlabel message handling */
+/* Message Handling */
 nlbl_msg *nlbl_msg_new(void);
 void nlbl_msg_free(nlbl_msg *msg);
 struct nlmsghdr *nlbl_msg_nlhdr(nlbl_msg *msg);
 struct genlmsghdr *nlbl_msg_genlhdr(nlbl_msg *msg);
 struct nlmsgerr *nlbl_msg_err(nlbl_msg *msg);
 
-/* netlabel attribute handling */
+/* Attribute Handling */
 struct nlattr *nlbl_attr_head(nlbl_msg *msg);
 struct nlattr *nlbl_attr_find(nlbl_msg *msg, int nla_type);
 
-/* operations */
+/* Configuration Operations */
 
-/* management */
+/* Management */
 int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version);
 int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols);
 int nlbl_mgmt_add(struct nlbl_handle *hndl,
@@ -306,7 +307,7 @@ int nlbl_mgmt_deldef(struct nlbl_handle *hndl);
 int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains);
 int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain);
 
-/* unlabeled */
+/* Unlabeled Traffic */
 int nlbl_unlbl_accept(struct nlbl_handle *hndl, uint8_t allow_flag);
 int nlbl_unlbl_list(struct nlbl_handle *hndl, uint8_t *allow_flag);
 int nlbl_unlbl_staticadd(struct nlbl_handle *hndl,
@@ -326,7 +327,7 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
 int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 			     struct nlbl_addrmap **addrs);
 
-/* cipso/ipv4 */
+/* CIPSOv4 Protocol */
 int nlbl_cipsov4_add_std(struct nlbl_handle *hndl,
                          nlbl_cv4_doi doi,
                          struct nlbl_cv4_tag_a *tags,
