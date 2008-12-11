@@ -81,8 +81,6 @@ int map_add(int argc, char *argv[])
 		} else
 			return -EINVAL;
 	}
-	if (domain.domain == NULL && def_flag == 0)
-		return -EINVAL;
 
 	/* handle the protocol "extra" field */
 	switch (domain.proto_type) {
@@ -129,8 +127,6 @@ int map_del(int argc, char *argv[])
 		} else
 			return -EINVAL;
 	}
-	if (domain == NULL && def_flag == 0)
-		return -EINVAL;
 
 	/* remove the mapping */
 	if (def_flag != 0)
