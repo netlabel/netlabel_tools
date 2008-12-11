@@ -129,7 +129,8 @@ int cipsov4_add(int argc, char *argv[])
 	switch (cipso_type) {
 	case CIPSO_V4_MAP_TRANS:
 		/* translated mapping */
-		ret_val = nlbl_cipsov4_add_std(NULL, doi, &tags, &lvls, &cats);
+		ret_val = nlbl_cipsov4_add_trans(NULL,
+						 doi, &tags, &lvls, &cats);
 		break;
 	case CIPSO_V4_MAP_PASS:
 		/* pass through mapping */

@@ -328,11 +328,11 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 			     struct nlbl_addrmap **addrs);
 
 /* CIPSOv4 Protocol */
-int nlbl_cipsov4_add_std(struct nlbl_handle *hndl,
-                         nlbl_cv4_doi doi,
-                         struct nlbl_cv4_tag_a *tags,
-                         struct nlbl_cv4_lvl_a *lvls,
-                         struct nlbl_cv4_cat_a *cats);
+int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
+                           nlbl_cv4_doi doi,
+                           struct nlbl_cv4_tag_a *tags,
+                           struct nlbl_cv4_lvl_a *lvls,
+                           struct nlbl_cv4_cat_a *cats);
 int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 			  nlbl_cv4_doi doi,
 			  struct nlbl_cv4_tag_a *tags);
