@@ -47,9 +47,13 @@ DOXYGEN_OUTPUT_DIR = doxygen
 all: $(DOXYGEN_OUTPUT_DIR)
 
 $(DOXYGEN_OUTPUT_DIR):
-	@echo " DOXYGEN $(DOXYGEN_CONF)"
-	@test -d $(DOXYGEN_OUTPUT_DIR) || mkdir $(DOXYGEN_OUTPUT_DIR)
-	@doxygen $(DOXYGEN_CONF)
+	@if which doxygen &> /dev/null; then \
+		echo " DOXYGEN $(DOXYGEN_CONF)"; \
+		test -d $(DOXYGEN_OUTPUT_DIR) || mkdir $(DOXYGEN_OUTPUT_DIR); \
+		doxygen $(DOXYGEN_CONF); \
+	else \
+		echo "INFO: doxygen not found, skipping document generation"; \
+	fi
 
 clean:
 	rm -rf $(DOXYGEN_OUTPUT_DIR)
