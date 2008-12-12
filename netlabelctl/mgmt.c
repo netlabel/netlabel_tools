@@ -89,14 +89,19 @@ int mgmt_protocols(void)
 int mgmt_version(void)
 {
 	int ret_val;
-	uint32_t version;
+	uint32_t kernel_ver;
 
-	ret_val = nlbl_mgmt_version(NULL, &version);
+	ret_val = nlbl_mgmt_version(NULL, &kernel_ver);
 	if (ret_val < 0)
 		return ret_val;
 
-	printf(MSG("NetLabel protocol version : "));
-	printf("%u\n", version);
+	if (opt_pretty != 0) {
+		printf("Supported NetLabel protocol versions\n"
+		       "  kernel : %u\n"
+		       "  %s : %u\n",
+		       kernel_ver, nlctl_name, NETLBL_PROTO_VERSION);
+	} else
+		printf("%u\n", kernel_ver);
 
 	return 0;
 }
