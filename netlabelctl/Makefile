@@ -48,7 +48,7 @@ LIBFLAGS = $(TOPDIR)/libnetlabel/libnetlabel.a -lnl -lm
 all: netlabelctl
 
 netlabelctl: $(OBJS)
-	$(LINK)
+	$(LINK_EXEC)
 
 clean:
 	$(RM) -f $(OBJS) netlabelctl

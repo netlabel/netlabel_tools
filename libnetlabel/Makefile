@@ -35,10 +35,15 @@ include ../macros.mk
 # configuration
 #
 
-OBJS =	netlabel_comm.o netlabel_msg.o netlabel_init.o \
-	mod_mgmt.o mod_unlabeled.o mod_cipsov4.o 
+include ../version_info
 
-LIB = libnetlabel.a
+OBJS =	netlabel_comm.o netlabel_msg.o netlabel_init.o \
+	mod_mgmt.o mod_unlabeled.o mod_cipsov4.o
+
+LIB        = libnetlabel.a
+LIB_SHARED = libnetlabel.so.$(VERSION_LIBNETLABEL)
+
+CFLAGS += -fPIC
 
 #
 # targets
@@ -51,6 +56,9 @@ all: $(LIB)
 $(LIB): $(OBJS)
 	$(ARCHIVE)
 
+$(LIB_SHARED): $(OBJS)
+	$(LINK_LIB)
+
 clean:
-	$(RM) -f $(OBJS) $(LIB)
+	$(RM) -f $(OBJS) $(LIB) $(LIB_SHARED)
 

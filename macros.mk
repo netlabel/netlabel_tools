@@ -45,7 +45,7 @@ TOPDIR = $$( \
 #
 
 INCFLAGS = -I$(TOPDIR)/include
-LIBFLAGS = 
+LIBFLAGS =
 
 CFLAGS  = -O0 -g -Wall
 LDFLAGS = -g
@@ -60,9 +60,10 @@ VERSION_HDR = include/version.h
 # build macros
 #
 
-ARCHIVE = @echo " AR $@ (add/update: $?)"; $(AR) -cru $@ $?;
-COMPILE = @echo " CC $@"; $(CC) $(CFLAGS) $(INCFLAGS) -o $*.o -c $<;
-LINK    = @echo " LD $@"; $(CC) $(LDFLAGS) -o $@ $^ $(LIBFLAGS);
+ARCHIVE   = @echo " AR $@ (add/update: $?)"; $(AR) -cru $@ $?;
+COMPILE   = @echo " CC $@"; $(CC) $(CFLAGS) $(INCFLAGS) -o $*.o -c $<;
+LINK_EXEC = @echo " LD $@"; $(CC) $(LDFLAGS) -o $@ $^ $(LIBFLAGS);
+LINK_LIB  = @echo " LD $@ "; $(CC) $(LDFLAGS) -o $@ $^ -shared -Wl,-soname=$@;
 
 #
 # default build targets

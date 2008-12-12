@@ -7,6 +7,8 @@ o Added support for address selectors
 o Added support for the new CIPSO_V4_MAP_LOCAL CIPSO mapping type
 o General code cleanups including style fixes
 o Basic doxygen support ("make docs")
+o Preliminary support for building libnetlabel as a shared library, not enabled
+  by default
 
 * Release 0.18 (June 25, 2008)
 ------------------------------------------------------------------------------
