@@ -1,4 +1,4 @@
-.TH "netlabelctl" 1 "25 June 2008" "paul.moore@hp.com" "NetLabel Documentation"
+.TH "netlabelctl" 8 "18 December 2008" "paul.moore@hp.com" "NetLabel Documentation"
 .//////////////////////////////////////////////////////////////////////////////
 .SH NAME
 .//////////////////////////////////////////////////////////////////////////////
@@ -35,7 +35,7 @@ Enable extra output
 .B -V
 Display the version information
 .//////////////////////////////////////////////////////////////////////////////
-.SS Supported Modules
+.SS Modules and Commands
 .TP 5
 .B mgmt
 .P
@@ -56,17 +56,22 @@ Display the kernel's list of supported labeling protocols.
 The domain mapping module is used to map different NetLabel labeling protocols
 to either individual LSM domains or the default domain mapping.  It is up to
 each LSM to determine what defines a domain.  With SELinux, the normal SELinux
-domain should be used, i.e. "ping_t".  When specifying the labeling protocol
-to use for each domain mapping there is an optional "extra" field which is used
-to further identify the specific labeling protocol configuration.  When
-specifying the unlabeled protocol, "unlbl", there is no extra identification
-needed.  When specifying the CIPSO/IPv4 protocol, "cipsov4", the DOI value
-should be specified; see the EXAMPLES section for details.  The different
-commands and their syntax are listed below.
+domain should be used, i.e. "ping_t".  In addition to protocol selection based
+only on the LSM domain, it is also possible to select the labeling protocol
+based on both the LSM domain and destination address.  The network address
+selectors can specify either single hosts or entire networks and work for both
+IPv4 and IPv6, although the labeling protocol chosen must support the IP
+version chosen.  When specifying the labeling protocol to use for each mapping
+there is an optional "extra" field which is used to further identify the
+specific labeling protocol configuration.  When specifying the unlabeled
+protocol, "unlbl", there is no extra identification needed.  When specifying
+the CIPSO/IPv4 protocol, "cipsov4", the DOI value should be specified; see the
+EXAMPLES section for details.  The different commands and their syntax are
+listed below.
 .HP
-.I add default|domain:<domain> protocol:<protocol>[,<extra>]
+.I add default|domain:<domain> [address:<ADDR>[/<MASK>]] protocol:<protocol>[,<extra>]
 .br
-Add a new LSM domain to NetLabel protocol mapping.
+Add a new LSM domain / network address to NetLabel protocol mapping.
 .HP
 .I del default|domain:<domain>
 .br
@@ -106,19 +111,20 @@ Display the status of the unlabeled accept flag.
 The CIPSO/IPv4 (cipsov4) module controls the CIPSO/IPv4 labeling engine in the
 kernel.  The CIPSO/IPv4 engine provided by NetLabel supports multiple Domains
 Of Interpretation (DOI) and the CIPSO/IPv4 module allows for different
-configurations for each DOI.  At present there are two types of configurations,
-the "trans" configuration which allows on-the-fly translation of MLS
-sensitivity labels and the "pass" configuration which does not perform any
-translation of the MLS sensitivity label.  Regardless of which configuration
-type is chosen a DOI value must be specified as well as the list of CIPSO/IPv4
-tag types to use when generating CIPSO/IPv4 packet labels.  The list of
-CIPSO/IPv4 tags is ordered such that when possible the first tag type listed is
-used when a CIPSO/IPv4 label is generated.  However, if it is not possible to
-use the first tag type then each tag type is checked, in order, until a
-suitable tag type is found.  If a valid tag type can not be found then the
-operation causing the CIPSO/IPv4 label will fail, typically this occurs
-whenever a new socket is created.  The different commands and their syntax are
-listed below.
+configurations for each DOI.  At present there are three types of 
+configurations, the "trans" configuration which allows on-the-fly translation
+of MLS sensitivity labels, the "pass" configuration which does not perform any
+translation of the MLS sensitivity label and the "local" configuration which
+conveys the full LSM security label over localhost/loopback connections.
+Regardless of which configuration type is chosen a DOI value must be specified
+and if the "trans" or "pass" configurations are specified then a list of the
+CIPSO/IPv4 tag types to use when generating the CIPSO/IPv4 packet labels must
+also be specified.  The list of CIPSO/IPv4 tags is ordered such that when
+possible the first tag type listed is used when a CIPSO/IPv4 label is generated.  However, if it is not possible to use the first tag type then each tag type is
+checked, in order, until a suitable tag type is found.  If a valid tag type can
+not be found then the operation causing the CIPSO/IPv4 label will fail,
+typically this occurs whenever a new socket is created.  The different commands
+and their syntax are listed below.
 .HP
 .I add trans doi:<DOI> tags:<T1>,<Tn> levels:<LL1>=<RL1>,<LLn>=<RLn> categories:<LC1>=<RC1>,<LCn>=<RCn>
 .br
@@ -135,6 +141,10 @@ translated the application will fail.
 .I add pass doi:<DOI> tags:<T1>,<Tn>
 .br
 Add a new CIPSO/IPv4 configuration without any level or category translations.
+.HP
+.I add local doi:<DOI>
+.br
+Add a new CIPSO/IPv4 configuration for localhost/loopback connections.
 .HP
 .I del doi:<DOI>
 .br
@@ -182,6 +192,12 @@ configuration will also be removed.
 Add a domain mapping so that all outgoing packets sent from the "lsm_domain"
 will be labeled according to the CIPSO/IPv4 protocol using DOI 8.
 .HP
+.I netlabelctl map add domain:lsm_domain address:192.168.1.0/24 protocol:cipsov4,8
+.br
+Add a mapping so that all outgoing packets sent from the "lsm_domain" to the
+192.168.1.0/24 network will be labeled according to the CIPSO/IPv4 protocol
+using DOI 8.
+.HP
 .I netlabelctl -p map list
 .br
 Display all of the domain mappings in a human readable format.
@@ -205,8 +221,15 @@ the 192.168.0.0/16 network.
 .//////////////////////////////////////////////////////////////////////////////
 .SH "NOTES"
 .//////////////////////////////////////////////////////////////////////////////
-This program is currently under development, please report any bugs to the
-author.
+The NetLabel subsystem is supported on Linux Kernels version 2.6.19 and later.
+The static, or fallback, labels are only supported on Linux Kernels version
+2.6.25 and later.  The domain mapping address selectors are only supported on
+Linux Kernels 2.6.28 and later.
+
+The NetLabel project site, with more information including the source code
+respository, can be found at http://netlabel.sf.net.  This program is currently
+under development, please report any bugs at the project site or directly to
+the author.
 .//////////////////////////////////////////////////////////////////////////////
 .SH "AUTHOR"
 .//////////////////////////////////////////////////////////////////////////////
