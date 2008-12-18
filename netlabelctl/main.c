@@ -101,7 +101,7 @@ static void nlctl_help_print(FILE *fp)
 	"  map : Domain/Protocol mapping\n"
 	"    add default|domain:<domain> [address:<ADDR>[/<MASK>]]\n"
 	"                                protocol:<protocol>[,<extra>]\n"
-	"    del default|domain:<domain> [address:<ADDR>[/<MASK>]]\n"
+	"    del default|domain:<domain>\n"
 	"    list\n"
 	"  unlbl : Unlabeled packet handling\n"
 	"    accept on|off\n"
