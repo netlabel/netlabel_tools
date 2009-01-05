@@ -283,13 +283,7 @@ int main(int argc, char *argv[])
 	main_function_t *module_main = NULL;
 	char *module_name;
 
-	/* sanity checks */
-	if (argc < 2) {
-		nlctl_usage_print(stderr);
-		return RET_USAGE;
-	}
-
-	/* save of the invoked program name */
+	/* save the invoked program name for use in user notifications */
 	nlctl_name = strrchr(argv[0], '/');
 	if (nlctl_name == NULL)
 		nlctl_name = argv[0];
@@ -298,7 +292,7 @@ int main(int argc, char *argv[])
 	else
 		nlctl_name = strdup("unknown");
 
-	/* get the command line arguments */
+	/* get the command line arguments and module information */
 	do {
 		arg_iter = getopt(argc, argv, "hvt:pV");
 		switch (arg_iter) {
@@ -330,6 +324,11 @@ int main(int argc, char *argv[])
 			break;
 		}
 	} while (arg_iter > 0);
+	module_name = argv[optind];
+	if (!module_name) {
+		nlctl_usage_print(stderr);
+		return RET_USAGE;
+	}
 
 	/* perform any setup we have to do */
 	ret_val = nlbl_init();
@@ -339,9 +338,7 @@ int main(int argc, char *argv[])
 		goto exit;
 	}
 	nlbl_comm_timeout(opt_timeout);
-	module_name = argv[optind];
-	if (!module_name)
-		goto exit;
+
 	/* transfer control to the module */
 	if (!strcmp(module_name, "mgmt")) {
 		module_main = mgmt_main;
