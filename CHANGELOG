@@ -3,6 +3,10 @@ NetLabel Tools CHANGELOG
 
 * Release X.XX (XXXXXX)
 ------------------------------------------------------------------------------
+
+
+* Release 0.19 (January 5, 2009)
+------------------------------------------------------------------------------
 o Added address selector support to the LSM domain mapping mechanism
 o Added support for the new CIPSO_V4_MAP_LOCAL CIPSO mapping type to allow
   native LSM security labels over local connections
