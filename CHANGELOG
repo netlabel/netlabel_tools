@@ -3,12 +3,18 @@ NetLabel Tools CHANGELOG
 
 * Release X.XX (XXXXXX)
 ------------------------------------------------------------------------------
-o Added support for address selectors
-o Added support for the new CIPSO_V4_MAP_LOCAL CIPSO mapping type
-o General code cleanups including style fixes
-o Basic doxygen support ("make docs")
+o Added address selector support to the LSM domain mapping mechanism
+o Added support for the new CIPSO_V4_MAP_LOCAL CIPSO mapping type to allow
+  native LSM security labels over local connections
+o General code cleanup, including style changes/fixes; focused primarily on
+  libnetlabel
+o Initial doxygen support, including slightly improved documentation for the
+  libnetlabel API; doxygen docs built by default if doxygen is detected
+o Man page updates for netlabelctl
 o Preliminary support for building libnetlabel as a shared library, not enabled
-  by default
+  by default (see libnetlabel/Makefile to enable)
+o Removed empty and unused directories to make the package cleaner and easier
+  to understand
 
 * Release 0.18 (June 25, 2008)
 ------------------------------------------------------------------------------
