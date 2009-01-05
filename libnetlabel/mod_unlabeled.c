@@ -887,12 +887,11 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
 
 			/* resize the array */
 			addr_array = realloc(addr_array,
-					     sizeof(struct nlbl_addrmap) *
+					     sizeof(*addr_array) *
 					     (addr_count + 1));
 			if (addr_array == NULL)
 				goto staticlist_return;
-			memset(&addr_array[addr_count], 0,
-			       sizeof(struct nlbl_addrmap));
+			memset(&addr_array[addr_count], 0, sizeof(*addr_array));
 
 			/* get the attribute information */
 			nla = nla_find(nla_head,
@@ -1081,12 +1080,11 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 
 			/* resize the array */
 			addr_array = realloc(addr_array,
-					     sizeof(struct nlbl_addrmap) *
+					     sizeof(*addr_array) *
 					     (addr_count + 1));
 			if (addr_array == NULL)
 				goto staticlistdef_return;
-			memset(&addr_array[addr_count], 0,
-			       sizeof(struct nlbl_addrmap));
+			memset(&addr_array[addr_count], 0, sizeof(*addr_array));
 
 			/* get the attribute information */
 			nla = nla_find(nla_head,

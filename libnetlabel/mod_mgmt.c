@@ -1095,13 +1095,10 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 				       NLMSG_ALIGN(sizeof(*genl_hdr));
 
 			/* resize the array */
-			dmns = realloc(dmns,
-				       sizeof(struct nlbl_dommap) *
-				       (dmns_count + 1));
+			dmns = realloc(dmns, sizeof(*dmns) * (dmns_count + 1));
 			if (dmns == NULL)
 				goto listall_return;
-			memset(&dmns[dmns_count], 0,
-			       sizeof(struct nlbl_dommap));
+			memset(&dmns[dmns_count], 0, sizeof(*dmns));
 
 			/* get the attribute information */
 			nla = nla_find(nla_head,

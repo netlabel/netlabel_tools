@@ -278,10 +278,10 @@ int map_list(int argc, char *argv[])
 	count = ret_val;
 
 	/* get the default mapping */
-	mapping = realloc(mapping, sizeof(struct nlbl_dommap) * (count + 1));
+	mapping = realloc(mapping, sizeof(*mapping) * (count + 1));
 	if (mapping == NULL)
 		goto list_return;
-	memset(&mapping[count], 0, sizeof(struct nlbl_dommap));
+	memset(&mapping[count], 0, sizeof(*mapping));
 	ret_val = nlbl_mgmt_listdef(NULL, &mapping[count]);
 	if (ret_val < 0 && ret_val != -ENOENT)
 		goto list_return;
