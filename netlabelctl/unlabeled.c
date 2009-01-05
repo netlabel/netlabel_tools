@@ -102,12 +102,11 @@ int unlbl_list(void)
 	count = ret_val;
 	ret_val = nlbl_unlbl_staticlistdef(NULL, &addrdef_p);
 	if (ret_val > 0) {
-		count += ret_val;
-		addr_p = realloc(addr_p, sizeof(struct nlbl_addrmap) * count);
+		addr_p = realloc(addr_p, sizeof(*addr_p) * (count + ret_val));
 		if (addr_p == NULL)
 			goto list_return;
-		memcpy(&addr_p[count], addrdef_p,
-		       sizeof(struct nlbl_addrmap) * ret_val);
+		memcpy(&addr_p[count], addrdef_p, sizeof(*addr_p) * ret_val);
+		count += ret_val;
 	}
 
 	/* display the static label mappings */
