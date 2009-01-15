@@ -55,7 +55,7 @@ SUBDIRS = libnetlabel netlabelctl docs
 all: $(SUBDIRS)
 
 tarball: clean
-	@ver=$$(. version_info; echo $$VERSION_RELEASE); \
+	@ver=$$(source ./version_info; echo $$VERSION_RELEASE); \
 	tarball=netlabel_tools-$$ver.tar.gz; \
 	echo "INFO: creating the tarball ../$$tarball"; \
 	tmp_dir=$$(mktemp -d /tmp/netlabel_tools.XXXXX); \
@@ -78,7 +78,7 @@ install: $(SUBDIRS)
 $(VERSION_HDR): version_info
 	@echo "INFO: creating the version header file"
 	@hdr="$(VERSION_HDR)"; \
-	. version_info; \
+	source ./version_info; \
 	echo "/* automatically generated - do not edit */" > $$hdr; \
 	echo "#ifndef _VERSION_H" >> $$hdr; \
 	echo "#define _VERSION_H" >> $$hdr; \
