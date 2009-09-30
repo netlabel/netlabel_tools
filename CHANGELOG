@@ -3,7 +3,7 @@ NetLabel Tools CHANGELOG
 
 * Release X.XX (XXXXXX)
 ------------------------------------------------------------------------------
-
+o Fixed the Makefile install target to allow installation by normal users
 
 * Release 0.19 (January 5, 2009)
 ------------------------------------------------------------------------------
