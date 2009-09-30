@@ -70,10 +70,12 @@ install: $(SUBDIRS)
 	@echo "INFO: installing files in $(INSTALL_PREFIX)"
 	@mkdir -p $(INSTALL_SBIN_DIR)
 	@mkdir -p $(INSTALL_MAN_DIR)/man8
-	@install -o $(OWNER) -g $(GROUP) -m 755 netlabelctl/netlabelctl \
-	 $(INSTALL_SBIN_DIR)/netlabelctl
-	@install -o $(OWNER) -g $(GROUP) -m 644 docs/man/netlabelctl.8 \
-	 $(INSTALL_MAN_DIR)/man8
+	@install $(if $(OWNER),-o $(OWNER)) $(if $(GROUP),-g $(GROUP)) \
+		-m 755 netlabelctl/netlabelctl \
+		 $(INSTALL_SBIN_DIR)/netlabelctl
+	@install $(if $(OWNER),-o $(OWNER)) $(if $(GROUP),-g $(GROUP)) \
+		-m 644 docs/man/netlabelctl.8 \
+		 $(INSTALL_MAN_DIR)/man8
 
 $(VERSION_HDR): version_info
 	@echo "INFO: creating the version header file"
