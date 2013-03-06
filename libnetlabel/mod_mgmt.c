@@ -443,7 +443,7 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 			/* next message */
 			nl_hdr = nlmsg_next(nl_hdr, &data_len);
 		}
-	} while (data_len > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
+	} while (NL_MULTI_CONTINUE(nl_hdr));
 
 	*protocols = protos;
 	ret_val = protos_count;
@@ -1138,7 +1138,7 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 			/* next message */
 			nl_hdr = nlmsg_next(nl_hdr, &data_len);
 		}
-	} while (data_len > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
+	} while (NL_MULTI_CONTINUE(nl_hdr));
 
 	*domains = dmns;
 	ret_val = dmns_count;

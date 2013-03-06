@@ -32,6 +32,11 @@ struct nlbl_handle {
 	struct nl_handle *nl_hndl;
 };
 
+#define NL_MULTI_CONTINUE(hdr) \
+	(((hdr)->nlmsg_type == 0) || \
+	 (((hdr)->nlmsg_flags & NLM_F_MULTI) && \
+	  ((hdr)->nlmsg_type != NLMSG_DONE)))
+
 /* Specify which version of libnl we are using */
 /*  1.0-pre5 => 1005 */
 /*  1.0-pre6 => 1006 */

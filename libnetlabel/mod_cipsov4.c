@@ -940,7 +940,7 @@ int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 			/* next message */
 			nl_hdr = nlmsg_next(nl_hdr, &data_len);
 		}
-	} while (data > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
+	} while (NL_MULTI_CONTINUE(nl_hdr));
 
 	*dois = doi_a;
 	*mtypes = mtype_a;

@@ -965,7 +965,7 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
 			/* next message */
 			nl_hdr = nlmsg_next(nl_hdr, &data_len);
 		}
-	} while (data_len > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
+	} while (NL_MULTI_CONTINUE(nl_hdr));
 
 	*addrs = addr_array;
 	ret_val = addr_count;
@@ -1149,7 +1149,7 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 			/* next message */
 			nl_hdr = nlmsg_next(nl_hdr, &data_len);
 		}
-	} while (data_len > 0 && nl_hdr->nlmsg_type != NLMSG_DONE);
+	} while (NL_MULTI_CONTINUE(nl_hdr));
 
 	*addrs = addr_array;
 	ret_val = addr_count;
