@@ -1,7 +1,7 @@
 /*
  * NetLabel Library Internals
  *
- * Author: Paul Moore <paul.moore@hp.com>
+ * Author: Paul Moore <paul@paul-moore.com>
  *
  */
 

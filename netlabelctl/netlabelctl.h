@@ -1,7 +1,7 @@
 /*
  * Header file for the NetLabel Control Utility
  *
- * Author: Paul Moore <paul.moore@hp.com>
+ * Author: Paul Moore <paul@paul-moore.com>
  *
  */
 

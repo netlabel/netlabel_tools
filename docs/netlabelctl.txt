@@ -1,6 +1,6 @@
 NetLabel Control Utility
 ==============================================================================
-Paul Moore <paul.moore@hp.com>
+Paul Moore <paul@paul-moore.com>
 
 * Introduction
 

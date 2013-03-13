@@ -1,5 +1,5 @@
 NetLabel Library
 ==============================================================================
-Paul Moore <paul.moore@hp.com>
+Paul Moore <paul@paul-moore.com>
 
 * TBD

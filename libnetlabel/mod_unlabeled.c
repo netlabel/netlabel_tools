@@ -1,7 +1,7 @@
 /** @file
  * Unlabeled Module Functions
  *
- * Author: Paul Moore <paul.moore@hp.com>
+ * Author: Paul Moore <paul@paul-moore.com>
  *
  */
 

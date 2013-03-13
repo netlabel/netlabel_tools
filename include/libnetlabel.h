@@ -6,7 +6,7 @@
  * "unlabeled" network traffic.  More information on NetLabel can be found at
  * the NetLabel SourceForge project site, http://netlabel.sf.net.
  *
- * Author: Paul Moore <paul.moore@hp.com>
+ * Author: Paul Moore <paul@paul-moore.com>
  *
  */
 
