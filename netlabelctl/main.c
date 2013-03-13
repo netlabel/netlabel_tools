@@ -69,10 +69,7 @@ static void nlctl_usage_print(FILE *fp)
  */
 static void nlctl_ver_print(FILE *fp)
 {
-	fprintf(fp,
-	"NetLabel Control Utility, version %s (libnetlabel %s)\n",
-	VERSION_NETLABELCTL,
-	NETLBL_VER_STRING);
+	fprintf(fp, "NetLabel Control Utility, version %s\n", VERSION_RELEASE);
 }
 
 /**

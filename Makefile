@@ -35,71 +35,70 @@ include macros.mk
 # configuration
 #
 
-INSTALL_PREFIX = /usr/local
-
-INSTALL_SBIN_DIR = $(INSTALL_PREFIX)/sbin
-INSTALL_BIN_DIR = $(INSTALL_PREFIX)/bin
-INSTALL_MAN_DIR = $(INSTALL_PREFIX)/share/man
-
-OWNER = root
-GROUP = root
+-include version_info.mk
+-include configure.mk
+include install.mk
 
 #
 # targets
 #
 
-SUBDIRS = libnetlabel netlabelctl docs
+CONFIGS = configure.mk configure.h version_info.mk version.h
+SUBDIRS_BUILD = libnetlabel netlabelctl docs
+SUBDIRS_INSTALL = netlabelctl docs
 
-.PHONY: tarball install clean $(SUBDIRS)
+.PHONY: tarball install clean $(SUBDIRS_BUILD)
 
-all: $(SUBDIRS)
+all: $(SUBDIRS_BUILD)
 
 tarball: clean
 	@ver=$$(source ./version_info; echo $$VERSION_RELEASE); \
 	tarball=netlabel_tools-$$ver.tar.gz; \
-	echo "INFO: creating the tarball ../$$tarball"; \
+	$(ECHO_INFO) "creating the tarball ../$$tarball"; \
 	tmp_dir=$$(mktemp -d /tmp/netlabel_tools.XXXXX); \
 	rel_dir=$$tmp_dir/netlabel_tools-$$ver; \
-	mkdir $$rel_dir; \
-	tar cf - --exclude=.svn . | (cd $$rel_dir; tar xf -); \
+	$(MKDIR) $$rel_dir; \
+	$(TAR) cf - --exclude=.svn . | (cd $$rel_dir; tar xf -); \
 	(cd $$tmp_dir; tar zcf $$tarball netlabel_tools-$$ver); \
 	mv $$tmp_dir/$$tarball ..; \
 	rm -rf $$tmp_dir;
 
-install: $(SUBDIRS)
-	@echo "INFO: installing files in $(INSTALL_PREFIX)"
-	@mkdir -p $(INSTALL_SBIN_DIR)
-	@mkdir -p $(INSTALL_MAN_DIR)/man8
-	@install $(if $(OWNER),-o $(OWNER)) $(if $(GROUP),-g $(GROUP)) \
-		-m 755 netlabelctl/netlabelctl \
-		 $(INSTALL_SBIN_DIR)/netlabelctl
-	@install $(if $(OWNER),-o $(OWNER)) $(if $(GROUP),-g $(GROUP)) \
-		-m 644 docs/man/netlabelctl.8 \
-		 $(INSTALL_MAN_DIR)/man8
-
-$(VERSION_HDR): version_info
-	@echo "INFO: creating the version header file"
+$(VERSION_HDR): version_info.mk
+	@$(ECHO_INFO) "creating the version header file"
 	@hdr="$(VERSION_HDR)"; \
-	source ./version_info; \
-	echo "/* automatically generated - do not edit */" > $$hdr; \
-	echo "#ifndef _VERSION_H" >> $$hdr; \
-	echo "#define _VERSION_H" >> $$hdr; \
-	echo "#define VERSION_RELEASE \"$$VERSION_RELEASE\"" >> $$hdr; \
-	echo "#define VERSION_LIBNETLABEL \"$$VERSION_LIBNETLABEL\"" >> $$hdr;\
-	echo "#define VERSION_NETLABELCTL \"$$VERSION_NETLABELCTL\"" >> $$hdr;\
-	echo "#define VERSION_NETLABELD \"$$VERSION_NETLABELD\"" >> $$hdr; \
-	echo "#endif" >> $$hdr;
+	$(ECHO) "/* automatically generated - do not edit */" > $$hdr; \
+	$(ECHO) "#ifndef _VERSION_H" >> $$hdr; \
+	$(ECHO) "#define _VERSION_H" >> $$hdr; \
+	$(ECHO) "#define VERSION_RELEASE \"$(VERSION_RELEASE)\"" >> $$hdr; \
+	$(ECHO) "#define VERSION_MAJOR $(VERSION_MAJOR)" >> $$hdr; \
+	$(ECHO) "#define VERSION_MINOR $(VERSION_MINOR)" >> $$hdr; \
+	$(ECHO) "#endif" >> $$hdr;
 
+libnetlabel: $(VERSION_HDR)
+	@$(ECHO_INFO) "entering directory $@/ ..."
+	@$(MAKE) -C $@
 
-$(SUBDIRS): $(VERSION_HDR)
-	@echo "INFO: entering directory $@/ ..."
-	@$(MAKE) -s -C $@
+netlabelctl: $(VERSION_HDR) libnetlabel
+	@$(ECHO_INFO) "entering directory $@/ ..."
+	@$(MAKE) -C $@
 
-clean:
-	@echo "INFO: removing the version header file"; \
-	rm -f $(VERSION_HDR)
-	@for dir in $(SUBDIRS); do \
-		echo "INFO: cleaning in $$dir/"; \
-		$(MAKE) -s -C $$dir clean; \
+docs: $(VERSION_HDR)
+	@$(ECHO_INFO) "entering directory $@/ ..."
+	@$(MAKE) -C $@
+
+install: $(SUBDIRS_BUILD)
+	@$(ECHO_INFO) "installing in $(INSTALL_PREFIX) ..."
+	@for dir in $(SUBDIRS_INSTALL); do \
+		$(ECHO_INFO) "installing from $$dir/"; \
+		$(MAKE) -C $$dir install; \
 	done
 
+clean:
+	@$(ECHO_INFO) "cleaning up"
+	@for dir in $(SUBDIRS_BUILD); do \
+		$(MAKE) -C $$dir clean; \
+	done
+
+dist-clean: clean
+	@$(ECHO_INFO) "removing the configuration files"
+	@$(RM) $(CONFIGS)

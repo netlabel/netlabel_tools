@@ -1,15 +1,7 @@
 #
-# version_info - version information for the various netlabel tool components
+# version_info - version information for the netlabel tool components
 #
 
-# release
-VERSION_RELEASE=X.XX
-
-# libnetlabel
-VERSION_LIBNETLABEL=X.XX
-
-# netlabelctl
-VERSION_NETLABELCTL=X.XX
-
-# netlabeld
-VERSION_NETLABELD=X.XX
+# version components
+VERSION_MAJOR=0
+VERSION_MINOR=0

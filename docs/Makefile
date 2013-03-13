@@ -35,26 +35,32 @@ include ../macros.mk
 # configuration
 #
 
+include $(TOPDIR)/version_info.mk
+include $(TOPDIR)/configure.mk
+include $(TOPDIR)/install.mk
+
 DOXYGEN_CONF = doxyfile
 DOXYGEN_OUTPUT_DIR = doxygen
+
+MAN8 = man/netlabelctl.8
 
 #
 # targets
 #
 
-.PHONY: clean
+.PHONY: all clean install install_man8
 
 all: $(DOXYGEN_OUTPUT_DIR)
 
-$(DOXYGEN_OUTPUT_DIR):
-	@if which doxygen &> /dev/null; then \
-		echo " DOXYGEN $(DOXYGEN_CONF)"; \
-		test -d $(DOXYGEN_OUTPUT_DIR) || mkdir $(DOXYGEN_OUTPUT_DIR); \
-		doxygen $(DOXYGEN_CONF); \
-	else \
-		echo "INFO: doxygen not found, skipping document generation"; \
-	fi
+$(DOXYGEN_OUTPUT_DIR): $(DOXYGEN_CONF)
+	@test -d $(DOXYGEN_OUTPUT_DIR) || mkdir $(DOXYGEN_OUTPUT_DIR);
+	$(DOXYGEN_GEN)
+
+install: install_man8
+
+install_man8: $(MAN8)
+	$(INSTALL_MAN8_MACRO)
 
 clean:
-	rm -rf $(DOXYGEN_OUTPUT_DIR)
+	$(RM) -rf $(DOXYGEN_OUTPUT_DIR)
 

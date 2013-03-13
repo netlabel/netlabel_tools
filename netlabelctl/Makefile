@@ -35,22 +35,34 @@ include ../macros.mk
 # configuration
 #
 
+include $(TOPDIR)/version_info.mk
+include $(TOPDIR)/configure.mk
+include $(TOPDIR)/install.mk
+
+PROG = netlabelctl
+
 OBJS = main.o mgmt.o map.o unlabeled.o cipsov4.o
 
-LIBFLAGS = $(TOPDIR)/libnetlabel/libnetlabel.a -lnl -lm
+LDFLAGS := ../libnetlabel/libnetlabel.a -lnl -lm
+
+DEPS = $(OBJS:%.o=%.d)
 
 #
 # targets
 #
 
-.PHONY: clean
+.PHONY: all clean
 
-all: netlabelctl
+all: $(PROG)
 
-netlabelctl: $(OBJS)
+-include $(DEPS)
+
+$(PROG): $(OBJS) ../libnetlabel/libnetlabel.a
 	$(LINK_EXEC)
 
-clean:
-	$(RM) -f $(OBJS) netlabelctl
+install: $(PROG)
+	$(INSTALL_SBIN_MACRO)
 
+clean:
+	$(RM) -f $(DEPS) $(OBJS) $(PROG)
 

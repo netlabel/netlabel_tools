@@ -11,6 +11,7 @@
 
 #
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2006
+# Copyright (c) 2013 Red Hat <pmoore@redhat.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License as
@@ -37,28 +38,26 @@ include ../macros.mk
 
 include ../version_info
 
+LIB_STATIC = libnetlabel.a
+
 OBJS =	netlabel_comm.o netlabel_msg.o netlabel_init.o \
 	mod_mgmt.o mod_unlabeled.o mod_cipsov4.o
 
-LIB        = libnetlabel.a
-LIB_SHARED = libnetlabel.so.$(VERSION_LIBNETLABEL)
-
-CFLAGS += -fPIC
+DEPS = $(OBJS:%.o=%.d)
 
 #
 # targets
 #
 
-.PHONY: clean
+.PHONY: all clean
 
-all: $(LIB)
+all: $(LIB_STATIC)
 
-$(LIB): $(OBJS)
+-include $(DEPS)
+
+$(LIB_STATIC): $(OBJS)
 	$(ARCHIVE)
 
-$(LIB_SHARED): $(OBJS)
-	$(LINK_LIB)
-
 clean:
-	$(RM) -f $(OBJS) $(LIB) $(LIB_SHARED)
+	$(RM) -f $(DEPS) $(OBJS) $(LIB_STATIC)
 
