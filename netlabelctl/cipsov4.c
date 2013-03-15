@@ -55,7 +55,7 @@ int cipsov4_add(int argc, char *argv[])
 	/* sanity checks */
 	if (argc <= 0 || argv == NULL || argv[0] == NULL)
 		return -EINVAL;
-  
+
 	/* parse the arguments */
 	for (iter = 0; iter < argc && argv[iter] != NULL; iter++) {
 		if (strcmp(argv[iter], "trans") == 0) {

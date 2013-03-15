@@ -202,7 +202,7 @@ static int nlbl_mgmt_list_addr(const struct nlattr *nla_head,
 					if (nla_b == NULL)
 						return -EINVAL;
 					addr_iter->proto.cv4_doi =
-						            nla_get_u32(nla_b);
+							nla_get_u32(nla_b);
 					break;
 				}
 			} else if ((nla_b = nla_find(nla_data(nla_a),
@@ -271,7 +271,7 @@ int nlbl_mgmt_init(void)
 	if (nl_hdr == NULL)
 		goto init_return;
 	nl_hdr->nlmsg_type = GENL_ID_CTRL;
-	
+
 	/* setup the generic netlink header */
 	genl_hdr = nlbl_msg_genlhdr(msg);
 	if (genl_hdr == NULL)
@@ -301,7 +301,7 @@ int nlbl_mgmt_init(void)
 			ret_val = -ENODATA;
 		goto init_return;
 	}
-	
+
 	/* process the response */
 	genl_hdr = nlbl_msg_genlhdr(ans_msg);
 	if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
@@ -504,7 +504,7 @@ int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version)
 			ret_val = -ENODATA;
 		goto version_return;
 	}
-	
+
 	/* read the response */
 	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
 	if (ret_val <= 0) {
@@ -512,7 +512,7 @@ int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version)
 			ret_val = -ENODATA;
 		goto version_return;
 	}
-	
+
 	/* check the response */
 	ret_val = nlbl_mgmt_parse_ack(ans_msg);
 	if (ret_val < 0 && ret_val != -ENOMSG)

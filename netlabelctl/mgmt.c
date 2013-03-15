@@ -50,7 +50,7 @@ int mgmt_protocols(void)
 		return ret_val;
 	count = ret_val;
 
-	printf(MSG("NetLabel protocols : ")); 
+	printf(MSG("NetLabel protocols : "));
 	for (iter = 0; iter < count; iter++) {
 		switch (list[iter]) {
 		case NETLBL_NLTYPE_UNLABELED:

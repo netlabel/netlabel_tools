@@ -3,7 +3,7 @@
  *
  * The NetLabel system manages static and dynamic security label mappings for
  * network protocols such as CIPSO and RIPSO.
- * 
+ *
  * Author: Paul Moore <paul@paul-moore.com>
  *
  */
@@ -33,22 +33,22 @@
  *  2: added static labels for unlabeled connections
  *  3: network selectors added to the NetLabel/LSM domain mapping
  */
-#define NETLBL_PROTO_VERSION            3
+#define NETLBL_PROTO_VERSION		3
 
 /* NetLabel NETLINK types/families */
-#define NETLBL_NLTYPE_NONE              0
-#define NETLBL_NLTYPE_MGMT              1
-#define NETLBL_NLTYPE_MGMT_NAME         "NLBL_MGMT"
-#define NETLBL_NLTYPE_RIPSO             2
-#define NETLBL_NLTYPE_RIPSO_NAME        "NLBL_RIPSO"
-#define NETLBL_NLTYPE_CIPSOV4           3
-#define NETLBL_NLTYPE_CIPSOV4_NAME      "NLBL_CIPSOv4"
-#define NETLBL_NLTYPE_CIPSOV6           4
-#define NETLBL_NLTYPE_CIPSOV6_NAME      "NLBL_CIPSOv6"
-#define NETLBL_NLTYPE_UNLABELED         5
-#define NETLBL_NLTYPE_UNLABELED_NAME    "NLBL_UNLBL"
-#define NETLBL_NLTYPE_ADDRSELECT        6
-#define NETLBL_NLTYPE_ADDRSELECT_NAME   "NLBL_ADRSEL"
+#define NETLBL_NLTYPE_NONE		0
+#define NETLBL_NLTYPE_MGMT		1
+#define NETLBL_NLTYPE_MGMT_NAME		"NLBL_MGMT"
+#define NETLBL_NLTYPE_RIPSO		2
+#define NETLBL_NLTYPE_RIPSO_NAME	"NLBL_RIPSO"
+#define NETLBL_NLTYPE_CIPSOV4		3
+#define NETLBL_NLTYPE_CIPSOV4_NAME	"NLBL_CIPSOv4"
+#define NETLBL_NLTYPE_CIPSOV6		4
+#define NETLBL_NLTYPE_CIPSOV6_NAME	"NLBL_CIPSOv6"
+#define NETLBL_NLTYPE_UNLABELED		5
+#define NETLBL_NLTYPE_UNLABELED_NAME	"NLBL_UNLBL"
+#define NETLBL_NLTYPE_ADDRSELECT	6
+#define NETLBL_NLTYPE_ADDRSELECT_NAME	"NLBL_ADRSEL"
 
 /*
  * MGMT
@@ -95,10 +95,10 @@ enum {
  */
 
 /* CIPSOv4 DOI map types */
-#define CIPSO_V4_MAP_UNKNOWN          0
-#define CIPSO_V4_MAP_TRANS            1
-#define CIPSO_V4_MAP_PASS             2
-#define CIPSO_V4_MAP_LOCAL            3
+#define CIPSO_V4_MAP_UNKNOWN		0
+#define CIPSO_V4_MAP_TRANS		1
+#define CIPSO_V4_MAP_PASS		2
+#define CIPSO_V4_MAP_LOCAL		3
 
 /**
  * NetLabel CIPSOv4 commands

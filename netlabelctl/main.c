@@ -36,9 +36,9 @@
 #include "netlabelctl.h"
 
 /* return values */
-#define RET_OK        0
-#define RET_ERR       1
-#define RET_USAGE     2
+#define RET_OK		0
+#define RET_ERR		1
+#define RET_USAGE	2
 
 /* option variables */
 uint32_t opt_verbose = 0;
@@ -161,7 +161,7 @@ static char *nlctl_strerror(int ret_val)
 	default:
 		str = strerror(ret_val);
 	}
-  
+
 	return str;
 }
 

@@ -44,7 +44,7 @@
  * Version
  */
 
-#define NETLBL_VER_STRING               VERSION_RELEASE
+#define NETLBL_VER_STRING		VERSION_RELEASE
 
 /*
  * Types

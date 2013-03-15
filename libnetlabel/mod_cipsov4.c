@@ -248,10 +248,10 @@ init_return:
  *
  */
 int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
-                           nlbl_cv4_doi doi,
-                           struct nlbl_cv4_tag_a *tags,
-                           struct nlbl_cv4_lvl_a *lvls,
-                           struct nlbl_cv4_cat_a *cats)
+			   nlbl_cv4_doi doi,
+			   struct nlbl_cv4_tag_a *tags,
+			   struct nlbl_cv4_lvl_a *lvls,
+			   struct nlbl_cv4_cat_a *cats)
 {
 	int ret_val = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -576,7 +576,7 @@ add_local_return:
  *
  * Remove the CIPSO label mapping with the DOI value matching @doi.  If @hndl
  * is NULL then the function will handle opening and closing it's own NetLabel
- * handle.  Returns zero on success, negative values on failure. 
+ * handle.  Returns zero on success, negative values on failure.
  *
  */
 int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
@@ -648,15 +648,15 @@ del_return:
  * Query the kernel for the specified CIPSOv4 mapping specified by @doi and
  * return the details of the mapping to the caller.  If @hndl is NULL then the
  * function will handle opening and closing it's own NetLabel handle.  Returns
- * zero on success, negative values on failure.   
+ * zero on success, negative values on failure.
  *
  */
 int nlbl_cipsov4_list(struct nlbl_handle *hndl,
-                      nlbl_cv4_doi doi,
+		      nlbl_cv4_doi doi,
 		      nlbl_cv4_mtype *mtype,
-                      struct nlbl_cv4_tag_a *tags,
-                      struct nlbl_cv4_lvl_a *lvls,
-                      struct nlbl_cv4_cat_a *cats)
+		      struct nlbl_cv4_tag_a *tags,
+		      struct nlbl_cv4_lvl_a *lvls,
+		      struct nlbl_cv4_cat_a *cats)
 {
 	int ret_val = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -770,8 +770,8 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 						 NLBL_CIPSOV4_A_MLSLVLREM);
 				if (nla_d == NULL)
 					goto list_return;
-				lvls->array[lvls->size * 2] = nla_get_u32(nla_c);
-				lvls->array[lvls->size * 2 + 1] = nla_get_u32(nla_d);
+				lvls->array[lvls->size * 2]=nla_get_u32(nla_c);
+				lvls->array[lvls->size*2+1]=nla_get_u32(nla_d);
 				lvls->size++;
 			}
 
@@ -798,8 +798,8 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 						 NLBL_CIPSOV4_A_MLSCATREM);
 				if (nla_d == NULL)
 					goto list_return;
-				cats->array[cats->size * 2] = nla_get_u32(nla_c);
-				cats->array[cats->size * 2 + 1] = nla_get_u32(nla_d);
+				cats->array[cats->size * 2]=nla_get_u32(nla_c);
+				cats->array[cats->size*2+1]=nla_get_u32(nla_d);
 				cats->size++;
 			}
 	}
@@ -824,7 +824,7 @@ list_return:
  * @dois which contains the DOI values and @mtypes which contains the
  * type of mapping.  If @hndl is NULL then the function will handle opening
  * and closing it's own NetLabel handle.  Returns the number of mappings on
- * success, zero if no mappings exist, and negative values on failure.   
+ * success, zero if no mappings exist, and negative values on failure.
  *
  */
 int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
