@@ -1,9 +1,18 @@
 NetLabel Tools CHANGELOG
 ==============================================================================
 
-* Release X.XX (XXXXXX)
+* Release 0.20 (June 3, 2013)
 ------------------------------------------------------------------------------
-o Fixed the Makefile install target to allow installation by normal users
+o Patch from Marius Tomaschewski <mt@suse.de> to fix the Makefile install
+  target to allow installation by normal users
+o Fixed build problems on Debian/Ubuntu
+o Correctly read all the parts of multipart Netlink messages, fixed problems
+  when trying to display large configurations
+o Updated the doxygen configuration file to work with modern doxygen versions
+o Updated and improved portions of the build mechanism
+o Incorporate fixes from the Fedora/RHEL RPMs
+o Add support for systemd with the inclusion of a systemd unit file,
+  configuration file, and configuration helper script
 
 * Release 0.19 (January 5, 2009)
 ------------------------------------------------------------------------------
