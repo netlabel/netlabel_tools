@@ -44,8 +44,8 @@ include install.mk
 #
 
 CONFIGS = configure.mk configure.h version_info.mk version.h
-SUBDIRS_BUILD = libnetlabel netlabelctl docs
-SUBDIRS_INSTALL = netlabelctl docs
+SUBDIRS_BUILD = libnetlabel netlabelctl doc
+SUBDIRS_INSTALL = netlabelctl doc
 
 .PHONY: tarball install clean $(SUBDIRS_BUILD)
 
@@ -82,7 +82,7 @@ netlabelctl: $(VERSION_HDR) libnetlabel
 	@$(ECHO_INFO) "entering directory $@/ ..."
 	@$(MAKE) -C $@
 
-docs: $(VERSION_HDR)
+doc: $(VERSION_HDR)
 	@$(ECHO_INFO) "entering directory $@/ ..."
 	@$(MAKE) -C $@
 

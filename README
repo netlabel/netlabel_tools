@@ -6,7 +6,7 @@ Paul Moore <paul@paul-moore.com>
 
 The text below is intended as a quick start guide to configuring the Linux
 NetLabel subsystm using the tools provided in this package.  For more
-documentation please look in the "docs/" subdirectory.
+documentation please look in the "doc/" subdirectory.
 
 * Quick Start
 
@@ -67,5 +67,5 @@ commands:
  # netlabelctl -p cipsov4 list doi:1
  # netlabelctl -p map list
 
-For a greater explanation of what these commands do please see the "docs/"
+For a greater explanation of what these commands do please see the "doc/"
 directory, good luck!
