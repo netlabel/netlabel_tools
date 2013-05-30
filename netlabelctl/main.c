@@ -349,6 +349,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr,
 			MSG_ERR("unknown or missing module '%s'\n"),
 			module_name);
+		ret_val = RET_ERR;
 		goto exit;
 	}
 	ret_val = module_main(argc - optind - 1, argv + optind + 1);
