@@ -1,0 +1,53 @@
+.TH "netlabel-config" 8 "31 May 2013" "paul@paul-moore.com" "NetLabel Documentation"
+.\" //////////////////////////////////////////////////////////////////////////
+.SH NAME
+.\" //////////////////////////////////////////////////////////////////////////
+netlabel-config \- NetLabel configuration utility
+.\" //////////////////////////////////////////////////////////////////////////
+.SH SYNOPSIS
+.\" //////////////////////////////////////////////////////////////////////////
+.B netlabelctl
+reset| load
+.\" //////////////////////////////////////////////////////////////////////////
+.SH DESCRIPTION
+.\" //////////////////////////////////////////////////////////////////////////
+.P
+The NetLabel configuration utility, netlabel-config, is a script designed to
+make it easier for system administratiors to create, manage, and use complex
+NetLabel configurations.  The netlabel-config script uses the netlabelctl(8)
+tool and /etc/netlabel.rules configuration file to load a saved NetLabel
+configuration into the kernel and reset the kernel's NetLabel configuration
+to the default state when needed.
+.TP
+.B reset
+Removes any NetLabel configuration loaded into the kernel and resets the
+kernel's NetLabel state to the default.
+.TP
+.B load
+Loads the NetLabel configuration specified by /etc/netlabel.rules into the
+kernel.
+.\" //////////////////////////////////////////////////////////////////////////
+.SH EXIT STATUS
+.\" //////////////////////////////////////////////////////////////////////////
+Returns zero on success, errno values on failure.
+.\" //////////////////////////////////////////////////////////////////////////
+.SH "NOTES"
+.\" //////////////////////////////////////////////////////////////////////////
+.P
+The NetLabel subsystem is supported on Linux Kernels version 2.6.19 and later.
+The static, or fallback, labels are only supported on Linux Kernels version
+2.6.25 and later.  The domain mapping address selectors are only supported on
+Linux Kernels 2.6.28 and later.
+.P
+The NetLabel project site, with more information including the source code
+repository, can be found at http://netlabel.sf.net.  This program is currently
+under development, please report any bugs at the project site or directly to
+the author.
+.\" //////////////////////////////////////////////////////////////////////////
+.SH "AUTHOR"
+.\" //////////////////////////////////////////////////////////////////////////
+Paul Moore <paul@paul-moore.com>
+.\" //////////////////////////////////////////////////////////////////////////
+.SH "SEE ALSO"
+.\" //////////////////////////////////////////////////////////////////////////
+.BR netlabelctl (8)

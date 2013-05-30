@@ -42,7 +42,9 @@ include $(TOPDIR)/install.mk
 DOXYGEN_CONF = doxyfile
 DOXYGEN_OUTPUT_DIR = doxygen
 
-MAN8 = man/man8/netlabelctl.8
+MAN8 = \
+	man/man8/netlabelctl.8 \
+	man/man8/netlabel-config.8
 
 #
 # targets

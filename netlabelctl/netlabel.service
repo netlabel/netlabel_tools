@@ -1,0 +1,15 @@
+[Unit]
+Description=NetLabel Kernel Configuration
+After=systemd-modules-load.service
+Before=network.target
+Before=libvirtd.service
+Before=NetworkManager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/netlabel-config load
+ExecStop=/usr/sbin/netlabel-config reset
+
+[Install]
+WantedBy=multi-user.target

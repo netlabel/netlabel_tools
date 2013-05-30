@@ -1,0 +1,144 @@
+#!/bin/bash
+
+#
+# NetLabel configuration helper script
+# http://netlabel.sf.net
+#
+
+#
+# Configuration file:
+#  /etc/netlabel.rules
+#
+# Return values:
+#  0 - success
+#  1 - generic or unspecified error
+#  2 - invalid or excess argument(s)
+#  3 - unimplemented feature (e.g. "reload")
+#  4 - insufficient privilege
+#  5 - program is not installed
+#  6 - program is not configured
+#  7 - program is not running
+
+# set the PATH
+PATH="/sbin:/bin:/usr/sbin:/usr/bin"
+
+# core configuration
+CFG_FILE="/etc/netlabel.rules"
+
+####
+# functions
+#
+
+# clear/reset the unlabeled traffic configuration
+function nlbl_reset_unlbl() {
+	# remove the static/fallback labels
+	local list=$(netlabelctl unlbl list)
+	for i in $list; do
+		[[ "$(echo $i | cut -d':' -f 1)" == "accept" ]] && continue
+
+		local iface=$(echo $i | cut -d',' -f 1 | cut -d':' -f 2)
+		local addr=$(echo $i | cut -d',' -f 2 | cut -d':' -f 2)
+		if [[ "$iface" == "DEFAULT" ]]; then
+			netlabelctl unlbl del default address:$addr
+		else
+			netlabelctl unlbl del interface:$iface address:$addr
+		fi
+	done
+
+	# reset the unlabeled traffic handling
+	# NOTE: only turn this off if you _really_ know what you are doing
+	netlabelctl unlbl accept on
+
+	return 0
+}
+
+# clear/reset the CIPSO DOIs
+function nlbl_reset_cipso() {
+	# NOTE: make sure there are no mappings left which use these DOIs else
+	#       you will run into errors if the DOI is currently in use
+	local list=$(netlabelctl cipsov4 list)
+	for i in $list; do
+		local doi=$(echo $i | cut -d',' -f 1)
+		netlabelctl cipsov4 del doi:$doi
+	done
+
+	return 0
+}
+
+# clear/reset the NetLabel outbound traffic mapping
+function nlbl_reset_map() {
+	# remove the existing mapping domains
+	local list=$(netlabelctl map list)
+	for i in $list; do
+		local dmn=$(echo $i | cut -d':' -f 2 | cut -d',' -f 1)
+		if [[ "$dmn" == "DEFAULT" ]]; then
+			netlabelctl map del default
+		else
+			netlabelctl map del domain:${dmn//\"/}
+		fi
+	done
+
+	# allow the kernel to settle
+	# XXX: this is awkward but necessary as of early 2013
+	sleep 1
+
+	# reset the default mapping
+	netlabelctl map add default protocol:unlbl
+
+	return 0
+}
+
+# clear/reset the NetLabel configuration
+function nlbl_reset() {
+	# NOTE: ordering is important here, see nlbl_reset_cipso() for details
+	nlbl_reset_map
+	nlbl_reset_cipso
+	nlbl_reset_unlbl
+	return 0
+}
+
+# load the NetLabel configuration from the configuration file
+function nlbl_load() {
+	local ret_rc=0
+	local line
+	while read line; do
+		# skip comments and blank lines
+		echo "$line" | egrep '^#|^$' >& /dev/null && continue
+
+		# perform the configuration
+		netlabelctl $line >& /dev/null
+		rc=$?
+		[[ $rc -ne 0 ]] && ret_rc=1
+	done < "$CFG_FILE"
+
+	return $ret_rc
+}
+
+####
+# main
+#
+
+rc=0
+
+# sanity checks
+[[ "$(id -u)" == "0" ]] || exit 4
+which netlabelctl >& /dev/null || exit 5
+[[ -r "$CFG_FILE" ]] || exit 6
+
+# operation
+case "$1" in
+load)
+	nlbl_load
+	rc=$?
+	;;
+reset)
+	nlbl_reset
+	rc=$?
+	;;
+*)
+	# unknown/unimplemented operation
+	rc=3
+	;;
+esac
+
+exit $rc

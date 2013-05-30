@@ -39,7 +39,13 @@ include $(TOPDIR)/version_info.mk
 include $(TOPDIR)/configure.mk
 include $(TOPDIR)/install.mk
 
-PROG = netlabelctl
+PROG_BUILD = netlabelctl
+PROG_SCRIPT = netlabel-config
+PROGS = $(PROG_BUILD) $(PROG_SCRIPT)
+
+SYSD_UNIT = netlabel.service
+
+CONF_FILE = netlabel.rules
 
 OBJS = main.o mgmt.o map.o unlabeled.o cipsov4.o
 
@@ -51,18 +57,27 @@ DEPS = $(OBJS:%.o=%.d)
 # targets
 #
 
-.PHONY: all clean
+.PHONY: all clean install install_progs install_sysd install_conf
 
-all: $(PROG)
+all: $(PROG_BUILD)
+
+install: install_prog install_sysd install_conf
 
 -include $(DEPS)
 
-$(PROG): $(OBJS) ../libnetlabel/libnetlabel.a
+$(PROG_BUILD): $(OBJS) ../libnetlabel/libnetlabel.a
 	$(LINK_EXEC)
 
-install: $(PROG)
+install_prog: $(PROGS)
 	$(INSTALL_SBIN_MACRO)
 
-clean:
-	$(RM) -f $(DEPS) $(OBJS) $(PROG)
+install_sysd: $(SYSD_UNIT)
+ifeq ($(CONF_SYSTEMD),1)
+	$(INSTALL_SYSD_MACRO)
+endif
 
+install_conf: $(CONF_FILE)
+	$(INSTALL_ETC_MACRO)
+
+clean:
+	$(RM) -f $(DEPS) $(OBJS) $(PROG_BUILD)

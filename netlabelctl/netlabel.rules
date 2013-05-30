@@ -1,0 +1,34 @@
+#
+# Configuration file for the NetLabel subsystem.  This file should contain
+# individual commands for the netlabelctl utility to be run in order from the
+# top of the file to the bottom.
+#
+# See the netlabel-config(8) and netlabelctl(8) manpages for more information.
+#
+# http://netlabel.sf.net
+#
+
+##
+## Example: Remove the default configuration and replace it with an address
+##          selector based configuration that send unlabeled traffic to all
+##          IPv4 and IPv6 addresses.
+##
+#
+# map del default
+# map add default address:0.0.0.0/0 protocol:unlbl
+# map add default address:::0/0 protocol:unlbl
+
+##
+## Example: Remove the default configuration and replace it with an address
+##          selector based configuration that send unlabeled traffic to all
+##          IPv4 and IPv6 addresses except for 127.0.0.1, which uses CIPSO
+##          DOI 9999 to pass LSM security labels over the loopback network
+##          device.
+##
+#
+# cipsov4 add doi:9999 local
+# map del default
+# map add default address:0.0.0.0/0 protocol:unlbl
+# map add default address:::0/0 protocol:unlbl
+# map add default address:127.0.0.1 protocol:cipsov4,9999
+

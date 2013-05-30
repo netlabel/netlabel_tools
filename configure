@@ -24,7 +24,7 @@
 # configuration defaults
 opt_prefix="/usr/local"
 opt_libdir=""
-opt_bindings_python="no"
+opt_systemd="no"
 
 # output files
 cnf_mk_file="configure.mk"
@@ -60,6 +60,7 @@ Options:
 * installation configuration
   --prefix=PREFIX	installation base [/usr/local]
   --libdir=DIR		library directory [/usr/local/lib]
+  --enable-systemd	enable systemd support
 EOF
 }
 
@@ -69,6 +70,7 @@ function msg_summary() {
   version:		${VERSION_MAJOR}.${VERSION_MINOR}
   installation base:	$opt_prefix
   library directory:	$opt_libdir
+  systemd support:	$opt_systemd
 EOF
 }
 
@@ -167,7 +169,7 @@ verify_deps getopt
 
 # parse the command line options
 opt_str="$@"
-opt=$(getopt -n "$0" --options "h" --longoptions "help,prefix:" -- "$@")
+opt=$(getopt -n "$0" --options "h" --longoptions "help,prefix:,libdir:,enable-systemd" -- "$@")
 eval set -- "$opt"
 while [[ $# -gt 0 ]]; do
 	case "$1" in
@@ -178,6 +180,10 @@ while [[ $# -gt 0 ]]; do
 	--libdir)
 		opt_libdir="$2"
 		shift 2
+		;;
+	--enable-systemd)
+		opt_systemd="yes"
+		shift
 		;;
 	-h|--help)
 		msg_usage
@@ -229,6 +235,7 @@ cnf_header
 # output the configuration files
 cnf_mk_entry "CONF_INSTALL_PREFIX" "$opt_prefix"
 cnf_mk_entry "CONF_INSTALL_LIBDIR" "$opt_libdir"
+cnf_mk_entry "CONF_SYSTEMD" "$opt_systemd"
 
 # configuration footer
 cnf_footer

@@ -187,6 +187,24 @@ INSTALL_SBIN_MACRO += \
 			$^ "$(INSTALL_SBIN_DIR)";
 
 ifeq ($(V),0)
+	INSTALL_SYSD_MACRO = @echo " INSTALL $^ ($(INSTALL_SYSD_DIR))";
+endif
+INSTALL_SYSD_MACRO += \
+		$(INSTALL) -o $(INSTALL_OWNER) -g $(INSTALL_GROUP) \
+			-d "$(INSTALL_SYSD_DIR)"; \
+		$(INSTALL) -o $(INSTALL_OWNER) -g $(INSTALL_GROUP) -m 0644 \
+			$^ "$(INSTALL_SYSD_DIR)";
+
+ifeq ($(V),0)
+	INSTALL_ETC_MACRO = @echo " INSTALL $^ ($(INSTALL_ETC_DIR))";
+endif
+INSTALL_ETC_MACRO += \
+		$(INSTALL) -o $(INSTALL_OWNER) -g $(INSTALL_GROUP) \
+			-d "$(INSTALL_ETC_DIR)"; \
+		$(INSTALL) -o $(INSTALL_OWNER) -g $(INSTALL_GROUP) -m 0644 \
+			$^ "$(INSTALL_ETC_DIR)";
+
+ifeq ($(V),0)
 	INSTALL_LIB_MACRO = @echo " INSTALL $^ ($(INSTALL_LIB_DIR)/$^)";
 endif
 INSTALL_LIB_MACRO += \
