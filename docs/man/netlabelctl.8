@@ -20,19 +20,19 @@ the different types of NetLabel commands supported by the kernel.
 .//////////////////////////////////////////////////////////////////////////////
 .SS Global Flags
 .TP 5
-.B -h
+.B \-h
 Help message
 .TP 5
-.B -p
+.B \-p
 Attempt to make the output human readable or "pretty"
 .TP 5
-.B -t <seconds>
+.B \-t <seconds>
 Set a timeout to be used when waiting for the NetLabel subsystem to respond
 .TP 5
-.B -v
+.B \-v
 Enable extra output
 .TP 5
-.B -V
+.B \-V
 Display the version information
 .//////////////////////////////////////////////////////////////////////////////
 .SS Modules and Commands
@@ -112,7 +112,7 @@ The CIPSO/IPv4 (cipsov4) module controls the CIPSO/IPv4 labeling engine in the
 kernel.  The CIPSO/IPv4 engine provided by NetLabel supports multiple Domains
 Of Interpretation (DOI) and the CIPSO/IPv4 module allows for different
 configurations for each DOI.  At present there are three types of 
-configurations, the "trans" configuration which allows on-the-fly translation
+configurations, the "trans" configuration which allows on\-the\-fly translation
 of MLS sensitivity labels, the "pass" configuration which does not perform any
 translation of the MLS sensitivity label and the "local" configuration which
 conveys the full LSM security label over localhost/loopback connections.
@@ -130,7 +130,7 @@ and their syntax are listed below.
 .br
 Add a new CIPSO/IPv4 configuration using the standard/translated mapping with
 the given level and category translations.  The levels are translated in such a
-way that the local level "LLn" is translated to the remote, on-the-wire level
+way that the local level "LLn" is translated to the remote, on\-the\-wire level
 of "RLn"; the reverse translation is done for incoming packets.  The same
 translation is done for the categories using "LCn" and "RCn".  In order for a
 packet to be accepted, or a socket created by an application, there must be a
@@ -173,11 +173,11 @@ Add a CIPSO/IPv4 configuration with a DOI value of "8", using CIPSO tag "1"
 "0" and "1" to CIPSO levels "0" and "1" respectively while local LSM categories
 "0" and "1" are mapped to CIPSO categories "1" and "0" respectively.
 .HP
-.I netlabelctl -p cipsov4 list
+.I netlabelctl \-p cipsov4 list
 .br
 Display all of the CIPSO/IPv4 configurations in a human readable format.
 .HP
-.I netlabelctl -p cipsov4 list doi:16
+.I netlabelctl \-p cipsov4 list doi:16
 .br
 Display specific information about the CIPSO/IPv4 DOI 16 configuration.
 .HP
@@ -198,7 +198,7 @@ Add a mapping so that all outgoing packets sent from the "lsm_domain" to the
 192.168.1.0/24 network will be labeled according to the CIPSO/IPv4 protocol
 using DOI 8.
 .HP
-.I netlabelctl -p map list
+.I netlabelctl \-p map list
 .br
 Display all of the domain mappings in a human readable format.
 .HP
@@ -227,7 +227,7 @@ The static, or fallback, labels are only supported on Linux Kernels version
 Linux Kernels 2.6.28 and later.
 
 The NetLabel project site, with more information including the source code
-respository, can be found at http://netlabel.sf.net.  This program is currently
+repository, can be found at http://netlabel.sf.net.  This program is currently
 under development, please report any bugs at the project site or directly to
 the author.
 .//////////////////////////////////////////////////////////////////////////////
