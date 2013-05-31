@@ -52,7 +52,7 @@ SUBDIRS_INSTALL = netlabelctl doc
 all: $(SUBDIRS_BUILD)
 
 tarball: clean
-	@ver=$$(source ./version_info; echo $$VERSION_RELEASE); \
+	@ver=$(VERSION_RELEASE); \
 	tarball=netlabel_tools-$$ver.tar.gz; \
 	$(ECHO_INFO) "creating the tarball ../$$tarball"; \
 	tmp_dir=$$(mktemp -d /tmp/netlabel_tools.XXXXX); \
