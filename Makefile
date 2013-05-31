@@ -58,7 +58,8 @@ tarball: clean
 	tmp_dir=$$(mktemp -d /tmp/netlabel_tools.XXXXX); \
 	rel_dir=$$tmp_dir/netlabel_tools-$$ver; \
 	$(MKDIR) $$rel_dir; \
-	$(TAR) cf - --exclude=.svn . | (cd $$rel_dir; tar xf -); \
+	$(TAR) cf - --exclude=.git --exclude=.gitignore . | \
+		(cd $$rel_dir; tar xf -); \
 	(cd $$tmp_dir; tar zcf $$tarball netlabel_tools-$$ver); \
 	mv $$tmp_dir/$$tarball ..; \
 	rm -rf $$tmp_dir;
