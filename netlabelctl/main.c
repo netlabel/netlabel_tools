@@ -210,7 +210,30 @@ void nlctl_addr_print(const struct nlbl_netaddr *addr)
 }
 
 /**
- * Add a domain mapping to NetLabel
+ * Parse an unsigned interger number
+ * @param str the number string
+ * @param num pointer to number to return
+ *
+ * Parse an unsigned integer number string and returns the value in @num.
+ * Returns zero on success, negative values on failure.
+ *
+ */
+static int _nlctl_num_parse(char *str, uint32_t *num)
+{
+	char *spot = str;
+
+	while (*spot != '\0') {
+		if (*spot < '0' || *spot > '9')
+			return -EINVAL;
+		spot++;
+	}
+
+	*num = atoi(str);
+	return 0;
+}
+
+/**
+ * Parse a network address/mask pair
  * @param addr_str the IP address/mask in string format
  * @param addr the IP address/mask in native NetLabel format
  *
@@ -240,7 +263,12 @@ int nlctl_addr_parse(char *addr_str, struct nlbl_netaddr *addr)
 	ret_val = inet_pton(AF_INET, addr_str, &addr->addr.v4);
 	if (ret_val > 0) {
 		addr->type = AF_INET;
-		iter_a = (mask ? atoi(mask) : 32);
+		if (mask != NULL) {
+			ret_val = _nlctl_num_parse(mask, &iter_a);
+			if (ret_val < 0 || iter_a > 32)
+				return -EINVAL;
+		} else
+			iter_a = 32;
 		for (; iter_a > 0; iter_a--) {
 			addr->mask.v4.s_addr >>= 1;
 			addr->mask.v4.s_addr |= 0x80000000;
@@ -253,7 +281,12 @@ int nlctl_addr_parse(char *addr_str, struct nlbl_netaddr *addr)
 	ret_val = inet_pton(AF_INET6, addr_str, &addr->addr.v6);
 	if (ret_val > 0) {
 		addr->type = AF_INET6;
-		iter_a = (mask ? atoi(mask) : 128);
+		if (mask != NULL) {
+			ret_val = _nlctl_num_parse(mask, &iter_a);
+			if (ret_val < 0 || iter_a > 128)
+				return -EINVAL;
+		} else
+			iter_a = 128;
 		for (iter_b = 0; iter_a > 0 && iter_b < 4; iter_b++) {
 			for (; iter_a > 0 &&
 			       addr->mask.v6.s6_addr32[iter_b] < 0xffffffff;
