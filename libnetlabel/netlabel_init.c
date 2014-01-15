@@ -46,6 +46,8 @@ int nlbl_init(void)
 {
 	int ret_val;
 
+	nlmsg_set_default_size(8096);
+
 	ret_val = nlbl_mgmt_init();
 	if (ret_val < 0)
 		return ret_val;
