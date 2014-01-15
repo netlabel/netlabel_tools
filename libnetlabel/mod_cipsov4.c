@@ -302,7 +302,9 @@ int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
 		if (ret_val != 0)
 			goto add_std_return;
 	}
-	nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg_a);
+	ret_val = nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg_a);
+	if (ret_val != 0)
+		goto add_std_return;
 	nlbl_msg_free(nest_msg_a);
 	nest_msg_a = NULL;
 
@@ -327,11 +329,16 @@ int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
 				      lvls->array[iter * 2 + 1]);
 		if (ret_val != 0)
 			goto add_std_return;
-		nla_put_nested(nest_msg_a, NLBL_CIPSOV4_A_MLSLVL, nest_msg_b);
+		ret_val = nla_put_nested(nest_msg_a, NLBL_CIPSOV4_A_MLSLVL,
+					 nest_msg_b);
+		if (ret_val != 0)
+			goto add_std_return;
 		nlbl_msg_free(nest_msg_b);
 		nest_msg_b = NULL;
 	}
-	nla_put_nested(msg, NLBL_CIPSOV4_A_MLSLVLLST, nest_msg_a);
+	ret_val = nla_put_nested(msg, NLBL_CIPSOV4_A_MLSLVLLST, nest_msg_a);
+	if (ret_val != 0)
+		goto add_std_return;
 	nlbl_msg_free(nest_msg_a);
 	nest_msg_a = NULL;
 
@@ -356,11 +363,16 @@ int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
 				      cats->array[iter * 2 + 1]);
 		if (ret_val != 0)
 			goto add_std_return;
-		nla_put_nested(nest_msg_a, NLBL_CIPSOV4_A_MLSCAT, nest_msg_b);
+		ret_val = nla_put_nested(nest_msg_a, NLBL_CIPSOV4_A_MLSCAT,
+					 nest_msg_b);
+		if (ret_val != 0)
+			goto add_std_return;
 		nlbl_msg_free(nest_msg_b);
 		nest_msg_b = NULL;
 	}
-	nla_put_nested(msg, NLBL_CIPSOV4_A_MLSCATLST, nest_msg_a);
+	ret_val = nla_put_nested(msg, NLBL_CIPSOV4_A_MLSCATLST, nest_msg_a);
+	if (ret_val != 0)
+		goto add_std_return;
 	nlbl_msg_free(nest_msg_a);
 	nest_msg_a = NULL;
 
@@ -455,7 +467,9 @@ int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 		if (ret_val != 0)
 			goto add_pass_return;
 	}
-	nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg);
+	ret_val = nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg);
+	if (ret_val != 0)
+		goto add_pass_return;
 
 	/* send the request */
 	ret_val = nlbl_comm_send(p_hndl, msg);
@@ -539,7 +553,9 @@ int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 	ret_val = nla_put_u8(nest_msg, NLBL_CIPSOV4_A_TAG, 128);
 	if (ret_val != 0)
 		goto add_local_return;
-	nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg);
+	ret_val = nla_put_nested(msg, NLBL_CIPSOV4_A_TAGLST, nest_msg);
+	if (ret_val != 0)
+		goto add_local_return;
 
 	/* send the request */
 	ret_val = nlbl_comm_send(p_hndl, msg);
