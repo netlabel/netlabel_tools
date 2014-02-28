@@ -276,8 +276,6 @@ static int cipsov4_list_doi(uint32_t doi)
 {
 	int ret_val;
 	uint32_t iter;
-	nlbl_cv4_doi *doi_list = NULL;
-	nlbl_cv4_mtype *mtype_list = NULL;
 	nlbl_cv4_mtype maptype;
 	struct nlbl_cv4_tag_a tags = { .array = NULL, .size = 0 };
 	struct nlbl_cv4_lvl_a lvls = { .array = NULL, .size = 0 };
@@ -285,7 +283,7 @@ static int cipsov4_list_doi(uint32_t doi)
 
 	ret_val = nlbl_cipsov4_list(NULL, doi, &maptype, &tags, &lvls, &cats);
 	if (ret_val < 0)
-		goto list_doi_return;
+		return ret_val;
 
 	if (opt_pretty != 0) {
 		printf("Configured CIPSOv4 mapping (DOI = %u)\n", doi);
@@ -364,14 +362,7 @@ static int cipsov4_list_doi(uint32_t doi)
 		printf("\n");
 	}
 
-	ret_val = 0;
-
-list_doi_return:
-	if (doi_list != NULL)
-		free(doi_list);
-	if (mtype_list != NULL)
-		free(mtype_list);
-	return ret_val;
+	return 0;
 }
 
 /**

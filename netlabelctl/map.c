@@ -267,7 +267,7 @@ static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
 int map_list(int argc, char *argv[])
 {
 	int ret_val;
-	struct nlbl_dommap *mapping;
+	struct nlbl_dommap *mapping, *mapping_new;
 	size_t count;
 	uint32_t iter;
 
@@ -278,9 +278,10 @@ int map_list(int argc, char *argv[])
 	count = ret_val;
 
 	/* get the default mapping */
-	mapping = realloc(mapping, sizeof(*mapping) * (count + 1));
-	if (mapping == NULL)
+	mapping_new = realloc(mapping, sizeof(*mapping) * (count + 1));
+	if (mapping_new == NULL)
 		goto list_return;
+	mapping = mapping_new;
 	memset(&mapping[count], 0, sizeof(*mapping));
 	ret_val = nlbl_mgmt_listdef(NULL, &mapping[count]);
 	if (ret_val < 0 && ret_val != -ENOENT)

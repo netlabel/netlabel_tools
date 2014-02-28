@@ -355,7 +355,7 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 	struct nlattr *nla;
 	int data_len;
 	int data_attrlen;
-	nlbl_proto *protos = NULL;
+	nlbl_proto *protos = NULL, *protos_new;
 	uint32_t protos_count = 0;
 
 	/* sanity checks */
@@ -427,10 +427,12 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 				NLMSG_ALIGN(sizeof(*genl_hdr));
 
 			/* resize the array */
-			protos = realloc(protos,
-				       sizeof(nlbl_proto) * (protos_count + 1));
-			if (protos == NULL)
+			protos_new = realloc(protos,
+					     sizeof(nlbl_proto) *
+					     (protos_count + 1));
+			if (protos_new == NULL)
 				goto protocols_return;
+			protos = protos_new;
 
 			/* get the attribute information */
 			nla = nla_find(nla_head,
@@ -1023,7 +1025,7 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 	struct nlattr *nla;
 	int data_len;
 	int data_attrlen;
-	struct nlbl_dommap *dmns = NULL;
+	struct nlbl_dommap *dmns = NULL, *dmns_new;
 	uint32_t dmns_count = 0;
 
 	/* sanity checks */
@@ -1095,9 +1097,11 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 				       NLMSG_ALIGN(sizeof(*genl_hdr));
 
 			/* resize the array */
-			dmns = realloc(dmns, sizeof(*dmns) * (dmns_count + 1));
-			if (dmns == NULL)
+			dmns_new = realloc(dmns,
+					   sizeof(*dmns) * (dmns_count + 1));
+			if (dmns_new == NULL)
 				goto listall_return;
+			dmns = dmns_new;
 			memset(&dmns[dmns_count], 0, sizeof(*dmns));
 
 			/* get the attribute information */

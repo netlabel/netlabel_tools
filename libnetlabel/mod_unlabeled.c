@@ -816,7 +816,7 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
 	struct nlattr *nla;
 	int data_len;
 	int data_attrlen;
-	struct nlbl_addrmap *addr_array = NULL;
+	struct nlbl_addrmap *addr_array = NULL, *addr_array_new;
 	uint32_t addr_count = 0;
 
 	/* sanity checks */
@@ -886,11 +886,12 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
 				NLMSG_ALIGN(sizeof(*genl_hdr));
 
 			/* resize the array */
-			addr_array = realloc(addr_array,
-					     sizeof(*addr_array) *
-					     (addr_count + 1));
-			if (addr_array == NULL)
+			addr_array_new = realloc(addr_array,
+						 sizeof(*addr_array) *
+						 (addr_count + 1));
+			if (addr_array_new == NULL)
 				goto staticlist_return;
+			addr_array = addr_array_new;
 			memset(&addr_array[addr_count], 0, sizeof(*addr_array));
 
 			/* get the attribute information */
@@ -1009,7 +1010,7 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 	struct nlattr *nla;
 	int data_len;
 	int data_attrlen;
-	struct nlbl_addrmap *addr_array = NULL;
+	struct nlbl_addrmap *addr_array = NULL, *addr_array_new;
 	uint32_t addr_count = 0;
 
 	/* sanity checks */
@@ -1079,11 +1080,12 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 				NLMSG_ALIGN(sizeof(*genl_hdr));
 
 			/* resize the array */
-			addr_array = realloc(addr_array,
-					     sizeof(*addr_array) *
-					     (addr_count + 1));
-			if (addr_array == NULL)
+			addr_array_new = realloc(addr_array,
+						 sizeof(*addr_array) *
+						 (addr_count + 1));
+			if (addr_array_new == NULL)
 				goto staticlistdef_return;
+			addr_array = addr_array_new;
 			memset(&addr_array[addr_count], 0, sizeof(*addr_array));
 
 			/* get the attribute information */

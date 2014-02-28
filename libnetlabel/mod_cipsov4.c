@@ -857,8 +857,8 @@ int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 	struct nlattr *nla;
 	int data_len;
 	int data_attrlen;
-	nlbl_cv4_doi *doi_a = NULL;
-	nlbl_cv4_mtype *mtype_a = NULL;
+	nlbl_cv4_doi *doi_a = NULL, *doi_a_new;
+	nlbl_cv4_mtype *mtype_a = NULL, *mtype_a_new;
 	uint32_t count = 0;
 
 	/* sanity checks */
@@ -930,14 +930,16 @@ int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 						NLMSG_ALIGN(sizeof(*genl_hdr));
 
 			/* resize the arrays */
-			doi_a = realloc(doi_a,
-					sizeof(nlbl_cv4_doi) * (count + 1));
-			if (doi_a == NULL)
+			doi_a_new = realloc(doi_a,
+					    sizeof(nlbl_cv4_doi) * (count + 1));
+			if (doi_a_new == NULL)
 				goto listall_return;
-			mtype_a = realloc(mtype_a,
-					  sizeof(nlbl_cv4_mtype) * (count + 1));
-			if (mtype_a == NULL)
+			doi_a = doi_a_new;
+			mtype_a_new = realloc(mtype_a,
+					      sizeof(nlbl_cv4_mtype)*(count+1));
+			if (mtype_a_new == NULL)
 				goto listall_return;
+			mtype_a = mtype_a_new;
 
 			/* get the attribute information */
 			nla = nla_find(nla_head,

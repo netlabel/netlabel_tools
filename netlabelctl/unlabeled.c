@@ -79,7 +79,7 @@ int unlbl_list(void)
 {
 	int ret_val;
 	uint8_t flag;
-	struct nlbl_addrmap *addr_p = NULL;
+	struct nlbl_addrmap *addr_p = NULL, *addr_p_new;
 	struct nlbl_addrmap *addrdef_p = NULL;
 	struct nlbl_addrmap *iter_p;
 	size_t count;
@@ -102,9 +102,10 @@ int unlbl_list(void)
 	count = ret_val;
 	ret_val = nlbl_unlbl_staticlistdef(NULL, &addrdef_p);
 	if (ret_val > 0) {
-		addr_p = realloc(addr_p, sizeof(*addr_p) * (count + ret_val));
-		if (addr_p == NULL)
+		addr_p_new = realloc(addr_p, sizeof(*addr_p) * (count + ret_val));
+		if (addr_p_new == NULL)
 			goto list_return;
+		addr_p = addr_p_new;
 		memcpy(&addr_p[count], addrdef_p, sizeof(*addr_p) * ret_val);
 		count += ret_val;
 	}
