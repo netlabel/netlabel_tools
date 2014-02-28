@@ -182,7 +182,7 @@ int unlbl_add(int argc, char *argv[])
 	uint8_t def_flag = 0;
 	nlbl_netdev dev = NULL;
 	struct nlbl_netaddr addr;
-	nlbl_secctx label;
+	nlbl_secctx label = NULL;
 
 	/* sanity checks */
 	if (argc <= 0 || argv == NULL || argv[0] == NULL)
@@ -224,7 +224,7 @@ int unlbl_del(int argc, char *argv[])
 {
 	uint32_t iter;
 	uint8_t def_flag = 0;
-	nlbl_netdev dev;
+	nlbl_netdev dev = NULL;
 	struct nlbl_netaddr addr;
 
 	/* sanity checks */
