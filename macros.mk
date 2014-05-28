@@ -53,7 +53,7 @@ CPPFLAGS += -I$(TOPDIR) -I$(TOPDIR)/include
 LIBFLAGS =
 
 CFLAGS ?= -Wl,-z,relro -Wall -O0 -g
-CFLAGS += -fPIC
+CFLAGS += `pkg-config --cflags libnl-3.0` -fPIC
 LDFLAGS ?= -z relro -g
 
 #

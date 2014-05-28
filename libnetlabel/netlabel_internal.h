@@ -27,6 +27,14 @@
 
 #include <netlink/netlink.h>
 
+#define nl_handle_alloc             nl_socket_alloc
+#define nl_handle_destroy           nl_socket_free
+#define nl_handle                   nl_sock
+#define nlmsg_build(ptr)            nlmsg_inherit(ptr)
+#define nl_set_passcred             nl_socket_set_passcred
+#define nl_disable_sequence_check   nl_socket_disable_seq_check
+#define nlmsg_len                   nlmsg_datalen
+
 /* NetLabel communication handle */
 struct nlbl_handle {
 	struct nl_handle *nl_hndl;
@@ -37,46 +45,5 @@ struct nlbl_handle {
 	 (((hdr)->nlmsg_flags & NLM_F_MULTI) && \
 	  ((hdr)->nlmsg_type != NLMSG_DONE)))
 
-/* Specify which version of libnl we are using */
-/*  1.0-pre5 => 1005 */
-/*  1.0-pre6 => 1006 */
-/*  1.0-pre8 => 1008 */
-/*  1.1      => 1100 */
-#define LIBNL_VERSION		1100
-
-/* XXX - this whole block will most likely go away once libnl supports Generic
- * Netlink */
-#if LIBNL_VERSION <= 1006 /* Generic Netlink types */
-
-/* Generic Netlink message header */
-struct genlmsghdr {
-	uint8_t cmd;
-	uint8_t version;
-	uint16_t reserved;
-};
-
-#define GENL_ID_CTRL		0x10
-
-enum {
-	CTRL_CMD_UNSPEC,
-	CTRL_CMD_NEWFAMILY,
-	CTRL_CMD_DELFAMILY,
-	CTRL_CMD_GETFAMILY,
-	CTRL_CMD_NEWOPS,
-	CTRL_CMD_DELOPS,
-	CTRL_CMD_GETOPS,
-	__CTRL_CMD_MAX,
-};
-#define CTRL_CMD_MAX (__CTRL_CMD_MAX - 1)
-
-enum {
-	CTRL_ATTR_UNSPEC,
-	CTRL_ATTR_FAMILY_ID,
-	CTRL_ATTR_FAMILY_NAME,
-	__CTRL_ATTR_MAX,
-};
-#define CTRL_ATTR_MAX (__CTRL_ATTR_MAX - 1)
-
-#endif /* Generic Netlink types */
 
 #endif

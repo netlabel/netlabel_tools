@@ -49,7 +49,7 @@ CONF_FILE = netlabel.rules
 
 OBJS = main.o mgmt.o map.o unlabeled.o cipsov4.o
 
-LDFLAGS := ../libnetlabel/libnetlabel.a -lnl -lm
+LDFLAGS := ../libnetlabel/libnetlabel.a `pkg-config --libs libnl-3.0` -lm
 
 DEPS = $(OBJS:%.o=%.d)
 

@@ -102,13 +102,8 @@ struct nlbl_handle *nlbl_comm_open(void)
 		goto open_failure;
 
 	/* set the netlink handle properties */
-#if LIBNL_VERSION >= 1008
 	nl_socket_set_peer_port(hndl->nl_hndl, 0);
 	nl_set_passcred(hndl->nl_hndl, 1);
-#elif LIBNL_VERSION == 1006
-	nl_handle_set_peer_pid(hndl->nl_hndl, 0);
-	nl_set_passcred(hndl->nl_hndl, 1);
-#endif
 	nl_disable_sequence_check(hndl->nl_hndl);
 
 	/* connect to the generic netlink subsystem in the kernel */
@@ -177,11 +172,7 @@ int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data)
 	 * no data is waiting to be read from the handle */
 	timeout.tv_sec = nlcomm_read_timeout;
 	timeout.tv_usec = 0;
-#if LIBNL_VERSION >= 1008
 	nl_fd = nl_socket_get_fd(hndl->nl_hndl);
-#else
-	nl_fd = nl_handle_get_fd(hndl->nl_hndl);
-#endif
 	FD_ZERO(&read_fds);
 	FD_SET(nl_fd, &read_fds);
 	ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
@@ -192,15 +183,9 @@ int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data)
 
 	/* perform the read operation */
 	*data = NULL;
-#if LIBNL_VERSION >= 1006
 	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
 	if (ret_val < 0)
 		return ret_val;
-#else
-	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
-	if (ret_val < 0)
-		return ret_val;
-#endif
 
 	/* if we are setup to receive credentials, only accept messages from
 	 * the kernel (ignore all others and send an -EAGAIN) */
@@ -251,11 +236,7 @@ int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 	 * no data is waiting to be read from the handle */
 	timeout.tv_sec = nlcomm_read_timeout;
 	timeout.tv_usec = 0;
-#if LIBNL_VERSION >= 1008
 	nl_fd = nl_socket_get_fd(hndl->nl_hndl);
-#else
-	nl_fd = nl_handle_get_fd(hndl->nl_hndl);
-#endif
 	FD_ZERO(&read_fds);
 	FD_SET(nl_fd, &read_fds);
 	ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
@@ -265,19 +246,9 @@ int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 		return -EAGAIN;
 
 	/* perform the read operation */
-#if LIBNL_VERSION >= 1100
 	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data, &creds);
 	if (ret_val < 0)
 		return ret_val;
-#elif LIBNL_VERSION >= 1006
-	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
-	if (ret_val < 0)
-		return ret_val;
-#else
-	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data);
-	if (ret_val < 0)
-		return ret_val;
-#endif
 
 	/* if we are setup to receive credentials, only accept messages from
 	 * the kernel (ignore all others and send an -EAGAIN) */
@@ -344,9 +315,7 @@ int nlbl_comm_send(struct nlbl_handle *hndl, nlbl_msg *msg)
 	creds.gid = getegid();
 
 	/* set the message properties */
-#if LIBNL_VERSION >= 1006
 	nlmsg_set_creds(msg, &creds);
-#endif
 
 	/* request a netlink ack message */
 	nl_hdr = nlbl_msg_nlhdr(msg);
@@ -355,9 +324,5 @@ int nlbl_comm_send(struct nlbl_handle *hndl, nlbl_msg *msg)
 	nl_hdr->nlmsg_flags |= NLM_F_ACK;
 
 	/* send the message */
-#if LIBNL_VERSION == 1005
-	return nl_send_auto_complete(hndl->nl_hndl, nlbl_msg_nlhdr(msg));
-#elif LIBNL_VERSION >= 1006
 	return nl_send_auto_complete(hndl->nl_hndl, msg);
-#endif
 }
