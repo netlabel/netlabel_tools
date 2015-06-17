@@ -60,18 +60,14 @@ void nlbl_msg_free(nlbl_msg *msg)
 nlbl_msg *nlbl_msg_new(void)
 {
 	nlbl_msg *msg;
-	struct genlmsghdr genl_hdr;
+	void *msg_buf;
 
-	/* create the message with a simple netlink header */
 	msg = nlmsg_alloc();
 	if (msg == NULL)
 		goto msg_new_failure;
 
-	/* add a generic netlink header */
-	genl_hdr.cmd = 0;
-	genl_hdr.version = NETLBL_PROTO_VERSION;
-	genl_hdr.reserved = 0;
-	if (nlmsg_append(msg, &genl_hdr, sizeof(genl_hdr), 1) != 0)
+	msg_buf = genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, 0, 0, 0, 0, 0);
+	if (msg_buf == NULL)
 		goto msg_new_failure;
 
 	return msg;
@@ -110,14 +106,12 @@ struct genlmsghdr *nlbl_msg_genlhdr(nlbl_msg *msg)
 {
 	struct nlmsghdr *nl_hdr;
 
-	if (msg == NULL)
-		return NULL;
-
-	nl_hdr = nlmsg_hdr(msg);
+	/* NOTE: nlbl_msg_nlhdr() can handle being passed a NULL msg */
+	nl_hdr = nlbl_msg_nlhdr(msg);
 	if (nl_hdr == NULL)
 		return NULL;
 
-	return (struct genlmsghdr *)(&nl_hdr[1]);
+	return genlmsg_hdr(nl_hdr);
 }
 
 /*
@@ -136,6 +130,7 @@ struct nlmsgerr *nlbl_msg_err(nlbl_msg *msg)
 {
 	struct nlmsghdr *nl_hdr;
 
+	/* NOTE: nlbl_msg_nlhdr() can handle being passed a NULL msg */
 	nl_hdr = nlbl_msg_nlhdr(msg);
 	if (nl_hdr == NULL || nl_hdr->nlmsg_type != NLMSG_ERROR)
 		return NULL;
@@ -158,14 +153,12 @@ struct nlattr *nlbl_attr_head(nlbl_msg *msg)
 {
 	struct genlmsghdr *genl_hdr;
 
-	if (msg == NULL)
-		return NULL;
-
+	/* NOTE: nlbl_msg_genlhdr() can handle being passed a NULL msg */
 	genl_hdr = nlbl_msg_genlhdr(msg);
 	if (genl_hdr == NULL)
 		return NULL;
 
-	return (struct nlattr *)(&genl_hdr[1]);
+	return genlmsg_attrdata(genl_hdr, 0);
 }
 
 /**
@@ -179,22 +172,17 @@ struct nlattr *nlbl_attr_head(nlbl_msg *msg)
  */
 struct nlattr *nlbl_attr_find(nlbl_msg *msg, int nla_type)
 {
-	struct nlmsghdr *nl_hdr;
+	struct genlmsghdr *genl_hdr;
 	struct nlattr *nla_head;
-	size_t rem;
 
-	if (msg == NULL)
+	/* NOTE: nlbl_msg_genlhdr() can handle being passed a NULL msg */
+	genl_hdr = nlbl_msg_genlhdr(msg);
+	if (genl_hdr == NULL)
 		return NULL;
 
-	nl_hdr = nlbl_msg_nlhdr(msg);
-	if (nl_hdr == NULL)
-		return NULL;
-
-	nla_head = nlbl_attr_head(msg);
+	nla_head = genlmsg_attrdata(genl_hdr, 0);
 	if (nla_head == NULL)
 		return NULL;
-
-	rem = nlmsg_len(nl_hdr) - NLMSG_ALIGN(sizeof(struct genlmsghdr));
-
-	return nla_find(nla_head, rem, nla_type);
+	
+	return nla_find(nla_head, genlmsg_attrlen(genl_hdr, 0), nla_type);
 }

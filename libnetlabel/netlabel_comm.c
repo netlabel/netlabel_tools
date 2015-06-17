@@ -56,7 +56,7 @@ static uint32_t nlcomm_read_timeout = 10;
  */
 static int nlbl_comm_hndl_valid(struct nlbl_handle *hndl)
 {
-	return (hndl != NULL && hndl->nl_hndl != NULL);
+	return (hndl != NULL && hndl->nl_sock != NULL);
 }
 
 /*
@@ -96,25 +96,25 @@ struct nlbl_handle *nlbl_comm_open(void)
 	if (hndl == NULL)
 		return NULL;
 
-	/* create a new netlink handle */
-	hndl->nl_hndl = nl_handle_alloc();
-	if (hndl->nl_hndl == NULL)
+	/* create a new netlink socket */
+	hndl->nl_sock = nl_socket_alloc();
+	if (hndl->nl_sock == NULL)
 		goto open_failure;
 
-	/* set the netlink handle properties */
-	nl_socket_set_peer_port(hndl->nl_hndl, 0);
-	nl_set_passcred(hndl->nl_hndl, 1);
-	nl_disable_sequence_check(hndl->nl_hndl);
+	/* set the netlink socket properties */
+	nl_socket_set_peer_port(hndl->nl_sock, 0);
+	nl_socket_disable_seq_check(hndl->nl_sock);
+	nl_socket_set_passcred(hndl->nl_sock, 1);
 
 	/* connect to the generic netlink subsystem in the kernel */
-	if (nl_connect(hndl->nl_hndl, NETLINK_GENERIC) != 0)
+	if (nl_connect(hndl->nl_sock, NETLINK_GENERIC) != 0)
 		goto open_failure_handle;
 
 	return hndl;
 
 open_failure_handle:
-	nl_close(hndl->nl_hndl);
-	nl_handle_destroy(hndl->nl_hndl);
+	nl_close(hndl->nl_sock);
+	nl_socket_free(hndl->nl_sock);
 open_failure:
 	free(hndl);
 	return NULL;
@@ -135,8 +135,8 @@ int nlbl_comm_close(struct nlbl_handle *hndl)
 		return -EINVAL;
 
 	/* close and destroy the socket */
-	nl_close(hndl->nl_hndl);
-	nl_handle_destroy(hndl->nl_hndl);
+	nl_close(hndl->nl_sock);
+	nl_socket_free(hndl->nl_sock);
 
 	/* free the memory */
 	free(hndl);
@@ -172,7 +172,7 @@ int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data)
 	 * no data is waiting to be read from the handle */
 	timeout.tv_sec = nlcomm_read_timeout;
 	timeout.tv_usec = 0;
-	nl_fd = nl_socket_get_fd(hndl->nl_hndl);
+	nl_fd = nl_socket_get_fd(hndl->nl_sock);
 	FD_ZERO(&read_fds);
 	FD_SET(nl_fd, &read_fds);
 	ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
@@ -183,7 +183,7 @@ int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data)
 
 	/* perform the read operation */
 	*data = NULL;
-	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, data, &creds);
+	ret_val = nl_recv(hndl->nl_sock, &peer_nladdr, data, &creds);
 	if (ret_val < 0)
 		return ret_val;
 
@@ -218,45 +218,13 @@ recv_raw_failure:
 int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 {
 	int ret_val;
-	struct sockaddr_nl peer_nladdr;
-	struct ucred *creds = NULL;
-	int nl_fd;
-	fd_set read_fds;
-	struct timeval timeout;
 	unsigned char *data = NULL;
 	struct nlmsghdr *nl_hdr;
 
-	/* XXX - we should make use of nlbl_comm_recv_raw() here */
-
-	/* sanity checks */
-	if (!nlbl_comm_hndl_valid(hndl) || msg == NULL)
-		return -EINVAL;
-
-	/* we use blocking sockets so do enforce a timeout using select() if
-	 * no data is waiting to be read from the handle */
-	timeout.tv_sec = nlcomm_read_timeout;
-	timeout.tv_usec = 0;
-	nl_fd = nl_socket_get_fd(hndl->nl_hndl);
-	FD_ZERO(&read_fds);
-	FD_SET(nl_fd, &read_fds);
-	ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
-	if (ret_val < 0)
-		return -errno;
-	else if (ret_val == 0)
-		return -EAGAIN;
-
-	/* perform the read operation */
-	ret_val = nl_recv(hndl->nl_hndl, &peer_nladdr, &data, &creds);
+	/* perform the raw read operation */
+	ret_val = nlbl_comm_recv_raw(hndl, &data);
 	if (ret_val < 0)
 		return ret_val;
-
-	/* if we are setup to receive credentials, only accept messages from
-	 * the kernel (ignore all others and send an -EAGAIN) */
-	if (creds != NULL && creds->pid != 0) {
-		ret_val = -EAGAIN;
-		goto recv_failure;
-	}
-
 	nl_hdr = (struct nlmsghdr *)data;
 
 	/* make sure the received buffer is the correct length */
@@ -285,8 +253,6 @@ int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 recv_failure:
 	if (data != NULL)
 		free(data);
-	if (creds != NULL)
-		free(creds);
 	return ret_val;
 }
 
@@ -302,20 +268,10 @@ recv_failure:
 int nlbl_comm_send(struct nlbl_handle *hndl, nlbl_msg *msg)
 {
 	struct nlmsghdr *nl_hdr;
-	struct ucred creds;
 
 	/* sanity checks */
 	if (!nlbl_comm_hndl_valid(hndl) || msg == NULL)
 		return -EINVAL;
-
-	/* setup our credentials using the _effective_ values */
-	/* XXX - should we use the _real_ values instead? */
-	creds.pid = getpid();
-	creds.uid = geteuid();
-	creds.gid = getegid();
-
-	/* set the message properties */
-	nlmsg_set_creds(msg, &creds);
 
 	/* request a netlink ack message */
 	nl_hdr = nlbl_msg_nlhdr(msg);
@@ -324,5 +280,5 @@ int nlbl_comm_send(struct nlbl_handle *hndl, nlbl_msg *msg)
 	nl_hdr->nlmsg_flags |= NLM_F_ACK;
 
 	/* send the message */
-	return nl_send_auto_complete(hndl->nl_hndl, msg);
+	return nl_send_auto(hndl->nl_sock, msg);
 }

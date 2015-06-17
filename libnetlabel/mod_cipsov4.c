@@ -149,83 +149,24 @@ static int nlbl_cipsov4_parse_ack(nlbl_msg *msg)
  */
 int nlbl_cipsov4_init(void)
 {
-	int ret_val = -ENOMEM;
+	int ret_val;
 	struct nlbl_handle *hndl;
-	nlbl_msg *msg = NULL;
-	nlbl_msg *ans_msg = NULL;
-	struct nlmsghdr *nl_hdr;
-	struct genlmsghdr *genl_hdr;
-	struct nlattr *nla;
 
 	/* get a netlabel handle */
 	hndl = nlbl_comm_open();
 	if (hndl == NULL)
 		goto init_return;
 
-	/* create a new message */
-	msg = nlbl_msg_new();
-	if (msg == NULL)
+	/* resolve the family */
+	ret_val = genl_ctrl_resolve(hndl->nl_sock, NETLBL_NLTYPE_CIPSOV4_NAME);
+	if (ret_val < 0)
 		goto init_return;
-
-	/* setup the netlink header */
-	nl_hdr = nlbl_msg_nlhdr(msg);
-	if (nl_hdr == NULL)
-		goto init_return;
-	nl_hdr->nlmsg_type = GENL_ID_CTRL;
-
-	/* setup the generic netlink header */
-	genl_hdr = nlbl_msg_genlhdr(msg);
-	if (genl_hdr == NULL)
-		goto init_return;
-	genl_hdr->cmd = CTRL_CMD_GETFAMILY;
-	genl_hdr->version = 1;
-
-	/* add the netlabel family request attributes */
-	ret_val = nla_put_string(msg,
-				 CTRL_ATTR_FAMILY_NAME,
-				 NETLBL_NLTYPE_CIPSOV4_NAME);
-	if (ret_val != 0)
-		goto init_return;
-
-	/* send the request */
-	ret_val = nlbl_comm_send(hndl, msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
-		goto init_return;
-	}
-
-	/* read the response */
-	ret_val = nlbl_comm_recv(hndl, &ans_msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
-		goto init_return;
-	}
-
-	/* process the response */
-	genl_hdr = nlbl_msg_genlhdr(ans_msg);
-	if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
-		ret_val = -EBADMSG;
-		goto init_return;
-	}
-	nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
-	if (nla == NULL) {
-		ret_val = -EBADMSG;
-		goto init_return;
-	}
-	nlbl_cipsov4_fid = nla_get_u16(nla);
-	if (nlbl_cipsov4_fid == 0) {
-		ret_val = -EBADMSG;
-		goto init_return;
-	}
+	nlbl_cipsov4_fid = ret_val;
 
 	ret_val = 0;
 
 init_return:
 	nlbl_comm_close(hndl);
-	nlbl_msg_free(msg);
-	nlbl_msg_free(ans_msg);
 	return ret_val;
 }
 
@@ -291,7 +232,7 @@ int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
 	if (ret_val != 0)
 		goto add_std_return;
 
-	nest_msg_a = nlmsg_build(NULL);
+	nest_msg_a = nlmsg_inherit(NULL);
 	if (nest_msg_a == NULL) {
 		ret_val = -ENOMEM;
 		goto add_std_return;
@@ -308,13 +249,13 @@ int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
 	nlbl_msg_free(nest_msg_a);
 	nest_msg_a = NULL;
 
-	nest_msg_a = nlmsg_build(NULL);
+	nest_msg_a = nlmsg_inherit(NULL);
 	if (nest_msg_a == NULL) {
 		ret_val = -ENOMEM;
 		goto add_std_return;
 	}
 	for (iter = 0; iter < lvls->size; iter++) {
-		nest_msg_b = nlmsg_build(NULL);
+		nest_msg_b = nlmsg_inherit(NULL);
 		if (nest_msg_b == NULL) {
 			ret_val = -ENOMEM;
 			goto add_std_return;
@@ -342,13 +283,13 @@ int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
 	nlbl_msg_free(nest_msg_a);
 	nest_msg_a = NULL;
 
-	nest_msg_a = nlmsg_build(NULL);
+	nest_msg_a = nlmsg_inherit(NULL);
 	if (nest_msg_a == NULL) {
 		ret_val = -ENOMEM;
 		goto add_std_return;
 	}
 	for (iter = 0; iter < cats->size; iter++) {
-		nest_msg_b = nlmsg_build(NULL);
+		nest_msg_b = nlmsg_inherit(NULL);
 		if (nest_msg_b == NULL) {
 			ret_val = -ENOMEM;
 			goto add_std_return;
@@ -456,7 +397,7 @@ int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 	if (ret_val != 0)
 		goto add_pass_return;
 
-	nest_msg = nlmsg_build(NULL);
+	nest_msg = nlmsg_inherit(NULL);
 	if (nest_msg == NULL) {
 		ret_val = -ENOMEM;
 		goto add_pass_return;
@@ -545,7 +486,7 @@ int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 	if (ret_val != 0)
 		goto add_local_return;
 
-	nest_msg = nlmsg_build(NULL);
+	nest_msg = nlmsg_inherit(NULL);
 	if (nest_msg == NULL) {
 		ret_val = -ENOMEM;
 		goto add_local_return;
@@ -926,8 +867,7 @@ int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 				goto listall_return;
 			}
 			nla_head = (struct nlattr *)(&genl_hdr[1]);
-			data_attrlen = nlmsg_len(nl_hdr) -
-						NLMSG_ALIGN(sizeof(*genl_hdr));
+			data_attrlen = genlmsg_attrlen(genl_hdr, 0);
 
 			/* resize the arrays */
 			doi_a_new = realloc(doi_a,

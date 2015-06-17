@@ -26,24 +26,17 @@
 #define _NETLINK_COMM_H_
 
 #include <netlink/netlink.h>
-
-#define nl_handle_alloc             nl_socket_alloc
-#define nl_handle_destroy           nl_socket_free
-#define nl_handle                   nl_sock
-#define nlmsg_build(ptr)            nlmsg_inherit(ptr)
-#define nl_set_passcred             nl_socket_set_passcred
-#define nl_disable_sequence_check   nl_socket_disable_seq_check
-#define nlmsg_len                   nlmsg_datalen
+#include <netlink/genl/genl.h>
+#include <netlink/genl/ctrl.h>
 
 /* NetLabel communication handle */
 struct nlbl_handle {
-	struct nl_handle *nl_hndl;
+	struct nl_sock *nl_sock;
 };
 
 #define NL_MULTI_CONTINUE(hdr) \
 	(((hdr)->nlmsg_type == 0) || \
 	 (((hdr)->nlmsg_flags & NLM_F_MULTI) && \
 	  ((hdr)->nlmsg_type != NLMSG_DONE)))
-
 
 #endif

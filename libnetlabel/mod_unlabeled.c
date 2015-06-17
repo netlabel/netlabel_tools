@@ -149,84 +149,27 @@ static int nlbl_unlbl_parse_ack(nlbl_msg *msg)
  */
 int nlbl_unlbl_init(void)
 {
-	int ret_val = -ENOMEM;
+	int ret_val;
 	struct nlbl_handle *hndl;
-	nlbl_msg *msg = NULL;
-	nlbl_msg *ans_msg = NULL;
-	struct nlmsghdr *nl_hdr;
-	struct genlmsghdr *genl_hdr;
-	struct nlattr *nla;
 
 	/* get a netlabel handle */
 	hndl = nlbl_comm_open();
 	if (hndl == NULL)
 		goto init_return;
 
-	/* create a new message */
-	msg = nlbl_msg_new();
-	if (msg == NULL)
+	/* resolve the family */
+	ret_val = genl_ctrl_resolve(hndl->nl_sock,
+				    NETLBL_NLTYPE_UNLABELED_NAME);
+	if (ret_val < 0)
 		goto init_return;
-
-	/* setup the netlink header */
-	nl_hdr = nlbl_msg_nlhdr(msg);
-	if (nl_hdr == NULL)
-		goto init_return;
-	nl_hdr->nlmsg_type = GENL_ID_CTRL;
-
-	/* setup the generic netlink header */
-	genl_hdr = nlbl_msg_genlhdr(msg);
-	if (genl_hdr == NULL)
-		goto init_return;
-	genl_hdr->cmd = CTRL_CMD_GETFAMILY;
-	genl_hdr->version = 1;
-
-	/* add the netlabel family request attributes */
-	ret_val = nla_put_string(msg,
-				 CTRL_ATTR_FAMILY_NAME,
-				 NETLBL_NLTYPE_UNLABELED_NAME);
-	if (ret_val != 0)
-		goto init_return;
-
-	/* send the request */
-	ret_val = nlbl_comm_send(hndl, msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
-		goto init_return;
-	}
-
-	/* read the response */
-	ret_val = nlbl_comm_recv(hndl, &ans_msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
-		goto init_return;
-	}
-
-	/* process the response */
-	genl_hdr = nlbl_msg_genlhdr(ans_msg);
-	if (genl_hdr == NULL || genl_hdr->cmd != CTRL_CMD_NEWFAMILY) {
-		ret_val = -EBADMSG;
-		goto init_return;
-	}
-	nla = nlbl_attr_find(ans_msg, CTRL_ATTR_FAMILY_ID);
-	if (nla == NULL) {
-		ret_val = -EBADMSG;
-		goto init_return;
-	}
-	nlbl_unlbl_fid = nla_get_u16(nla);
-	if (nlbl_unlbl_fid == 0) {
-		ret_val = -EBADMSG;
-		goto init_return;
-	}
+	nlbl_unlbl_fid = ret_val;
 
 	ret_val = 0;
 
 init_return:
 	nlbl_comm_close(hndl);
-	nlbl_msg_free(msg);
-	nlbl_msg_free(ans_msg);
 	return ret_val;
+	
 }
 
 /*
@@ -882,8 +825,7 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
 				goto staticlist_return;
 			}
 			nla_head = (struct nlattr *)(&genl_hdr[1]);
-			data_attrlen = nlmsg_len(nl_hdr) -
-				NLMSG_ALIGN(sizeof(*genl_hdr));
+			data_attrlen = genlmsg_attrlen(genl_hdr, 0);
 
 			/* resize the array */
 			addr_array_new = realloc(addr_array,
@@ -1076,8 +1018,7 @@ int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 				goto staticlistdef_return;
 			}
 			nla_head = (struct nlattr *)(&genl_hdr[1]);
-			data_attrlen = nlmsg_len(nl_hdr) -
-				NLMSG_ALIGN(sizeof(*genl_hdr));
+			data_attrlen = genlmsg_attrlen(genl_hdr, 0);
 
 			/* resize the array */
 			addr_array_new = realloc(addr_array,
