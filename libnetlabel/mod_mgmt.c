@@ -248,7 +248,7 @@ static int nlbl_mgmt_list_addr(const struct nlattr *nla_head,
  */
 int nlbl_mgmt_init(void)
 {
-	int ret_val;
+	int ret_val = -ENOMEM;
 	struct nlbl_handle *hndl;
 
 	/* get a netlabel handle */

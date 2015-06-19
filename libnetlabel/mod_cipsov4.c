@@ -149,7 +149,7 @@ static int nlbl_cipsov4_parse_ack(nlbl_msg *msg)
  */
 int nlbl_cipsov4_init(void)
 {
-	int ret_val;
+	int ret_val = -ENOMEM;
 	struct nlbl_handle *hndl;
 
 	/* get a netlabel handle */

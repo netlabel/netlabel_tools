@@ -22,6 +22,8 @@
  *
  */
 
+#include <configure.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,7 +33,6 @@
 #include <arpa/inet.h>
 
 #include <libnetlabel.h>
-#include <version.h>
 
 #include "netlabelctl.h"
 
@@ -69,7 +70,7 @@ static void nlctl_usage_print(FILE *fp)
  */
 static void nlctl_ver_print(FILE *fp)
 {
-	fprintf(fp, "NetLabel Control Utility, version %s\n", VERSION_RELEASE);
+	fprintf(fp, "NetLabel Control Utility, version %s\n", VERSION);
 }
 
 /**
