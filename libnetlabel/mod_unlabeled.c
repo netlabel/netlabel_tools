@@ -169,7 +169,7 @@ int nlbl_unlbl_init(void)
 init_return:
 	nlbl_comm_close(hndl);
 	return ret_val;
-	
+
 }
 
 /*

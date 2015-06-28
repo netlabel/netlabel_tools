@@ -694,14 +694,14 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 	tags->size = 0;
 	tags->array = NULL;
 	nla_for_each_attr(nla_b, nla_data(nla_a), nla_len(nla_a), nla_b_rem)
-		if (nla_b->nla_type == NLBL_CIPSOV4_A_TAG) {
-			tags->array = realloc(tags->array, tags->size + 1);
-			if (tags->array == NULL) {
-				ret_val = -ENOMEM;
-				goto list_return;
-			}
-			tags->array[tags->size++] = nla_get_u8(nla_b);
+	if (nla_b->nla_type == NLBL_CIPSOV4_A_TAG) {
+		tags->array = realloc(tags->array, tags->size + 1);
+		if (tags->array == NULL) {
+			ret_val = -ENOMEM;
+			goto list_return;
 		}
+		tags->array[tags->size++] = nla_get_u8(nla_b);
+	}
 
 	if (*mtype == CIPSO_V4_MAP_TRANS) {
 		nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSLVLLST);
@@ -709,56 +709,56 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 			goto list_return;
 		nla_for_each_attr(nla_b,
 				  nla_data(nla_a), nla_len(nla_a), nla_b_rem)
-			if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSLVL) {
-				lvls->array = realloc(lvls->array,
-						      ((lvls->size + 1) * 2) *
-						      sizeof(nlbl_cv4_lvl));
-				if (lvls->array == NULL) {
-					ret_val = -ENOMEM;
-					goto list_return;
-				}
-				nla_c = nla_find(nla_data(nla_b),
-						 nla_len(nla_b),
-						 NLBL_CIPSOV4_A_MLSLVLLOC);
-				if (nla_c == NULL)
-					goto list_return;
-				nla_d = nla_find(nla_data(nla_b),
-						 nla_len(nla_b),
-						 NLBL_CIPSOV4_A_MLSLVLREM);
-				if (nla_d == NULL)
-					goto list_return;
-				lvls->array[lvls->size * 2]=nla_get_u32(nla_c);
-				lvls->array[lvls->size*2+1]=nla_get_u32(nla_d);
-				lvls->size++;
+		if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSLVL) {
+			lvls->array = realloc(lvls->array,
+					      ((lvls->size + 1) * 2) *
+					      sizeof(nlbl_cv4_lvl));
+			if (lvls->array == NULL) {
+				ret_val = -ENOMEM;
+				goto list_return;
 			}
+			nla_c = nla_find(nla_data(nla_b),
+					 nla_len(nla_b),
+					 NLBL_CIPSOV4_A_MLSLVLLOC);
+			if (nla_c == NULL)
+				goto list_return;
+			nla_d = nla_find(nla_data(nla_b),
+					 nla_len(nla_b),
+					 NLBL_CIPSOV4_A_MLSLVLREM);
+			if (nla_d == NULL)
+				goto list_return;
+			lvls->array[lvls->size * 2] = nla_get_u32(nla_c);
+			lvls->array[lvls->size * 2 + 1] = nla_get_u32(nla_d);
+			lvls->size++;
+		}
 
 		nla_a = nlbl_attr_find(ans_msg, NLBL_CIPSOV4_A_MLSCATLST);
 		if (nla_a == NULL)
 			goto list_return;
 		nla_for_each_attr(nla_b,
 				  nla_data(nla_a), nla_len(nla_a), nla_b_rem)
-			if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSCAT) {
-				cats->array = realloc(cats->array,
-						      ((cats->size + 1) * 2) *
-						      sizeof(nlbl_cv4_cat));
-				if (cats->array == NULL) {
-					ret_val = -ENOMEM;
-					goto list_return;
-				}
-				nla_c = nla_find(nla_data(nla_b),
-						 nla_len(nla_b),
-						 NLBL_CIPSOV4_A_MLSCATLOC);
-				if (nla_c == NULL)
-					goto list_return;
-				nla_d = nla_find(nla_data(nla_b),
-						 nla_len(nla_b),
-						 NLBL_CIPSOV4_A_MLSCATREM);
-				if (nla_d == NULL)
-					goto list_return;
-				cats->array[cats->size * 2]=nla_get_u32(nla_c);
-				cats->array[cats->size*2+1]=nla_get_u32(nla_d);
-				cats->size++;
+		if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSCAT) {
+			cats->array = realloc(cats->array,
+					      ((cats->size + 1) * 2) *
+					      sizeof(nlbl_cv4_cat));
+			if (cats->array == NULL) {
+				ret_val = -ENOMEM;
+				goto list_return;
 			}
+			nla_c = nla_find(nla_data(nla_b),
+					 nla_len(nla_b),
+					 NLBL_CIPSOV4_A_MLSCATLOC);
+			if (nla_c == NULL)
+				goto list_return;
+			nla_d = nla_find(nla_data(nla_b),
+					 nla_len(nla_b),
+					 NLBL_CIPSOV4_A_MLSCATREM);
+			if (nla_d == NULL)
+				goto list_return;
+			cats->array[cats->size * 2] = nla_get_u32(nla_c);
+			cats->array[cats->size * 2 + 1] = nla_get_u32(nla_d);
+			cats->size++;
+		}
 	}
 
 	ret_val = 0;
@@ -876,7 +876,7 @@ int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 				goto listall_return;
 			doi_a = doi_a_new;
 			mtype_a_new = realloc(mtype_a,
-					      sizeof(nlbl_cv4_mtype)*(count+1));
+					      sizeof(nlbl_cv4_mtype) * (count + 1));
 			if (mtype_a_new == NULL)
 				goto listall_return;
 			mtype_a = mtype_a_new;

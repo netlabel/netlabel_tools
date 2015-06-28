@@ -158,78 +158,78 @@ static int nlbl_mgmt_list_addr(const struct nlattr *nla_head,
 	nla_for_each_attr(nla_a,
 			  nla_data(nla_head), nla_len(nla_head),
 			  nla_a_rem)
-		if (nla_a->nla_type == NLBL_MGMT_A_ADDRSELECTOR) {
-			addr_iter = malloc(sizeof(*addr_iter));
-			if (addr_iter == NULL)
-				return -ENOMEM;
-			memset(addr_iter, 0, sizeof(*addr_iter));
-			if (domain->proto.addrsel != NULL) {
-				struct nlbl_dommap_addr *iter;
-				iter = domain->proto.addrsel;
-				while (iter->next != NULL)
-					iter = iter->next;
-				iter->next = addr_iter;
-			} else
-				domain->proto.addrsel = addr_iter;
+	if (nla_a->nla_type == NLBL_MGMT_A_ADDRSELECTOR) {
+		addr_iter = malloc(sizeof(*addr_iter));
+		if (addr_iter == NULL)
+			return -ENOMEM;
+		memset(addr_iter, 0, sizeof(*addr_iter));
+		if (domain->proto.addrsel != NULL) {
+			struct nlbl_dommap_addr *iter;
+			iter = domain->proto.addrsel;
+			while (iter->next != NULL)
+				iter = iter->next;
+			iter->next = addr_iter;
+		} else
+			domain->proto.addrsel = addr_iter;
 
-			nla_b = nla_find(nla_data(nla_a), nla_len(nla_a),
-					 NLBL_MGMT_A_IPV4ADDR);
-			if (nla_b != NULL) {
-				if (nla_len(nla_b) != sizeof(struct in_addr))
-					return -EINVAL;
-				memcpy(&addr_iter->addr.addr.v4,
-				       nla_data(nla_b), nla_len(nla_b));
-				nla_b = nla_find(nla_data(nla_a),
-						 nla_len(nla_a),
-						 NLBL_MGMT_A_IPV4MASK);
-				if (nla_b == NULL ||
-				    nla_len(nla_b) != sizeof(struct in_addr))
-					return -EINVAL;
-				memcpy(&addr_iter->addr.mask.v4,
-				       nla_data(nla_b), nla_len(nla_b));
-				addr_iter->addr.type = AF_INET;
-				nla_b = nla_find(nla_data(nla_a),
-						 nla_len(nla_a),
-						 NLBL_MGMT_A_PROTOCOL);
-				if (nla_b == NULL)
-					return -EINVAL;
-				addr_iter->proto_type = nla_get_u32(nla_b);
-				switch (addr_iter->proto_type) {
-				case NETLBL_NLTYPE_CIPSOV4:
-					nla_b = nla_find(nla_data(nla_a),
-							 nla_len(nla_a),
-							 NLBL_MGMT_A_CV4DOI);
-					if (nla_b == NULL)
-						return -EINVAL;
-					addr_iter->proto.cv4_doi =
-							nla_get_u32(nla_b);
-					break;
-				}
-			} else if ((nla_b = nla_find(nla_data(nla_a),
-						     nla_len(nla_a),
-						     NLBL_MGMT_A_IPV6ADDR))) {
-				if (nla_len(nla_b) != sizeof(struct in6_addr))
-					return -EINVAL;
-				memcpy(&addr_iter->addr.addr.v6,
-				       nla_data(nla_b), nla_len(nla_b));
-				nla_b = nla_find(nla_data(nla_a),
-						 nla_len(nla_a),
-						 NLBL_MGMT_A_IPV6MASK);
-				if (nla_b == NULL ||
-				    nla_len(nla_b) != sizeof(struct in6_addr))
-					return -EINVAL;
-				memcpy(&addr_iter->addr.mask.v6,
-				       nla_data(nla_b), nla_len(nla_b));
-				addr_iter->addr.type = AF_INET6;
-				nla_b = nla_find(nla_data(nla_a),
-						 nla_len(nla_a),
-						 NLBL_MGMT_A_PROTOCOL);
-				if (nla_b == NULL)
-					return -EINVAL;
-				addr_iter->proto_type = nla_get_u32(nla_b);
-			} else
+		nla_b = nla_find(nla_data(nla_a), nla_len(nla_a),
+				 NLBL_MGMT_A_IPV4ADDR);
+		if (nla_b != NULL) {
+			if (nla_len(nla_b) != sizeof(struct in_addr))
 				return -EINVAL;
-		}
+			memcpy(&addr_iter->addr.addr.v4,
+			       nla_data(nla_b), nla_len(nla_b));
+			nla_b = nla_find(nla_data(nla_a),
+					 nla_len(nla_a),
+					 NLBL_MGMT_A_IPV4MASK);
+			if (nla_b == NULL ||
+			    nla_len(nla_b) != sizeof(struct in_addr))
+				return -EINVAL;
+			memcpy(&addr_iter->addr.mask.v4,
+			       nla_data(nla_b), nla_len(nla_b));
+			addr_iter->addr.type = AF_INET;
+			nla_b = nla_find(nla_data(nla_a),
+					 nla_len(nla_a),
+					 NLBL_MGMT_A_PROTOCOL);
+			if (nla_b == NULL)
+				return -EINVAL;
+			addr_iter->proto_type = nla_get_u32(nla_b);
+			switch (addr_iter->proto_type) {
+			case NETLBL_NLTYPE_CIPSOV4:
+				nla_b = nla_find(nla_data(nla_a),
+						 nla_len(nla_a),
+						 NLBL_MGMT_A_CV4DOI);
+				if (nla_b == NULL)
+					return -EINVAL;
+				addr_iter->proto.cv4_doi =
+					nla_get_u32(nla_b);
+				break;
+			}
+		} else if ((nla_b = nla_find(nla_data(nla_a),
+					     nla_len(nla_a),
+					     NLBL_MGMT_A_IPV6ADDR))) {
+			if (nla_len(nla_b) != sizeof(struct in6_addr))
+				return -EINVAL;
+			memcpy(&addr_iter->addr.addr.v6,
+			       nla_data(nla_b), nla_len(nla_b));
+			nla_b = nla_find(nla_data(nla_a),
+					 nla_len(nla_a),
+					 NLBL_MGMT_A_IPV6MASK);
+			if (nla_b == NULL ||
+			    nla_len(nla_b) != sizeof(struct in6_addr))
+				return -EINVAL;
+			memcpy(&addr_iter->addr.mask.v6,
+			       nla_data(nla_b), nla_len(nla_b));
+			addr_iter->addr.type = AF_INET6;
+			nla_b = nla_find(nla_data(nla_a),
+					 nla_len(nla_a),
+					 NLBL_MGMT_A_PROTOCOL);
+			if (nla_b == NULL)
+				return -EINVAL;
+			addr_iter->proto_type = nla_get_u32(nla_b);
+		} else
+			return -EINVAL;
+	}
 
 	return 0;
 }

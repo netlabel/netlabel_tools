@@ -34,6 +34,9 @@ AM_MAKEFLAGS = ${AM_MAKEFLAGS_@AM_V@}
 DISTCHECK_CONFIGURE_FLAGS = \
 	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
 
+check-syntax:
+	@./tools/check-syntax
+
 if COVERITY
 coverity-build: clean
 	cov-build --dir cov-int ${MAKE} ${AM_MAKEFLAGS}

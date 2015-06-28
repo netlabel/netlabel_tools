@@ -84,39 +84,39 @@ static void nlctl_help_print(FILE *fp)
 {
 	nlctl_ver_print(fp);
 	fprintf(fp,
-	" Usage: %s [<flags>] <module> [<commands>]\n"
-	"\n"
-	" Flags:\n"
-	"   -h        : help/usage message\n"
-	"   -p        : make the output pretty\n"
-	"   -t <secs> : timeout\n"
-	"   -v        : verbose mode\n"
-	"\n"
-	" Modules and Commands:\n"
-	"  mgmt : NetLabel management\n"
-	"    version\n"
-	"    protocols\n"
-	"  map : Domain/Protocol mapping\n"
-	"    add default|domain:<domain> [address:<ADDR>[/<MASK>]]\n"
-	"                                protocol:<protocol>[,<extra>]\n"
-	"    del default|domain:<domain>\n"
-	"    list\n"
-	"  unlbl : Unlabeled packet handling\n"
-	"    accept on|off\n"
-	"    add default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
-	"                                label:<LABEL>\n"
-	"    del default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
-	"    list\n"
-	"  cipsov4 : CIPSO/IPv4 packet handling\n"
-	"    add trans doi:<DOI> tags:<T1>,<Tn>\n"
-	"            levels:<LL1>=<RL1>,<LLn>=<RLn>\n"
-	"            categories:<LC1>=<RC1>,<LCn>=<RCn>\n"
-	"    add pass doi:<DOI> tags:<T1>,<Tn>\n"
-	"    add local doi:<DOI>\n"
-	"    del doi:<DOI>\n"
-	"    list [doi:<DOI>]\n"
-	"\n",
-	nlctl_name);
+		" Usage: %s [<flags>] <module> [<commands>]\n"
+		"\n"
+		" Flags:\n"
+		"   -h        : help/usage message\n"
+		"   -p        : make the output pretty\n"
+		"   -t <secs> : timeout\n"
+		"   -v        : verbose mode\n"
+		"\n"
+		" Modules and Commands:\n"
+		"  mgmt : NetLabel management\n"
+		"    version\n"
+		"    protocols\n"
+		"  map : Domain/Protocol mapping\n"
+		"    add default|domain:<domain> [address:<ADDR>[/<MASK>]]\n"
+		"                                protocol:<protocol>[,<extra>]\n"
+		"    del default|domain:<domain>\n"
+		"    list\n"
+		"  unlbl : Unlabeled packet handling\n"
+		"    accept on|off\n"
+		"    add default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
+		"                                label:<LABEL>\n"
+		"    del default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
+		"    list\n"
+		"  cipsov4 : CIPSO/IPv4 packet handling\n"
+		"    add trans doi:<DOI> tags:<T1>,<Tn>\n"
+		"            levels:<LL1>=<RL1>,<LLn>=<RLn>\n"
+		"            categories:<LC1>=<RC1>,<LCn>=<RCn>\n"
+		"    add pass doi:<DOI> tags:<T1>,<Tn>\n"
+		"    add local doi:<DOI>\n"
+		"    del doi:<DOI>\n"
+		"    list [doi:<DOI>]\n"
+		"\n",
+		nlctl_name);
 }
 
 /**
@@ -194,7 +194,7 @@ void nlctl_addr_print(const struct nlbl_netaddr *addr)
 	case AF_INET6:
 		for (mask_size = 0, mask_off = 0; mask_off < 4; mask_off++) {
 			mask6.s6_addr32[mask_off] =
-				      ntohl(addr->mask.v6.s6_addr32[mask_off]);
+				ntohl(addr->mask.v6.s6_addr32[mask_off]);
 			while (mask6.s6_addr32[mask_off] != 0) {
 				mask_size++;
 				mask6.s6_addr32[mask_off] <<= 1;
@@ -290,13 +290,13 @@ int nlctl_addr_parse(char *addr_str, struct nlbl_netaddr *addr)
 			iter_a = 128;
 		for (iter_b = 0; iter_a > 0 && iter_b < 4; iter_b++) {
 			for (; iter_a > 0 &&
-			       addr->mask.v6.s6_addr32[iter_b] < 0xffffffff;
+			     addr->mask.v6.s6_addr32[iter_b] < 0xffffffff;
 			     iter_a--) {
 				addr->mask.v6.s6_addr32[iter_b] >>= 1;
 				addr->mask.v6.s6_addr32[iter_b] |= 0x80000000;
 			}
 			addr->mask.v6.s6_addr32[iter_b] =
-					htonl(addr->mask.v6.s6_addr32[iter_b]);
+				htonl(addr->mask.v6.s6_addr32[iter_b]);
 		}
 		return 0;
 	}

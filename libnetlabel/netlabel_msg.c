@@ -183,6 +183,6 @@ struct nlattr *nlbl_attr_find(nlbl_msg *msg, int nla_type)
 	nla_head = genlmsg_attrdata(genl_hdr, 0);
 	if (nla_head == NULL)
 		return NULL;
-	
+
 	return nla_find(nla_head, genlmsg_attrlen(genl_hdr, 0), nla_type);
 }
