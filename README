@@ -1,31 +1,55 @@
-NetLabel Tools README
+NetLabel Tools: A Library and Management Tool for the Linux NetLabel Subsystem
 ==============================================================================
-Paul Moore <paul@paul-moore.com>
+https://github.com/netlabel/netlabel_tools
 
-* Note on the Documentation
+* Online Resources
 
-The text below is intended as a quick start guide to configuring the Linux
-NetLabel subsystm using the tools provided in this package.  For more
-documentation please look in the "doc/" subdirectory.
+The library source repository currently lives on GitHub at the following URL:
 
-* Quick Start
+	-> https://github.com/netlabel/netlabel_tools
 
-The first step is to compile and install the netlabelctl application.  It
-assumes you are already running a kernel with NetLabel support, if you are not
-please configure your kernel for NetLabel support before going any further.
-Once you have unpacked the NetLabel tools tarball run the following to build
-the application:
+The project mailing list is currently hosted on Google Groups at the URL below,
+please note that a Google account is not required to subscribe to the mailing
+list.
 
- # make
+	-> https://groups.google.com/d/forum/netlabel
 
-Then as root run the following command to install the required files (installs
-to /usr/local by default):
+* Documentation
 
- # make install
+The "doc/" directory contains all of the currently available documentation,
+mostly in the form of manpages.  The top level directory also contains a README
+file (this file) as well as the LICENSE, SUBMITTING_PATCHES, and CHANGELOG
+files.
 
-Now you can proceed to configuring the NetLabel system in the kernel.  Before
-you begin you first need to see if your kernel is already configured to some
-extent (it probably is), so run the following commands:
+Those who are interested in contributing to the the project are encouraged to
+read the SUBMITTING_PATCHES in the top level directory.
+
+* Building and Installing
+
+If you are building the NetLabel tools package from an official release
+tarball, you should follow the familiar three step process used by most
+autotools based applications:
+
+	# ./configure
+	# make [V=0|1]
+	# make install
+
+However, if you are building the library from sources retrieved from the source
+repository you may need to run the autogen.sh script before running configure.
+In both cases, running "./configure -h" will display a list of build-time
+configuration options.
+
+* NetLabel Configuration Quick Start
+
+This section assumes you are already running a kernel with NetLabel support,
+if you are not please configure your kernel for NetLabel support before going
+any further.  Once you have unpacked the NetLabel tools tarball and built the
+netlabelctl management application as described above, you can proceed with
+the following configuration steps.
+
+If you are unsure about the necessary kernel support, or even the current
+NetLabel configuration, you can both verify the kernel and display the current
+configuration with the following commands:
 
  # netlabelctl -p cipsov4 list
  # netlabelctl -p map list
@@ -39,7 +63,9 @@ If you see any domain mappings you can remove them with the following command:
 
  # netlabelctl -p map del domain:<DOMAIN>
 
-You can remove the default domain mapping with this command:
+You can remove the default domain mapping with the command below, although
+you should proceed with caution as outbound traffic without an associated
+mapping is dropped.
 
  # netlabelctl -p map del default
 
@@ -67,5 +93,6 @@ commands:
  # netlabelctl -p cipsov4 list doi:1
  # netlabelctl -p map list
 
-For a greater explanation of what these commands do please see the "doc/"
-directory, good luck!
+For a more in depth explanation of configuring NetLabel on your Linux system,
+please see the information in the "doc/" directory.
+
