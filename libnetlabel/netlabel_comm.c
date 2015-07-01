@@ -157,7 +157,7 @@ int nlbl_comm_close(struct nlbl_handle *hndl)
  */
 int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data)
 {
-	int ret_val;
+	int rc;
 	struct sockaddr_nl peer_nladdr;
 	struct ucred *creds = NULL;
 	int nl_fd;
@@ -175,33 +175,33 @@ int nlbl_comm_recv_raw(struct nlbl_handle *hndl, unsigned char **data)
 	nl_fd = nl_socket_get_fd(hndl->nl_sock);
 	FD_ZERO(&read_fds);
 	FD_SET(nl_fd, &read_fds);
-	ret_val = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
-	if (ret_val < 0)
+	rc = select(nl_fd + 1, &read_fds, NULL, NULL, &timeout);
+	if (rc < 0)
 		return -errno;
-	else if (ret_val == 0)
+	else if (rc == 0)
 		return -EAGAIN;
 
 	/* perform the read operation */
 	*data = NULL;
-	ret_val = nl_recv(hndl->nl_sock, &peer_nladdr, data, &creds);
-	if (ret_val < 0)
-		return ret_val;
+	rc = nl_recv(hndl->nl_sock, &peer_nladdr, data, &creds);
+	if (rc < 0)
+		return rc;
 
 	/* if we are setup to receive credentials, only accept messages from
 	 * the kernel (ignore all others and send an -EAGAIN) */
 	if (creds != NULL && creds->pid != 0) {
-		ret_val = -EAGAIN;
+		rc = -EAGAIN;
 		goto recv_raw_failure;
 	}
 
-	return ret_val;
+	return rc;
 
 recv_raw_failure:
 	if (*data != NULL) {
 		free(*data);
 		*data = NULL;
 	}
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -217,19 +217,19 @@ recv_raw_failure:
  */
 int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 {
-	int ret_val;
+	int rc;
 	unsigned char *data = NULL;
 	struct nlmsghdr *nl_hdr;
 
 	/* perform the raw read operation */
-	ret_val = nlbl_comm_recv_raw(hndl, &data);
-	if (ret_val < 0)
-		return ret_val;
+	rc = nlbl_comm_recv_raw(hndl, &data);
+	if (rc < 0)
+		return rc;
 	nl_hdr = (struct nlmsghdr *)data;
 
 	/* make sure the received buffer is the correct length */
-	if (!nlmsg_ok(nl_hdr, ret_val)) {
-		ret_val = -EBADMSG;
+	if (!nlmsg_ok(nl_hdr, rc)) {
+		rc = -EBADMSG;
 		goto recv_failure;
 	}
 
@@ -237,23 +237,23 @@ int nlbl_comm_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 	 * about */
 	if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
 	    nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
-		ret_val = -EBADMSG;
+		rc = -EBADMSG;
 		goto recv_failure;
 	}
 
 	/* convert the received buffer into a nlbl_msg */
 	*msg = nlmsg_convert((struct nlmsghdr *)data);
 	if (*msg == NULL) {
-		ret_val = -EBADMSG;
+		rc = -EBADMSG;
 		goto recv_failure;
 	}
 
-	return ret_val;
+	return rc;
 
 recv_failure:
 	if (data != NULL)
 		free(data);
-	return ret_val;
+	return rc;
 }
 
 /**

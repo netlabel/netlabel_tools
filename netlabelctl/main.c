@@ -121,17 +121,17 @@ static void nlctl_help_print(FILE *fp)
 
 /**
  * Convert a errno value into a human readable string
- * @param ret_val the errno return value
+ * @param rc the errno return value
  *
  * Return a pointer to a human readable string describing the error in
- * @ret_val.
+ * @rc.
  *
  */
-static char *nlctl_strerror(int ret_val)
+static char *nlctl_strerror(int rc)
 {
 	char *str = NULL;
 
-	switch (ret_val) {
+	switch (rc) {
 	case 0:
 		str = "operation succeeded";
 		break;
@@ -160,7 +160,7 @@ static char *nlctl_strerror(int ret_val)
 		str = "no message was received";
 		break;
 	default:
-		str = strerror(ret_val);
+		str = strerror(rc);
 	}
 
 	return str;
@@ -244,7 +244,7 @@ static int _nlctl_num_parse(char *str, uint32_t *num)
  */
 int nlctl_addr_parse(char *addr_str, struct nlbl_netaddr *addr)
 {
-	int ret_val;
+	int rc;
 	char *mask;
 	uint32_t iter_a;
 	uint32_t iter_b;
@@ -261,12 +261,12 @@ int nlctl_addr_parse(char *addr_str, struct nlbl_netaddr *addr)
 	}
 
 	/* ipv4 */
-	ret_val = inet_pton(AF_INET, addr_str, &addr->addr.v4);
-	if (ret_val > 0) {
+	rc = inet_pton(AF_INET, addr_str, &addr->addr.v4);
+	if (rc > 0) {
 		addr->type = AF_INET;
 		if (mask != NULL) {
-			ret_val = _nlctl_num_parse(mask, &iter_a);
-			if (ret_val < 0 || iter_a > 32)
+			rc = _nlctl_num_parse(mask, &iter_a);
+			if (rc < 0 || iter_a > 32)
 				return -EINVAL;
 		} else
 			iter_a = 32;
@@ -279,12 +279,12 @@ int nlctl_addr_parse(char *addr_str, struct nlbl_netaddr *addr)
 	}
 
 	/* ipv6 */
-	ret_val = inet_pton(AF_INET6, addr_str, &addr->addr.v6);
-	if (ret_val > 0) {
+	rc = inet_pton(AF_INET6, addr_str, &addr->addr.v6);
+	if (rc > 0) {
 		addr->type = AF_INET6;
 		if (mask != NULL) {
-			ret_val = _nlctl_num_parse(mask, &iter_a);
-			if (ret_val < 0 || iter_a > 128)
+			rc = _nlctl_num_parse(mask, &iter_a);
+			if (rc < 0 || iter_a > 128)
 				return -EINVAL;
 		} else
 			iter_a = 128;
@@ -309,7 +309,7 @@ int nlctl_addr_parse(char *addr_str, struct nlbl_netaddr *addr)
  */
 int main(int argc, char *argv[])
 {
-	int ret_val = RET_ERR;
+	int rc = RET_ERR;
 	int arg_iter;
 	main_function_t *module_main = NULL;
 	char *module_name;
@@ -362,8 +362,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* perform any setup we have to do */
-	ret_val = nlbl_init();
-	if (ret_val < 0) {
+	rc = nlbl_init();
+	if (rc < 0) {
 		fprintf(stderr,
 			MSG_ERR("failed to initialize the NetLabel library\n"));
 		goto exit;
@@ -383,16 +383,16 @@ int main(int argc, char *argv[])
 		fprintf(stderr,
 			MSG_ERR("unknown or missing module '%s'\n"),
 			module_name);
-		ret_val = RET_ERR;
+		rc = RET_ERR;
 		goto exit;
 	}
-	ret_val = module_main(argc - optind - 1, argv + optind + 1);
-	if (ret_val < 0) {
-		fprintf(stderr, MSG_ERR("%s\n"), nlctl_strerror(-ret_val));
-		ret_val = RET_ERR;
+	rc = module_main(argc - optind - 1, argv + optind + 1);
+	if (rc < 0) {
+		fprintf(stderr, MSG_ERR("%s\n"), nlctl_strerror(-rc));
+		rc = RET_ERR;
 	} else
-		ret_val = RET_OK;
+		rc = RET_OK;
 exit:
 	nlbl_exit();
-	return ret_val;
+	return rc;
 }

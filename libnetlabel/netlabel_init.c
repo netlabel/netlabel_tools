@@ -44,21 +44,21 @@
  */
 int nlbl_init(void)
 {
-	int ret_val;
+	int rc;
 
 	nlmsg_set_default_size(8096);
 
-	ret_val = nlbl_mgmt_init();
-	if (ret_val < 0)
-		return ret_val;
+	rc = nlbl_mgmt_init();
+	if (rc < 0)
+		return rc;
 
-	ret_val = nlbl_cipsov4_init();
-	if (ret_val < 0)
-		return ret_val;
+	rc = nlbl_cipsov4_init();
+	if (rc < 0)
+		return rc;
 
-	ret_val = nlbl_unlbl_init();
-	if (ret_val < 0)
-		return ret_val;
+	rc = nlbl_unlbl_init();
+	if (rc < 0)
+		return rc;
 
 	return 0;
 }

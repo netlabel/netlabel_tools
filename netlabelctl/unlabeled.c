@@ -46,7 +46,7 @@
  */
 int unlbl_accept(int argc, char *argv[])
 {
-	int ret_val;
+	int rc;
 	uint8_t flag;
 
 	/* sanity check */
@@ -61,9 +61,9 @@ int unlbl_accept(int argc, char *argv[])
 	else
 		return -EINVAL;
 
-	ret_val = nlbl_unlbl_accept(NULL, flag);
-	if (ret_val < 0)
-		return ret_val;
+	rc = nlbl_unlbl_accept(NULL, flag);
+	if (rc < 0)
+		return rc;
 
 	return 0;
 }
@@ -77,7 +77,7 @@ int unlbl_accept(int argc, char *argv[])
  */
 int unlbl_list(void)
 {
-	int ret_val;
+	int rc;
 	uint8_t flag;
 	struct nlbl_addrmap *addr_p = NULL, *addr_p_new;
 	struct nlbl_addrmap *addrdef_p = NULL;
@@ -86,9 +86,9 @@ int unlbl_list(void)
 	uint32_t iter;
 
 	/* display the accept flag */
-	ret_val = nlbl_unlbl_list(NULL, &flag);
-	if (ret_val < 0)
-		return ret_val;
+	rc = nlbl_unlbl_list(NULL, &flag);
+	if (rc < 0)
+		return rc;
 	if (opt_pretty != 0)
 		printf("Accept unlabeled packets : %s\n",
 		       (flag ? "on" : "off"));
@@ -96,18 +96,18 @@ int unlbl_list(void)
 		printf("accept:%s", (flag ? "on" : "off"));
 
 	/* get the static label mappings */
-	ret_val = nlbl_unlbl_staticlist(NULL, &addr_p);
-	if (ret_val < 0)
-		return ret_val;
-	count = ret_val;
-	ret_val = nlbl_unlbl_staticlistdef(NULL, &addrdef_p);
-	if (ret_val > 0) {
-		addr_p_new = realloc(addr_p, sizeof(*addr_p) * (count + ret_val));
+	rc = nlbl_unlbl_staticlist(NULL, &addr_p);
+	if (rc < 0)
+		return rc;
+	count = rc;
+	rc = nlbl_unlbl_staticlistdef(NULL, &addrdef_p);
+	if (rc > 0) {
+		addr_p_new = realloc(addr_p, sizeof(*addr_p) * (count + rc));
 		if (addr_p_new == NULL)
 			goto list_return;
 		addr_p = addr_p_new;
-		memcpy(&addr_p[count], addrdef_p, sizeof(*addr_p) * ret_val);
-		count += ret_val;
+		memcpy(&addr_p[count], addrdef_p, sizeof(*addr_p) * rc);
+		count += rc;
 	}
 
 	/* display the static label mappings */
@@ -165,7 +165,7 @@ list_return:
 		}
 		free(addr_p);
 	}
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -264,7 +264,7 @@ int unlbl_del(int argc, char *argv[])
  */
 int unlbl_main(int argc, char *argv[])
 {
-	int ret_val;
+	int rc;
 
 	/* sanity checks */
 	if (argc <= 0 || argv == NULL || argv[0] == NULL)
@@ -273,20 +273,20 @@ int unlbl_main(int argc, char *argv[])
 	/* handle the request */
 	if (strcmp(argv[0], "accept") == 0) {
 		/* accept flag */
-		ret_val = unlbl_accept(argc - 1, argv + 1);
+		rc = unlbl_accept(argc - 1, argv + 1);
 	} else if (strcmp(argv[0], "list") == 0) {
 		/* list */
-		ret_val = unlbl_list();
+		rc = unlbl_list();
 	} else if (strcmp(argv[0], "add") == 0) {
 		/* add */
-		ret_val = unlbl_add(argc - 1, argv + 1);
+		rc = unlbl_add(argc - 1, argv + 1);
 	} else if (strcmp(argv[0], "del") == 0) {
 		/* del */
-		ret_val = unlbl_del(argc - 1, argv + 1);
+		rc = unlbl_del(argc - 1, argv + 1);
 	} else {
 		/* unknown request */
-		ret_val = -EINVAL;
+		rc = -EINVAL;
 	}
 
-	return ret_val;
+	return rc;
 }

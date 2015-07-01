@@ -40,15 +40,15 @@
  */
 int mgmt_protocols(void)
 {
-	int ret_val;
+	int rc;
 	nlbl_proto *list = NULL;
 	size_t count;
 	uint32_t iter;
 
-	ret_val = nlbl_mgmt_protocols(NULL, &list);
-	if (ret_val < 0)
-		return ret_val;
-	count = ret_val;
+	rc = nlbl_mgmt_protocols(NULL, &list);
+	if (rc < 0)
+		return rc;
+	count = rc;
 
 	printf(MSG("NetLabel protocols : "));
 	for (iter = 0; iter < count; iter++) {
@@ -88,12 +88,12 @@ int mgmt_protocols(void)
  */
 int mgmt_version(void)
 {
-	int ret_val;
+	int rc;
 	uint32_t kernel_ver;
 
-	ret_val = nlbl_mgmt_version(NULL, &kernel_ver);
-	if (ret_val < 0)
-		return ret_val;
+	rc = nlbl_mgmt_version(NULL, &kernel_ver);
+	if (rc < 0)
+		return rc;
 
 	if (opt_pretty != 0) {
 		printf("Supported NetLabel protocol versions\n"
@@ -118,7 +118,7 @@ int mgmt_version(void)
  */
 int mgmt_main(int argc, char *argv[])
 {
-	int ret_val;
+	int rc;
 
 	/* sanity checks */
 	if (argc <= 0 || argv == NULL || argv[0] == NULL)
@@ -127,14 +127,14 @@ int mgmt_main(int argc, char *argv[])
 	/* handle the request */
 	if (strcmp(argv[0], "version") == 0) {
 		/* kernel version */
-		ret_val = mgmt_version();
+		rc = mgmt_version();
 	} else if (strcmp(argv[0], "protocols") == 0) {
 		/* module list */
-		ret_val = mgmt_protocols();
+		rc = mgmt_protocols();
 	} else {
 		/* unknown request */
-		ret_val = -EINVAL;
+		rc = -EINVAL;
 	}
 
-	return ret_val;
+	return rc;
 }

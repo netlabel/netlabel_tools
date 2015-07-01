@@ -266,16 +266,16 @@ static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
  */
 int map_list(int argc, char *argv[])
 {
-	int ret_val;
+	int rc;
 	struct nlbl_dommap *mapping, *mapping_new;
 	size_t count;
 	uint32_t iter;
 
 	/* get the list of mappings */
-	ret_val = nlbl_mgmt_listall(NULL, &mapping);
-	if (ret_val < 0)
-		return ret_val;
-	count = ret_val;
+	rc = nlbl_mgmt_listall(NULL, &mapping);
+	if (rc < 0)
+		return rc;
+	count = rc;
 
 	/* get the default mapping */
 	mapping_new = realloc(mapping, sizeof(*mapping) * (count + 1));
@@ -283,13 +283,13 @@ int map_list(int argc, char *argv[])
 		goto list_return;
 	mapping = mapping_new;
 	memset(&mapping[count], 0, sizeof(*mapping));
-	ret_val = nlbl_mgmt_listdef(NULL, &mapping[count]);
-	if (ret_val < 0 && ret_val != -ENOENT)
+	rc = nlbl_mgmt_listdef(NULL, &mapping[count]);
+	if (rc < 0 && rc != -ENOENT)
 		goto list_return;
-	else if (ret_val == 0)
+	else if (rc == 0)
 		count += 1;
 	else
-		ret_val = 0;
+		rc = 0;
 
 	/* display the results */
 	if (opt_pretty != 0)
@@ -304,7 +304,7 @@ list_return:
 				free(mapping[iter].domain);
 		free(mapping);
 	}
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -318,7 +318,7 @@ list_return:
  */
 int map_main(int argc, char *argv[])
 {
-	int ret_val;
+	int rc;
 
 	/* sanity checks */
 	if (argc <= 0 || argv == NULL || argv[0] == NULL)
@@ -327,17 +327,17 @@ int map_main(int argc, char *argv[])
 	/* handle the request */
 	if (strcmp(argv[0], "add") == 0) {
 		/* add a domain mapping */
-		ret_val = map_add(argc - 1, argv + 1);
+		rc = map_add(argc - 1, argv + 1);
 	} else if (strcmp(argv[0], "del") == 0) {
 		/* delete a domain mapping */
-		ret_val = map_del(argc - 1, argv + 1);
+		rc = map_del(argc - 1, argv + 1);
 	} else if (strcmp(argv[0], "list") == 0) {
 		/* list the domain mappings */
-		ret_val = map_list(argc - 1, argv + 1);
+		rc = map_list(argc - 1, argv + 1);
 	} else {
 		/* unknown request */
-		ret_val = -EINVAL;
+		rc = -EINVAL;
 	}
 
-	return ret_val;
+	return rc;
 }

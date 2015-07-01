@@ -43,7 +43,7 @@
  */
 int cipsov4_add(int argc, char *argv[])
 {
-	int ret_val;
+	int rc;
 	uint32_t iter;
 	uint32_t cipso_type = CIPSO_V4_MAP_UNKNOWN;
 	nlbl_cv4_doi doi = 0;
@@ -79,7 +79,7 @@ int cipsov4_add(int argc, char *argv[])
 						     sizeof(nlbl_cv4_tag) *
 						     (tags.size + 1));
 				if (tags.array == NULL) {
-					ret_val = -ENOMEM;
+					rc = -ENOMEM;
 					goto add_return;
 				}
 				tags.array[tags.size++] = atoi(token_ptr);
@@ -93,7 +93,7 @@ int cipsov4_add(int argc, char *argv[])
 						     sizeof(nlbl_cv4_lvl) * 2 *
 						     (lvls.size + 1));
 				if (lvls.array == NULL) {
-					ret_val = -ENOMEM;
+					rc = -ENOMEM;
 					goto add_return;
 				}
 				/* XXX - should be more robust for bad input */
@@ -111,7 +111,7 @@ int cipsov4_add(int argc, char *argv[])
 						     sizeof(nlbl_cv4_cat) * 2 *
 						     (cats.size + 1));
 				if (cats.array == NULL) {
-					ret_val = -ENOMEM;
+					rc = -ENOMEM;
 					goto add_return;
 				}
 				/* XXX - should be more robust for bad input */
@@ -129,19 +129,19 @@ int cipsov4_add(int argc, char *argv[])
 	switch (cipso_type) {
 	case CIPSO_V4_MAP_TRANS:
 		/* translated mapping */
-		ret_val = nlbl_cipsov4_add_trans(NULL,
-						 doi, &tags, &lvls, &cats);
+		rc = nlbl_cipsov4_add_trans(NULL,
+					    doi, &tags, &lvls, &cats);
 		break;
 	case CIPSO_V4_MAP_PASS:
 		/* pass through mapping */
-		ret_val = nlbl_cipsov4_add_pass(NULL, doi, &tags);
+		rc = nlbl_cipsov4_add_pass(NULL, doi, &tags);
 		break;
 	case CIPSO_V4_MAP_LOCAL:
 		/* local mapping */
-		ret_val = nlbl_cipsov4_add_local(NULL, doi);
+		rc = nlbl_cipsov4_add_local(NULL, doi);
 		break;
 	default:
-		ret_val = -EINVAL;
+		rc = -EINVAL;
 	}
 
 add_return:
@@ -151,7 +151,7 @@ add_return:
 		free(lvls.array);
 	if (cats.array != NULL)
 		free(cats.array);
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -196,16 +196,16 @@ int cipsov4_del(int argc, char *argv[])
  */
 static int cipsov4_list_all(void)
 {
-	int ret_val;
+	int rc;
 	uint32_t iter;
 	nlbl_cv4_doi *doi_list = NULL;
 	nlbl_cv4_mtype *mtype_list = NULL;
 	size_t count;
 
-	ret_val = nlbl_cipsov4_listall(NULL, &doi_list, &mtype_list);
-	if (ret_val < 0)
+	rc = nlbl_cipsov4_listall(NULL, &doi_list, &mtype_list);
+	if (rc < 0)
 		goto list_all_return;
-	count = ret_val;
+	count = rc;
 
 	if (opt_pretty != 0) {
 		printf("Configured CIPSOv4 mappings (%zu)\n", count);
@@ -254,14 +254,14 @@ static int cipsov4_list_all(void)
 		printf("\n");
 	}
 
-	ret_val = 0;
+	rc = 0;
 
 list_all_return:
 	if (doi_list != NULL)
 		free(doi_list);
 	if (mtype_list != NULL)
 		free(mtype_list);
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -274,16 +274,16 @@ list_all_return:
  */
 static int cipsov4_list_doi(uint32_t doi)
 {
-	int ret_val;
+	int rc;
 	uint32_t iter;
 	nlbl_cv4_mtype maptype;
 	struct nlbl_cv4_tag_a tags = { .array = NULL, .size = 0 };
 	struct nlbl_cv4_lvl_a lvls = { .array = NULL, .size = 0 };
 	struct nlbl_cv4_cat_a cats = { .array = NULL, .size = 0 };
 
-	ret_val = nlbl_cipsov4_list(NULL, doi, &maptype, &tags, &lvls, &cats);
-	if (ret_val < 0)
-		return ret_val;
+	rc = nlbl_cipsov4_list(NULL, doi, &maptype, &tags, &lvls, &cats);
+	if (rc < 0)
+		return rc;
 
 	if (opt_pretty != 0) {
 		printf("Configured CIPSOv4 mapping (DOI = %u)\n", doi);
@@ -407,7 +407,7 @@ int cipsov4_list(int argc, char *argv[])
  */
 int cipsov4_main(int argc, char *argv[])
 {
-	int ret_val;
+	int rc;
 
 	/* sanity checks */
 	if (argc <= 0 || argv == NULL || argv[0] == NULL)
@@ -416,17 +416,17 @@ int cipsov4_main(int argc, char *argv[])
 	/* handle the request */
 	if (strcmp(argv[0], "add") == 0) {
 		/* add */
-		ret_val = cipsov4_add(argc - 1, argv + 1);
+		rc = cipsov4_add(argc - 1, argv + 1);
 	} else if (strcmp(argv[0], "del") == 0) {
 		/* delete */
-		ret_val = cipsov4_del(argc - 1, argv + 1);
+		rc = cipsov4_del(argc - 1, argv + 1);
 	} else if (strcmp(argv[0], "list") == 0) {
 		/* list */
-		ret_val = cipsov4_list(argc - 1, argv + 1);
+		rc = cipsov4_list(argc - 1, argv + 1);
 	} else {
 		/* unknown request */
-		ret_val = -EINVAL;
+		rc = -EINVAL;
 	}
 
-	return ret_val;
+	return rc;
 }

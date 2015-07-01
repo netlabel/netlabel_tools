@@ -92,12 +92,12 @@ msg_new_failure:
  */
 static int nlbl_mgmt_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 {
-	int ret_val;
+	int rc;
 	struct nlmsghdr *nl_hdr;
 
 	/* try to get a message from the handle */
-	ret_val = nlbl_comm_recv(hndl, msg);
-	if (ret_val <= 0)
+	rc = nlbl_comm_recv(hndl, msg);
+	if (rc <= 0)
 		goto recv_failure;
 
 	/* process the response */
@@ -105,15 +105,15 @@ static int nlbl_mgmt_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 	if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_mgmt_fid &&
 			       nl_hdr->nlmsg_type != NLMSG_DONE &&
 			       nl_hdr->nlmsg_type != NLMSG_ERROR)) {
-		ret_val = -EBADMSG;
+		rc = -EBADMSG;
 		goto recv_failure;
 	}
 
-	return ret_val;
+	return rc;
 
 recv_failure:
 	nlbl_msg_free(*msg);
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -248,7 +248,7 @@ static int nlbl_mgmt_list_addr(const struct nlattr *nla_head,
  */
 int nlbl_mgmt_init(void)
 {
-	int ret_val = -ENOMEM;
+	int rc = -ENOMEM;
 	struct nlbl_handle *hndl;
 
 	/* get a netlabel handle */
@@ -257,16 +257,16 @@ int nlbl_mgmt_init(void)
 		goto init_return;
 
 	/* resolve the family */
-	ret_val = genl_ctrl_resolve(hndl->nl_sock, NETLBL_NLTYPE_MGMT_NAME);
-	if (ret_val < 0)
+	rc = genl_ctrl_resolve(hndl->nl_sock, NETLBL_NLTYPE_MGMT_NAME);
+	if (rc < 0)
 		goto init_return;
-	nlbl_mgmt_fid = ret_val;
+	nlbl_mgmt_fid = rc;
 
-	ret_val = 0;
+	rc = 0;
 
 init_return:
 	nlbl_comm_close(hndl);
-	return ret_val;
+	return rc;
 }
 
 /*
@@ -286,7 +286,7 @@ init_return:
  */
 int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 {
-	int ret_val = -ENOMEM;
+	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
 	unsigned char *data = NULL;
 	nlbl_msg *msg = NULL;
@@ -315,15 +315,15 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 	/* create a new message */
 	msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_PROTOCOLS, NLM_F_DUMP);
 	if (msg == NULL) {
-		ret_val = -ENOMEM;
+		rc = -ENOMEM;
 		goto protocols_return;
 	}
 
 	/* send the request */
-	ret_val = nlbl_comm_send(p_hndl, msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_comm_send(p_hndl, msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto protocols_return;
 	}
 
@@ -335,13 +335,13 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 		}
 
 		/* get the next set of messages */
-		ret_val = nlbl_comm_recv_raw(p_hndl, &data);
-		if (ret_val <= 0) {
-			if (ret_val == 0)
-				ret_val = -ENODATA;
+		rc = nlbl_comm_recv_raw(p_hndl, &data);
+		if (rc <= 0) {
+			if (rc == 0)
+				rc = -ENODATA;
 			goto protocols_return;
 		}
-		data_len = ret_val;
+		data_len = rc;
 		nl_hdr = (struct nlmsghdr *)data;
 
 		/* check to see if this is a netlink control message we don't
@@ -349,7 +349,7 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 		if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
 		    nl_hdr->nlmsg_type == NLMSG_ERROR ||
 		    nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
-			ret_val = -EBADMSG;
+			rc = -EBADMSG;
 			goto protocols_return;
 		}
 
@@ -360,7 +360,7 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 			genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
 			if (genl_hdr == NULL ||
 			    genl_hdr->cmd != NLBL_MGMT_C_PROTOCOLS) {
-				ret_val = -EBADMSG;
+				rc = -EBADMSG;
 				goto protocols_return;
 			}
 			nla_head = (struct nlattr *)(&genl_hdr[1]);
@@ -388,17 +388,17 @@ int nlbl_mgmt_protocols(struct nlbl_handle *hndl, nlbl_proto **protocols)
 	} while (NL_MULTI_CONTINUE(nl_hdr));
 
 	*protocols = protos;
-	ret_val = protos_count;
+	rc = protos_count;
 
 protocols_return:
-	if (ret_val < 0 && protos)
+	if (rc < 0 && protos)
 		free(protos);
 	if (hndl == NULL)
 		nlbl_comm_close(p_hndl);
 	if (data != NULL)
 		free(data);
 	nlbl_msg_free(msg);
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -414,7 +414,7 @@ protocols_return:
  */
 int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version)
 {
-	int ret_val = -ENOMEM;
+	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
@@ -440,47 +440,47 @@ int nlbl_mgmt_version(struct nlbl_handle *hndl, uint32_t *version)
 		goto version_return;
 
 	/* send the request */
-	ret_val = nlbl_comm_send(p_hndl, msg);
-	if (ret_val == 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_comm_send(p_hndl, msg);
+	if (rc == 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto version_return;
 	}
 
 	/* read the response */
-	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto version_return;
 	}
 
 	/* check the response */
-	ret_val = nlbl_mgmt_parse_ack(ans_msg);
-	if (ret_val < 0 && ret_val != -ENOMSG)
+	rc = nlbl_mgmt_parse_ack(ans_msg);
+	if (rc < 0 && rc != -ENOMSG)
 		goto version_return;
 	genl_hdr = nlbl_msg_genlhdr(ans_msg);
 	if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_VERSION) {
-		ret_val = -EBADMSG;
+		rc = -EBADMSG;
 		goto version_return;
 	}
 
 	/* process the response */
 	nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_VERSION);
 	if (nla == NULL) {
-		ret_val = -EBADMSG;
+		rc = -EBADMSG;
 		goto version_return;
 	}
 	*version = nla_get_u32(nla);
 
-	ret_val = 0;
+	rc = 0;
 
 version_return:
 	if (hndl == NULL)
 		nlbl_comm_close(p_hndl);
 	nlbl_msg_free(msg);
 	nlbl_msg_free(ans_msg);
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -498,7 +498,7 @@ int nlbl_mgmt_add(struct nlbl_handle *hndl,
 		  struct nlbl_dommap *domain,
 		  struct nlbl_netaddr *addr)
 {
-	int ret_val = -ENOMEM;
+	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
@@ -522,18 +522,18 @@ int nlbl_mgmt_add(struct nlbl_handle *hndl,
 		goto add_return;
 
 	/* add the required attributes to the message */
-	ret_val = nla_put_string(msg, NLBL_MGMT_A_DOMAIN, domain->domain);
-	if (ret_val != 0)
+	rc = nla_put_string(msg, NLBL_MGMT_A_DOMAIN, domain->domain);
+	if (rc != 0)
 		goto add_return;
-	ret_val = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
-	if (ret_val != 0)
+	rc = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
+	if (rc != 0)
 		goto add_return;
 	switch (domain->proto_type) {
 	case NETLBL_NLTYPE_CIPSOV4:
-		ret_val = nla_put_u32(msg,
-				      NLBL_MGMT_A_CV4DOI,
-				      domain->proto.cv4_doi);
-		if (ret_val != 0)
+		rc = nla_put_u32(msg,
+				 NLBL_MGMT_A_CV4DOI,
+				 domain->proto.cv4_doi);
+		if (rc != 0)
 			goto add_return;
 		break;
 	}
@@ -541,66 +541,66 @@ int nlbl_mgmt_add(struct nlbl_handle *hndl,
 	/* optional attributes */
 	switch (addr->type) {
 	case AF_INET:
-		ret_val = nla_put(msg,
-				  NLBL_MGMT_A_IPV4ADDR,
-				  sizeof(struct in_addr),
-				  &addr->addr.v4);
-		if (ret_val != 0)
+		rc = nla_put(msg,
+			     NLBL_MGMT_A_IPV4ADDR,
+			     sizeof(struct in_addr),
+			     &addr->addr.v4);
+		if (rc != 0)
 			goto add_return;
-		ret_val = nla_put(msg,
-				  NLBL_MGMT_A_IPV4MASK,
-				  sizeof(struct in_addr),
-				  &addr->mask.v4);
-		if (ret_val != 0)
+		rc = nla_put(msg,
+			     NLBL_MGMT_A_IPV4MASK,
+			     sizeof(struct in_addr),
+			     &addr->mask.v4);
+		if (rc != 0)
 			goto add_return;
 		break;
 	case AF_INET6:
-		ret_val = nla_put(msg,
-				  NLBL_MGMT_A_IPV6ADDR,
-				  sizeof(struct in6_addr),
-				  &addr->addr.v6);
-		if (ret_val != 0)
+		rc = nla_put(msg,
+			     NLBL_MGMT_A_IPV6ADDR,
+			     sizeof(struct in6_addr),
+			     &addr->addr.v6);
+		if (rc != 0)
 			goto add_return;
-		ret_val = nla_put(msg,
-				  NLBL_MGMT_A_IPV6MASK,
-				  sizeof(struct in6_addr),
-				  &addr->mask.v6);
-		if (ret_val != 0)
+		rc = nla_put(msg,
+			     NLBL_MGMT_A_IPV6MASK,
+			     sizeof(struct in6_addr),
+			     &addr->mask.v6);
+		if (rc != 0)
 			goto add_return;
 		break;
 	case 0:
-		ret_val = 0;
+		rc = 0;
 		break;
 	default:
-		ret_val = -EINVAL;
+		rc = -EINVAL;
 		goto add_return;
 	}
 
 	/* send the request */
-	ret_val = nlbl_comm_send(p_hndl, msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_comm_send(p_hndl, msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto add_return;
 	}
 
 	/* read the response */
-	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto add_return;
 	}
 
 	/* process the response */
-	ret_val = nlbl_mgmt_parse_ack(ans_msg);
+	rc = nlbl_mgmt_parse_ack(ans_msg);
 
 add_return:
 	if (hndl == NULL)
 		nlbl_comm_close(p_hndl);
 	nlbl_msg_free(msg);
 	nlbl_msg_free(ans_msg);
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -619,7 +619,7 @@ int nlbl_mgmt_adddef(struct nlbl_handle *hndl,
 		     struct nlbl_dommap *domain,
 		     struct nlbl_netaddr *addr)
 {
-	int ret_val = -ENOMEM;
+	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
@@ -643,15 +643,15 @@ int nlbl_mgmt_adddef(struct nlbl_handle *hndl,
 		goto adddef_return;
 
 	/* add the required attributes to the message */
-	ret_val = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
-	if (ret_val != 0)
+	rc = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
+	if (rc != 0)
 		goto adddef_return;
 	switch (domain->proto_type) {
 	case NETLBL_NLTYPE_CIPSOV4:
-		ret_val = nla_put_u32(msg,
-				      NLBL_MGMT_A_CV4DOI,
-				      domain->proto.cv4_doi);
-		if (ret_val != 0)
+		rc = nla_put_u32(msg,
+				 NLBL_MGMT_A_CV4DOI,
+				 domain->proto.cv4_doi);
+		if (rc != 0)
 			goto adddef_return;
 		break;
 	}
@@ -659,66 +659,66 @@ int nlbl_mgmt_adddef(struct nlbl_handle *hndl,
 	/* optional attributes */
 	switch (addr->type) {
 	case AF_INET:
-		ret_val = nla_put(msg,
-				  NLBL_MGMT_A_IPV4ADDR,
-				  sizeof(struct in_addr),
-				  &addr->addr.v4);
-		if (ret_val != 0)
+		rc = nla_put(msg,
+			     NLBL_MGMT_A_IPV4ADDR,
+			     sizeof(struct in_addr),
+			     &addr->addr.v4);
+		if (rc != 0)
 			goto adddef_return;
-		ret_val = nla_put(msg,
-				  NLBL_MGMT_A_IPV4MASK,
-				  sizeof(struct in_addr),
-				  &addr->mask.v4);
-		if (ret_val != 0)
+		rc = nla_put(msg,
+			     NLBL_MGMT_A_IPV4MASK,
+			     sizeof(struct in_addr),
+			     &addr->mask.v4);
+		if (rc != 0)
 			goto adddef_return;
 		break;
 	case AF_INET6:
-		ret_val = nla_put(msg,
-				  NLBL_MGMT_A_IPV6ADDR,
-				  sizeof(struct in6_addr),
-				  &addr->addr.v6);
-		if (ret_val != 0)
+		rc = nla_put(msg,
+			     NLBL_MGMT_A_IPV6ADDR,
+			     sizeof(struct in6_addr),
+			     &addr->addr.v6);
+		if (rc != 0)
 			goto adddef_return;
-		ret_val = nla_put(msg,
-				  NLBL_MGMT_A_IPV6MASK,
-				  sizeof(struct in6_addr),
-				  &addr->mask.v6);
-		if (ret_val != 0)
+		rc = nla_put(msg,
+			     NLBL_MGMT_A_IPV6MASK,
+			     sizeof(struct in6_addr),
+			     &addr->mask.v6);
+		if (rc != 0)
 			goto adddef_return;
 		break;
 	case 0:
-		ret_val = 0;
+		rc = 0;
 		break;
 	default:
-		ret_val = -EINVAL;
+		rc = -EINVAL;
 		goto adddef_return;
 	}
 
 	/* send the request */
-	ret_val = nlbl_comm_send(p_hndl, msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_comm_send(p_hndl, msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto adddef_return;
 	}
 
 	/* read the response */
-	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto adddef_return;
 	}
 
 	/* process the response */
-	ret_val = nlbl_mgmt_parse_ack(ans_msg);
+	rc = nlbl_mgmt_parse_ack(ans_msg);
 
 adddef_return:
 	if (hndl == NULL)
 		nlbl_comm_close(p_hndl);
 	nlbl_msg_free(msg);
 	nlbl_msg_free(ans_msg);
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -733,7 +733,7 @@ adddef_return:
  */
 int nlbl_mgmt_del(struct nlbl_handle *hndl, char *domain)
 {
-	int ret_val = -ENOMEM;
+	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
@@ -757,35 +757,35 @@ int nlbl_mgmt_del(struct nlbl_handle *hndl, char *domain)
 		goto del_return;
 
 	/* add the required attributes to the message */
-	ret_val = nla_put_string(msg, NLBL_MGMT_A_DOMAIN, domain);
-	if (ret_val != 0)
+	rc = nla_put_string(msg, NLBL_MGMT_A_DOMAIN, domain);
+	if (rc != 0)
 		goto del_return;
 
 	/* send the request */
-	ret_val = nlbl_comm_send(p_hndl, msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_comm_send(p_hndl, msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto del_return;
 	}
 
 	/* read the response */
-	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto del_return;
 	}
 
 	/* process the response */
-	ret_val = nlbl_mgmt_parse_ack(ans_msg);
+	rc = nlbl_mgmt_parse_ack(ans_msg);
 
 del_return:
 	if (hndl == NULL)
 		nlbl_comm_close(p_hndl);
 	nlbl_msg_free(msg);
 	nlbl_msg_free(ans_msg);
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -799,7 +799,7 @@ del_return:
  */
 int nlbl_mgmt_deldef(struct nlbl_handle *hndl)
 {
-	int ret_val = -ENOMEM;
+	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
@@ -821,30 +821,30 @@ int nlbl_mgmt_deldef(struct nlbl_handle *hndl)
 		goto deldef_return;
 
 	/* send the request */
-	ret_val = nlbl_comm_send(p_hndl, msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_comm_send(p_hndl, msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto deldef_return;
 	}
 
 	/* read the response */
-	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto deldef_return;
 	}
 
 	/* process the response */
-	ret_val = nlbl_mgmt_parse_ack(ans_msg);
+	rc = nlbl_mgmt_parse_ack(ans_msg);
 
 deldef_return:
 	if (hndl == NULL)
 		nlbl_comm_close(p_hndl);
 	nlbl_msg_free(msg);
 	nlbl_msg_free(ans_msg);
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -860,7 +860,7 @@ deldef_return:
  */
 int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 {
-	int ret_val = -ENOMEM;
+	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
 	nlbl_msg *msg = NULL;
 	nlbl_msg *ans_msg = NULL;
@@ -886,28 +886,28 @@ int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 		goto listdef_return;
 
 	/* send the request */
-	ret_val = nlbl_comm_send(p_hndl, msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_comm_send(p_hndl, msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto listdef_return;
 	}
 
 	/* read the response */
-	ret_val = nlbl_mgmt_recv(p_hndl, &ans_msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_mgmt_recv(p_hndl, &ans_msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto listdef_return;
 	}
 
 	/* check the response */
-	ret_val = nlbl_mgmt_parse_ack(ans_msg);
-	if (ret_val < 0 && ret_val != -ENOMSG)
+	rc = nlbl_mgmt_parse_ack(ans_msg);
+	if (rc < 0 && rc != -ENOMSG)
 		goto listdef_return;
 	genl_hdr = nlbl_msg_genlhdr(ans_msg);
 	if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTDEF) {
-		ret_val = -EBADMSG;
+		rc = -EBADMSG;
 		goto listdef_return;
 	}
 
@@ -932,14 +932,14 @@ int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 	} else
 		goto listdef_return;
 
-	ret_val = 0;
+	rc = 0;
 
 listdef_return:
 	if (hndl == NULL)
 		nlbl_comm_close(p_hndl);
 	nlbl_msg_free(msg);
 	nlbl_msg_free(ans_msg);
-	return ret_val;
+	return rc;
 }
 
 /**
@@ -955,7 +955,7 @@ listdef_return:
  */
 int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 {
-	int ret_val = -ENOMEM;
+	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
 	unsigned char *data = NULL;
 	nlbl_msg *msg = NULL;
@@ -984,15 +984,15 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 	/* create a new message */
 	msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_LISTALL, NLM_F_DUMP);
 	if (msg == NULL) {
-		ret_val = -ENOMEM;
+		rc = -ENOMEM;
 		goto listall_return;
 	}
 
 	/* send the request */
-	ret_val = nlbl_comm_send(p_hndl, msg);
-	if (ret_val <= 0) {
-		if (ret_val == 0)
-			ret_val = -ENODATA;
+	rc = nlbl_comm_send(p_hndl, msg);
+	if (rc <= 0) {
+		if (rc == 0)
+			rc = -ENODATA;
 		goto listall_return;
 	}
 
@@ -1004,13 +1004,13 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 		}
 
 		/* get the next set of messages */
-		ret_val = nlbl_comm_recv_raw(p_hndl, &data);
-		if (ret_val <= 0) {
-			if (ret_val == 0)
-				ret_val = -ENODATA;
+		rc = nlbl_comm_recv_raw(p_hndl, &data);
+		if (rc <= 0) {
+			if (rc == 0)
+				rc = -ENODATA;
 			goto listall_return;
 		}
-		data_len = ret_val;
+		data_len = rc;
 		nl_hdr = (struct nlmsghdr *)data;
 
 		/* check to see if this is a netlink control message we don't
@@ -1018,7 +1018,7 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 		if (nl_hdr->nlmsg_type == NLMSG_NOOP ||
 		    nl_hdr->nlmsg_type == NLMSG_ERROR ||
 		    nl_hdr->nlmsg_type == NLMSG_OVERRUN) {
-			ret_val = -EBADMSG;
+			rc = -EBADMSG;
 			goto listall_return;
 		}
 
@@ -1029,7 +1029,7 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 			genl_hdr = (struct genlmsghdr *)nlmsg_data(nl_hdr);
 			if (genl_hdr == NULL ||
 			    genl_hdr->cmd != NLBL_MGMT_C_LISTALL) {
-				ret_val = -EBADMSG;
+				rc = -EBADMSG;
 				goto listall_return;
 			}
 			nla_head = (struct nlattr *)(&genl_hdr[1]);
@@ -1084,10 +1084,10 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 	} while (NL_MULTI_CONTINUE(nl_hdr));
 
 	*domains = dmns;
-	ret_val = dmns_count;
+	rc = dmns_count;
 
 listall_return:
-	if (ret_val < 0 && dmns) {
+	if (rc < 0 && dmns) {
 		do {
 			if (dmns[dmns_count].domain) {
 				free(dmns[dmns_count].domain);
@@ -1110,5 +1110,5 @@ listall_return:
 	if (data)
 		free(data);
 	nlbl_msg_free(msg);
-	return ret_val;
+	return rc;
 }
