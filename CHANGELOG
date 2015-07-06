@@ -1,112 +1,100 @@
-NetLabel Tools CHANGELOG
-==============================================================================
+NetLabel Tools: Releases
+===============================================================================
+https://github.com/netlabel/netlabel_tools
 
-* Release 0.21 (XXX)
-------------------------------------------------------------------------------
-o XXX
+* Version 0.21 - XXX
+- XXX
 
-* Release 0.20 (June 3, 2013)
-------------------------------------------------------------------------------
-o Patch from Marius Tomaschewski <mt@suse.de> to fix the Makefile install
+* Version 0.20 - June 3, 2013
+- Patch from Marius Tomaschewski <mt@suse.de> to fix the Makefile install
   target to allow installation by normal users
-o Fixed build problems on Debian/Ubuntu
-o Correctly read all the parts of multipart Netlink messages, fixed problems
+- Fixed build problems on Debian/Ubuntu
+- Correctly read all the parts of multipart Netlink messages, fixed problems
   when trying to display large configurations
-o Updated the doxygen configuration file to work with modern doxygen versions
-o Updated and improved portions of the build mechanism
-o Incorporate fixes from the Fedora/RHEL RPMs
-o Add support for systemd with the inclusion of a systemd unit file,
+- Updated the doxygen configuration file to work with modern doxygen versions
+- Updated and improved portions of the build mechanism
+- Incorporate fixes from the Fedora/RHEL RPMs
+- Add support for systemd with the inclusion of a systemd unit file,
   configuration file, and configuration helper script
 
-* Release 0.19 (January 5, 2009)
-------------------------------------------------------------------------------
-o Added address selector support to the LSM domain mapping mechanism
-o Added support for the new CIPSO_V4_MAP_LOCAL CIPSO mapping type to allow
+* Version 0.19 - January 5, 2009
+- Added address selector support to the LSM domain mapping mechanism
+- Added support for the new CIPSO_V4_MAP_LOCAL CIPSO mapping type to allow
   native LSM security labels over local connections
-o General code cleanup, including style changes/fixes; focused primarily on
+- General code cleanup, including style changes/fixes; focused primarily on
   libnetlabel
-o Initial doxygen support, including slightly improved documentation for the
+- Initial doxygen support, including slightly improved documentation for the
   libnetlabel API; doxygen docs built by default if doxygen is detected
-o Man page updates for netlabelctl
-o Preliminary support for building libnetlabel as a shared library, not enabled
+- Man page updates for netlabelctl
+- Preliminary support for building libnetlabel as a shared library, not enabled
   by default (see libnetlabel/Makefile to enable)
-o Removed empty and unused directories to make the package cleaner and easier
+- Removed empty and unused directories to make the package cleaner and easier
   to understand
 
-* Release 0.18 (June 25, 2008)
-------------------------------------------------------------------------------
-o Fixed some problems when printing CIPSOv4 and map information when not using
+* Version 0.18 - June 25, 2008
+- Fixed some problems when printing CIPSOv4 and map information when not using
   the '-p' flag
-o Always display an error message if an error occurred, based on patch from
+- Always display an error message if an error occurred, based on patch from
   Klaus Weidner <klaus@atsec.com>
-o Included a patch from Hagen Paul Pfeifer <pfeifer@netlab.nec.de> to fix a
+- Included a patch from Hagen Paul Pfeifer <pfeifer@netlab.nec.de> to fix a
   problem when building with LIBNL_VERSION >= 1006
-o Only use size_t and not ssize_t to specify datum sizes/lengths
-o Updated the netlabelctl man page with more text and examples
-o Removed the RPM specfile which included all contributions by Steve Grubb
+- Only use size_t and not ssize_t to specify datum sizes/lengths
+- Updated the netlabelctl man page with more text and examples
+- Removed the RPM specfile which included all contributions by Steve Grubb
   <sgrubb@redhat.com>
-o Updated copyright notice to GPLv2 only, received explicit approval from both
+- Updated copyright notice to GPLv2 only, received explicit approval from both
   Klaus Weidner <klaus@atsec.com> and
   Hagen Paul Pfeifer <pfeifer@netlab.nec.de>
-o Updated the README
-o Add libnl v 1.0-pre8 compatible code and make it the default (needed for
+- Updated the README
+- Add libnl v 1.0-pre8 compatible code and make it the default (needed for
   Fedora Rawhide post F8)
-o Renamed the CIPSOv4 'std' mapping to 'trans' to better reflect it's usage,
+- Renamed the CIPSOv4 'std' mapping to 'trans' to better reflect it's usage,
   'std' still works but is marked as deprecated
-o Merged the 'static-label' branch which provides fallback/static labeling
+- Merged the 'static-label' branch which provides fallback/static labeling
   support
-o Renamed the 'nlbl_mgmt_domain' structure to 'nlbl_dommap'
-o Converted the the same tab/ident spacing as the Linux kernel
-o Removed the structure typedefs in libnetlabel.h
-o Added some crude documentation to the types defined in libnetlabel.h
+- Renamed the 'nlbl_mgmt_domain' structure to 'nlbl_dommap'
+- Converted the the same tab/ident spacing as the Linux kernel
+- Removed the structure typedefs in libnetlabel.h
+- Added some crude documentation to the types defined in libnetlabel.h
 
-* Release 0.17 (September 28, 2006)
-------------------------------------------------------------------------------
-o Changed to support the updated use of Netlink attributes by NetLabel
-o Ported to use the libnl (version 1.0-pre5/6) library
-o Try to cleanup the error reporting a little bit
-o Changed the version/release information
+* Version 0.17 - September 28, 2006
+- Changed to support the updated use of Netlink attributes by NetLabel
+- Ported to use the libnl (version 1.0-pre5/6) library
+- Try to cleanup the error reporting a little bit
+- Changed the version/release information
 
-* Version 0.16 (August 3, 2006)
-------------------------------------------------------------------------------
-o Added a "version" flag (-V)
-o Moved the mapping commands to the new "map" class
-o Added support for the unlabeled list command
-o Updated the documentation to bring it up to date with the current options
-o Cleanup the libnetlabel interfaces a little bit
-o Shift to using Netlink attributes, at some point we should use libnetlink
+* Version 0.16 - August 3, 2006
+- Added a "version" flag (-V)
+- Moved the mapping commands to the new "map" class
+- Added support for the unlabeled list command
+- Updated the documentation to bring it up to date with the current options
+- Cleanup the libnetlabel interfaces a little bit
+- Shift to using Netlink attributes, at some point we should use libnetlink
 
-* Version 0.15 (July 6, 2006)
-------------------------------------------------------------------------------
-o Modified the Netlink communication bits to support the newly aligned fields
+* Version 0.15 - July 6, 2006
+- Modified the Netlink communication bits to support the newly aligned fields
 
-* Version 0.14 (June 27, 2006)
-------------------------------------------------------------------------------
-o Added a RPM specfile based on a version from Steve Grubb <sgrubb@redhat.com>
-o Minor Makefile changes to ease tarball and RPM creation
-o Modified the Netlink communication bits to support the new Generic Netlink
+* Version 0.14 - June 27, 2006
+- Added a RPM specfile based on a version from Steve Grubb <sgrubb@redhat.com>
+- Minor Makefile changes to ease tarball and RPM creation
+- Modified the Netlink communication bits to support the new Generic Netlink
   communication mechanism
 
-* Version 0.13 (June 23, 2006)
-------------------------------------------------------------------------------
-o Added some text to the README to explain how to remove any pre-existing
+* Version 0.13 - June 23, 2006
+- Added some text to the README to explain how to remove any pre-existing
   NetLabel configuration
-o Added two patches from Klaus Weidner <klaus@atsec.com> to add some error
+- Added two patches from Klaus Weidner <klaus@atsec.com> to add some error
   messages and better sendmsg() error reporting
-o Fixed some compiler warnings (added -Wall to CFLAGS) on Klaus' recomendation
+- Fixed some compiler warnings (added -Wall to CFLAGS) on Klaus' recomendation
 
-* Version 0.12 (June 13, 2006)
-------------------------------------------------------------------------------
-o Added support for the new CIPSO_V4_MAP_PASS CIPSO mapping type
+* Version 0.12 - June 13, 2006
+- Added support for the new CIPSO_V4_MAP_PASS CIPSO mapping type
 
-* Version 0.11 (June 7, 2006)
-------------------------------------------------------------------------------
-o Corrected a problem with the netlabel.h header file
+* Version 0.11 - June 7, 2006
+- Corrected a problem with the netlabel.h header file
 
-* Version 0.11 (June 6, 2006)
-------------------------------------------------------------------------------
-o Changed the libnetlabel to reflect changes to the NetLabel protocol
+* Version 0.11 - June 6, 2006
+- Changed the libnetlabel to reflect changes to the NetLabel protocol
 
-* Version 0.10 (May 1, 2006)
-------------------------------------------------------------------------------
-o Initial version
+* Version 0.10 - May 1, 2006
+- Initial version
