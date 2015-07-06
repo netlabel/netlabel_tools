@@ -1,0 +1,285 @@
+#!/bin/bash
+
+#
+# NetLabel Tools regression test automation script
+#
+
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+export GLBL_NETLABELCTL="../netlabelctl/netlabelctl"
+
+####
+# functions
+
+#
+# Dependency check
+#
+# Arguments:
+#     1    Dependency to check for
+#
+function check_deps() {
+	[[ -z "$1" ]] && return
+	which "$1" >& /dev/null
+	return $?
+}
+
+#
+# Dependency verification
+#
+# Arguments:
+#     1    Dependency to check for
+#
+function verify_deps() {
+	[[ -z "$1" ]] && return
+	if ! check_deps "$1"; then
+		echo "error: install \"$1\" and include it in your \$PATH"
+		exit 1
+	fi
+}
+
+#
+# Print a test header to the log file
+#
+# Arguments:
+#     1    string containing test name
+#     2    string containing additional text
+#
+function print_test() {
+	printf "Test %s %s\n" "$1" "$2" >&$logfd
+}
+
+#
+# Print the test result to the log file
+#
+# Arguments:
+#     1    string containing test name
+#     2    string containing the test result (INFO, SUCCESS, ERROR, or FAILURE)
+#     3    string containing addition details
+#
+function print_result() {
+	# stats update
+	stats_all=$(($stats_all+1))
+	case $2 in
+	INFO)
+		stats_skipped=$(($stats_skipped+1))
+		;;
+	SUCCESS)
+		stats_success=$(($stats_success+1))
+		;;
+	FAILURE)
+		stats_failure=$(($stats_failure+1))
+		;;
+	ERROR|*)
+		stats_error=$(($stats_error+1))
+		;;
+	esac
+
+	# skip certain results
+	if [[ $2 == "INFO" && -z $verbose ]]; then
+		return
+	fi
+
+	# output
+	if [[ $3 == "" ]]; then
+		printf "Test %-30s result: %s\n" "$1" "$2" >&$logfd
+	else
+		printf "Test %-30s result: %s %s\n" "$1" "$2" "$3" >&$logfd
+	fi
+}
+
+#
+# Print out script usage details
+#
+function usage() {
+cat << EOF
+usage: regression [-h] [-v] [-l <LOG>] [-s <SINGLE_TEST>]
+
+NetLabel regression test automation script
+optional arguments:
+  -h             show this help message and exit
+  -l LOG         specifies log file to write test results to
+  -s SINGLE_TEST specifies individual test number to be run
+  -v             specifies that verbose output be provided
+EOF
+}
+
+#
+# Run the pre-test sanity checks
+#
+#
+function run_sanity() {
+	local rc=0
+
+	echo " stage: sanity checks" >&$logfd
+
+	# netlabelctl check
+	if [[ ! -x $GLBL_NETLABELCTL ]]; then
+		rc=1
+		print_result "00-sanity-build_check" "ERROR"
+	else
+		print_result "00-sanity-build_check" "SUCCESS"
+	fi
+
+	# must be root
+	if [[ $(id -u) -ne 0 ]]; then
+		rc=1
+		print_result "00-sanity-root_check" "ERROR" "(id == $(id -u))"
+	else
+		print_result "00-sanity-root_check" "SUCCESS"
+	fi
+
+	# basic kernel support
+	if ! $GLBL_NETLABELCTL mgmt version >& /dev/null; then
+		rc=1
+		print_result "00-sanity-kernel_check" "ERROR"
+	else
+		print_result "00-sanity-kernel_check" "SUCCESS"
+	fi
+
+	return $rc
+}
+
+#
+# Run an individual test
+#
+# Arguments:
+#     1    string containing test name
+#
+function run_test() {
+	local rc
+	local name="$(basename ${1//.tests/})"
+
+	# sanity check
+	if [[ ! -x $1 ]]; then
+		print_result "$name" "ERROR"
+		return 1;
+	fi
+
+	# run the test
+	if [[ -z $verbose ]]; then
+		($1) >& /dev/null
+	else
+		print_test "$name" "running ..."
+		($1) >&$logfd
+	fi
+	rc=$?
+
+	# report on the results
+	if [[ $rc -eq 0 ]]; then
+		print_result "$name" "SUCCESS"
+	else
+		rc=1
+		print_result "$name" "FAILURE"
+	fi
+
+	return $rc
+}
+
+#
+# Run the requested tests
+#
+function run_tests() {
+	local rc=0
+
+	echo " stage: individual tests" >&$logfd
+
+	if [[ single_count -eq 0 ]]; then
+		# loop through all the test files
+		for test in $basedir/*.tests; do
+			run_test $test
+		done
+	else
+		# only run what was requested
+		for test in $basedir/$single_list; do
+			[[ ! -f $test ]] && test=$test.tests
+			run_test $test
+		done
+	fi
+
+	return $rc
+}
+
+####
+# main
+
+verify_deps id
+
+# global variables
+single_list=""
+singlecount=0
+logfile=
+logfd=
+tmpfile=""
+verbose=
+stats_all=0
+stats_skipped=0
+stats_success=0
+stats_failure=0
+stats_error=0
+
+# set the test root directory
+basedir=$(dirname $0)
+
+# parse the command line
+while getopts "l:s:vh" opt; do
+	case $opt in
+	l)
+		logfile="$OPTARG"
+		;;
+	s)
+		single_list+="$OPTARG "
+		single_count=$(($single_count+1))
+		;;
+	v)
+		verbose=1
+		;;
+	h|*)
+		usage
+		exit 1
+		;;
+	esac
+done
+
+# open log file for append (default to stdout)
+if [[ -n $logfile ]]; then
+	logfd=3
+	exec 3>>"$logfile"
+else
+	logfd=1
+fi
+
+# open temporary file
+tmpfile=$(mktemp -t regression_XXXXXX)
+
+# display the test output and run the requested tests
+echo "=============== $(date) ===============" >&$logfd
+echo "Regression Test Report (\"regression $*\")" >&$logfd
+run_sanity
+run_tests
+echo "Regression Test Summary" >&$logfd
+echo " tests run: $stats_all" >&$logfd
+echo " tests skipped: $stats_skipped" >&$logfd
+echo " tests passed: $stats_success" >&$logfd
+echo " tests failed: $stats_failure" >&$logfd
+echo " tests errored: $stats_error" >&$logfd
+echo "============================================================" >&$logfd
+
+# cleanup and exit
+rm -f $tmpfile
+rc=0
+[[ $stats_failure -gt 0 ]] && rc=$(($rc + 2))
+[[ $stats_error -gt 0 ]] && rc=$(($rc + 4))
+
+exit $rc

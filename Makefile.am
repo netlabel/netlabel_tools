@@ -19,7 +19,7 @@
 #
 
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = libnetlabel netlabelctl doc
+SUBDIRS = libnetlabel netlabelctl tests doc
 
 EXTRA_DIST = CHANGELOG LICENSE README
 
