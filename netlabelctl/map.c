@@ -183,6 +183,8 @@ static void map_list_print(struct nlbl_dommap *mapping, size_t count)
 					break;
 				}
 				iter_b = iter_b->next;
+				if (iter_b)
+					printf(",");
 			}
 			break;
 		default:
