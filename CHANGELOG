@@ -10,7 +10,7 @@ https://github.com/netlabel/netlabel_tools
 - Fixed a number of problems identified by Coverity
 - Updated to the libnl3 API
 - Added a SUBMITTING_PATCHES file with instructions on how to contribute
-- Fixed some output formatting problems when listing the outboung mappings
+- Fixed some output formatting problems when listing the outbound mappings
 - Created a basic regression test framework and populated it with some basic
   tests, see the "tests/" directory
 
