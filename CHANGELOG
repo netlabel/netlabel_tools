@@ -2,8 +2,17 @@ NetLabel Tools: Releases
 ===============================================================================
 https://github.com/netlabel/netlabel_tools
 
-* Version 0.21 - XXX
-- XXX
+* Version 0.21 - July 10, 2015
+- Converted the build system to autotools
+- Fixed a number of style/formatting problems, see 'make check-syntax'
+- Fixed a problem with parsing invalid network addresses
+- Fixed a problem with large numbers of MLS level/category translations
+- Fixed a number of problems identified by Coverity
+- Updated to the libnl3 API
+- Added a SUBMITTING_PATCHES file with instructions on how to contribute
+- Fixed some output formatting problems when listing the outboung mappings
+- Created a basic regression test framework and populated it with some basic
+  tests, see the "tests/" directory
 
 * Version 0.20 - June 3, 2013
 - Patch from Marius Tomaschewski <mt@suse.de> to fix the Makefile install
