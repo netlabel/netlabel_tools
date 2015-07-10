@@ -19,9 +19,9 @@
 #
 
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = libnetlabel netlabelctl tests doc
+SUBDIRS = include libnetlabel netlabelctl tests doc
 
-EXTRA_DIST = CHANGELOG LICENSE README
+EXTRA_DIST = CHANGELOG LICENSE README SUBMITTING_PATCHES
 
 # support silent builds
 AM_MAKEFLAGS_0 = --quiet --no-print-directory

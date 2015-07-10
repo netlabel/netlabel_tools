@@ -18,6 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+EXTRA_DIST = doxyfile
+
 dist_man8_MANS = \
 	man/man8/netlabel-config.8 \
 	man/man8/netlabelctl.8

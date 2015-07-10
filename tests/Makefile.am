@@ -19,3 +19,19 @@
 #
 
 TESTS = regression
+
+EXTRA_DIST_TESTS = \
+	01-mgmt-version.tests \
+	02-mgmt-protocols.tests \
+	03-cipso_local.tests \
+	04-cipso_pass.tests \
+	05-cipso_trans.tests \
+	06-map_domain.tests \
+	07-map_addrselect.tests \
+	08-unlbl_default.tests
+
+EXTRA_DIST_TESTSCRIPTS = regression
+
+EXTRA_DIST = \
+	${EXTRA_DIST_TESTS} \
+	${EXTRA_DIST_TESTSCRIPTS}

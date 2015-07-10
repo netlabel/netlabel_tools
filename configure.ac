@@ -21,7 +21,7 @@ dnl #
 dnl ####
 dnl netlabel_tools defines
 dnl ####
-AC_INIT([netlabel_tools], [0.0.0])
+AC_INIT([netlabel_tools], [0.20])
 
 dnl ####
 dnl autoconf configuration
@@ -142,6 +142,7 @@ dnl makefiles
 dnl ####
 AC_CONFIG_FILES([
 	Makefile
+	include/Makefile
 	libnetlabel/Makefile
 	netlabelctl/Makefile
 	doc/Makefile

@@ -18,16 +18,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-AM_CPPFLAGS = -I$(top_builddir)/include
+EXTRA_DIST = netlabel.service
 
 sbin_PROGRAMS = netlabelctl
 dist_sbin_SCRIPTS = netlabel-config
 
-sysconf_DATA = netlabel.rules
+dist_sysconf_DATA = netlabel.rules
 
 if HAVE_SYSTEMD
 systemdsystemunit_DATA = netlabel.service
 endif
 
-netlabelctl_SOURCES = main.c mgmt.c map.c unlabeled.c cipsov4.c
+netlabelctl_SOURCES = netlabelctl.h main.c mgmt.c map.c unlabeled.c cipsov4.c
+netlabelctl_CPPFLAGS = ${AM_CPPFLAGS} -I$(topdir)/include
 netlabelctl_LDADD = ../libnetlabel/libnetlabel.a
