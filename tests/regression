@@ -266,8 +266,16 @@ tmpfile=$(mktemp -t regression_XXXXXX)
 # display the test output and run the requested tests
 echo "=============== $(date) ===============" >&$logfd
 echo "Regression Test Report (\"regression $*\")" >&$logfd
-run_sanity
-run_tests
+sane=0
+if run_sanity; then
+	# the system should be okay to run the full testsuite
+	sane=1
+	run_tests
+else
+	# something went wrong in the sanity checks, return a 0 error code
+	# so things like "make check" work, but display as normal
+	sane=0
+fi
 echo "Regression Test Summary" >&$logfd
 echo " tests run: $stats_all" >&$logfd
 echo " tests skipped: $stats_skipped" >&$logfd
@@ -282,4 +290,8 @@ rc=0
 [[ $stats_failure -gt 0 ]] && rc=$(($rc + 2))
 [[ $stats_error -gt 0 ]] && rc=$(($rc + 4))
 
-exit $rc
+if [[ $sane -eq 1 ]]; then
+	exit $rc
+else
+	exit 0
+fi
