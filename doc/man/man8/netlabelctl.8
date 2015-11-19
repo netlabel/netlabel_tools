@@ -65,10 +65,12 @@ IPv4 and IPv6, although the labeling protocol chosen must support the IP
 version chosen.  When specifying the labeling protocol to use for each mapping
 there is an optional "extra" field which is used to further identify the
 specific labeling protocol configuration.  When specifying the unlabeled
-protocol, "unlbl", there is no extra identification needed.  When specifying
-the CIPSO/IPv4 protocol, "cipsov4", the DOI value should be specified; see the
-EXAMPLES section for details.  The different commands and their syntax are
-listed below.
+protocol, "unlbl", an extra value of either "4" or "6" may be used. This
+restricts the mapping to IPv4 or IPv6 addresses.  Omitting the extra value will
+result in a mapping for all address families.  When specifying the CIPSO/IPv4
+or the CALIPSO/IPv6 protocol, "cipsov4" or "calipso", the DOI value should be
+specified; see the EXAMPLES section for details.  The different commands and their
+syntax are listed below.
 .HP
 .I add default|domain:<domain> [address:<ADDR>[/<MASK>]] protocol:<protocol>[,<extra>]
 .br
@@ -157,6 +159,41 @@ deleted.
 .I list [doi:<DOI>]
 .br
 Display a list of all the CIPSO/IPv4 configurations or just the configuration
+matching the optionally specified DOI.
+.TP 5
+.B calipso
+.P
+The CALIPSO/IPv6 (calipso) module controls the CALIPSO/IPv6 labeling engine in the
+kernel.  This behaves in a very similar way to the CIPSO/IPv4 engine, however the
+protocol only specifies one tag-type (equivalent to CIPSO tag-type 1) and so the
+tag-type should not be specified.  In addition there is no support for the "local"
+configuration.  The different commands and their syntax are listed below.
+.HP
+.I add trans doi:<DOI> levels:<LL1>=<RL1>,<LLn>=<RLn> categories:<LC1>=<RC1>,<LCn>=<RCn>
+.br
+Add a new CALIPSO/IPv6 configuration using the translated mapping with
+the given level and category translations.  The levels are translated in such a
+way that the local level "LLn" is translated to the remote, on\-the\-wire level
+of "RLn"; the reverse translation is done for incoming packets.  The same
+translation is done for the categories using "LCn" and "RCn".  In order for a
+packet to be accepted, or a socket created by an application, there must be a
+translation for the sensitivity level and all the categories present in the MLS
+sensitivity label; if the entire requested sensitivity label can not be
+translated the application will fail.
+.HP
+.I add pass doi:<DOI>
+.br
+Add a new CALIPSO/IPv6 configuration without any level or category translations.
+.HP
+.I del doi:<DOI>
+.br
+Delete an existing CALIPSO/IPv6 configuration with the given DOI value.  If any
+LSM domain mappings are present which make use of this DOI they will also be
+deleted.
+.HP
+.I list [doi:<DOI>]
+.br
+Display a list of all the CALIPSO/IPv6 configurations or just the configuration
 matching the optionally specified DOI.
 .\" //////////////////////////////////////////////////////////////////////////
 .SH EXIT STATUS
