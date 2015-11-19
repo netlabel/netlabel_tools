@@ -115,6 +115,13 @@ static void nlctl_help_print(FILE *fp)
 		"    add local doi:<DOI>\n"
 		"    del doi:<DOI>\n"
 		"    list [doi:<DOI>]\n"
+		"  calipso : CALIPSO/IPv6 packet handling\n"
+		"    add trans doi:<DOI>\n"
+		"            levels:<LL1>=<RL1>,<LLn>=<RLn>\n"
+		"            categories:<LC1>=<RC1>,<LCn>=<RCn>\n"
+		"    add pass doi:<DOI>\n"
+		"    del doi:<DOI>\n"
+		"    list [doi:<DOI>]\n"
 		"\n",
 		nlctl_name);
 }
@@ -379,6 +386,8 @@ int main(int argc, char *argv[])
 		module_main = unlbl_main;
 	} else if (!strcmp(module_name, "cipsov4")) {
 		module_main = cipsov4_main;
+	} else if (!strcmp(module_name, "calipso")) {
+		module_main = calipso_main;
 	} else {
 		fprintf(stderr,
 			MSG_ERR("unknown or missing module '%s'\n"),

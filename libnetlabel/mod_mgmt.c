@@ -227,6 +227,17 @@ static int nlbl_mgmt_list_addr(const struct nlattr *nla_head,
 			if (nla_b == NULL)
 				return -EINVAL;
 			addr_iter->proto_type = nla_get_u32(nla_b);
+			switch (addr_iter->proto_type) {
+			case NETLBL_NLTYPE_CALIPSO:
+				nla_b = nla_find(nla_data(nla_a),
+						 nla_len(nla_a),
+						 NLBL_MGMT_A_CALDOI);
+				if (nla_b == NULL)
+					return -EINVAL;
+				addr_iter->proto.cal_doi =
+					nla_get_u32(nla_b);
+				break;
+			}
 		} else
 			return -EINVAL;
 	}
@@ -539,6 +550,13 @@ int nlbl_mgmt_add(struct nlbl_handle *hndl,
 		if (rc != 0)
 			goto add_return;
 		break;
+	case NETLBL_NLTYPE_CALIPSO:
+		rc = nla_put_u32(msg,
+				 NLBL_MGMT_A_CALDOI,
+				 domain->proto.cal_doi);
+		if (rc != 0)
+			goto add_return;
+		break;
 	}
 
 	/* optional attributes */
@@ -657,6 +675,13 @@ int nlbl_mgmt_adddef(struct nlbl_handle *hndl,
 		rc = nla_put_u32(msg,
 				 NLBL_MGMT_A_CV4DOI,
 				 domain->proto.cv4_doi);
+		if (rc != 0)
+			goto adddef_return;
+		break;
+	case NETLBL_NLTYPE_CALIPSO:
+		rc = nla_put_u32(msg,
+				 NLBL_MGMT_A_CALDOI,
+				 domain->proto.cal_doi);
 		if (rc != 0)
 			goto adddef_return;
 		break;
@@ -941,6 +966,12 @@ int nlbl_mgmt_listdef(struct nlbl_handle *hndl, uint16_t family,
 				goto listdef_return;
 			domain->proto.cv4_doi = nla_get_u32(nla);
 			break;
+		case NETLBL_NLTYPE_CALIPSO:
+			nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_CALDOI);
+			if (nla == NULL)
+				goto listdef_return;
+			domain->proto.cal_doi = nla_get_u32(nla);
+			break;
 		}
 	} else if ((nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_SELECTORLIST))) {
 		if (nlbl_mgmt_list_addr(nla, domain) != 0)
@@ -1087,6 +1118,15 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 					if (nla == NULL)
 						goto listall_return;
 					dmns[dmns_count].proto.cv4_doi =
+						nla_get_u32(nla);
+					break;
+				case NETLBL_NLTYPE_CALIPSO:
+					nla = nla_find(nla_head,
+						       data_attrlen,
+						       NLBL_MGMT_A_CALDOI);
+					if (nla == NULL)
+						goto listall_return;
+					dmns[dmns_count].proto.cal_doi =
 						nla_get_u32(nla);
 					break;
 				}

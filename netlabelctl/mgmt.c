@@ -62,8 +62,8 @@ int mgmt_protocols(void)
 		case NETLBL_NLTYPE_CIPSOV4:
 			printf("CIPSOv4");
 			break;
-		case NETLBL_NLTYPE_CIPSOV6:
-			printf("CIPSOv6");
+		case NETLBL_NLTYPE_CALIPSO:
+			printf("CALIPSO");
 			break;
 		default:
 			printf("UNKNOWN(%u)", list[iter]);
