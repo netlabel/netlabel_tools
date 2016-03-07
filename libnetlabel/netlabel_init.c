@@ -34,6 +34,7 @@
 #include "mod_mgmt.h"
 #include "mod_unlabeled.h"
 #include "mod_cipsov4.h"
+#include "mod_calipso.h"
 
 /**
  * Handle any NetLabel setup needed
@@ -53,6 +54,10 @@ int nlbl_init(void)
 		return rc;
 
 	rc = nlbl_cipsov4_init();
+	if (rc < 0)
+		return rc;
+
+	rc = nlbl_calipso_init();
 	if (rc < 0)
 		return rc;
 

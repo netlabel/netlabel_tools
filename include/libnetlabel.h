@@ -195,6 +195,24 @@ struct nlbl_cv4_cat_a {
 	size_t size;
 };
 
+/* CALIPSO Types */
+
+/**
+ * NetLabel CALIPSO Domain Of Interpretation (DOI) value
+ *
+ * NetLabel type used to represent a CALIPSO Domian of Interpretation (DOI).
+ *
+ */
+typedef uint32_t nlbl_clp_doi;
+
+/**
+ * NetLabel CALIPSO mapping type
+ *
+ * NetLabel type used to represent the CALIPSO security label mapping method.
+ *
+ */
+typedef uint32_t nlbl_clp_mtype;
+
 /* NetLabel and LSM Mapping Types */
 
 /**
@@ -202,6 +220,7 @@ struct nlbl_cv4_cat_a {
  * @param addr IP address
  * @param proto_type labeling protocol
  * @param proto.cv4_doi CIPSOv4 DOI
+ * @param proto.clp_doi CALIPSO DOI
  * @param next next address selector
  *
  * NetLabel type used to map IP addresses to labeling protocol configurations.
@@ -212,6 +231,7 @@ struct nlbl_dommap_addr {
 	nlbl_proto proto_type;
 	union {
 		nlbl_cv4_doi cv4_doi;
+		nlbl_clp_doi clp_doi;
 	} proto;
 
 	struct nlbl_dommap_addr *next;
@@ -223,6 +243,7 @@ struct nlbl_dommap_addr {
  * @param family address family
  * @param proto_type labeling protocol
  * @param proto.cv4_doi CIPSOv4 DOI
+ * @param proto.cpl_doi CALIPSO DOI
  * @param proto.addrsel IP address selector(s)
  *
  * NetLabel type used to map LSM domains to labeling protocol configurations.
@@ -234,6 +255,7 @@ struct nlbl_dommap {
 	nlbl_proto proto_type;
 	union {
 		nlbl_cv4_doi cv4_doi;
+		nlbl_clp_doi clp_doi;
 		struct nlbl_dommap_addr *addrsel;
 	} proto;
 };
@@ -343,5 +365,15 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 			 nlbl_cv4_doi **dois,
 			 nlbl_cv4_mtype **mtypes);
+/* CALIPSO Protocol */
+int nlbl_calipso_add_pass(struct nlbl_handle *hndl,
+			  nlbl_clp_doi doi);
+int nlbl_calipso_del(struct nlbl_handle *hndl, nlbl_clp_doi doi);
+int nlbl_calipso_list(struct nlbl_handle *hndl,
+		      nlbl_clp_doi doi,
+		      nlbl_clp_mtype *mtype);
+int nlbl_calipso_listall(struct nlbl_handle *hndl,
+			 nlbl_clp_doi **dois,
+			 nlbl_clp_mtype **mtypes);
 
 #endif

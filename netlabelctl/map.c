@@ -70,6 +70,9 @@ int map_add(int argc, char *argv[])
 			if (strncmp(argv[iter] + 9, "cipsov4", 7) == 0) {
 				domain.proto_type = NETLBL_NLTYPE_CIPSOV4;
 				domain.family = AF_INET;
+			} else if (strncmp(argv[iter] + 9, "calipso", 7) == 0) {
+				domain.proto_type = NETLBL_NLTYPE_CALIPSO;
+				domain.family = AF_INET6;
 			} else if (strncmp(argv[iter] + 9, "unlbl", 5) == 0) {
 				domain.proto_type = NETLBL_NLTYPE_UNLABELED;
 				domain.family = AF_UNSPEC;
@@ -91,6 +94,11 @@ int map_add(int argc, char *argv[])
 		if (domain_proto_extra == NULL)
 			return -EINVAL;
 		domain.proto.cv4_doi = atoi(domain_proto_extra);
+		break;
+	case NETLBL_NLTYPE_CALIPSO:
+		if (domain_proto_extra == NULL)
+			return -EINVAL;
+		domain.proto.clp_doi = atoi(domain_proto_extra);
 		break;
 	case NETLBL_NLTYPE_UNLABELED:
 		if (domain_proto_extra != NULL) {
@@ -188,6 +196,9 @@ static void map_list_print(struct nlbl_dommap *mapping, size_t count)
 		case NETLBL_NLTYPE_CIPSOV4:
 			printf("CIPSOv4,%u", mapping[iter_a].proto.cv4_doi);
 			break;
+		case NETLBL_NLTYPE_CALIPSO:
+			printf("CALIPSO,%u", mapping[iter_a].proto.clp_doi);
+			break;
 		case NETLBL_NLTYPE_ADDRSELECT:
 			iter_b = mapping[iter_a].proto.addrsel;
 			while (iter_b) {
@@ -201,6 +212,10 @@ static void map_list_print(struct nlbl_dommap *mapping, size_t count)
 				case NETLBL_NLTYPE_CIPSOV4:
 					printf("CIPSOv4,%u",
 					       iter_b->proto.cv4_doi);
+					break;
+				case NETLBL_NLTYPE_CALIPSO:
+					printf("CALIPSO,%u",
+					       iter_b->proto.clp_doi);
 					break;
 				default:
 					printf("UNKNOWN(%u)",
@@ -259,6 +274,10 @@ static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
 			printf("   protocol: CIPSOv4, DOI = %u\n",
 			       mapping[iter_a].proto.cv4_doi);
 			break;
+		case NETLBL_NLTYPE_CALIPSO:
+			printf("   protocol: CALIPSO, DOI = %u\n",
+			       mapping[iter_a].proto.clp_doi);
+			break;
 		case NETLBL_NLTYPE_ADDRSELECT:
 			iter_b = mapping[iter_a].proto.addrsel;
 			while (iter_b) {
@@ -273,6 +292,10 @@ static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
 				case NETLBL_NLTYPE_CIPSOV4:
 					printf("CIPSOv4, DOI = %u\n",
 					       iter_b->proto.cv4_doi);
+					break;
+				case NETLBL_NLTYPE_CALIPSO:
+					printf("CALIPSO, DOI = %u\n",
+					       iter_b->proto.clp_doi);
 					break;
 				default:
 					printf("UNKNOWN(%u)\n",
