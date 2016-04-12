@@ -65,6 +65,19 @@ function nlbl_reset_cipso() {
 	return 0
 }
 
+# clear/reset the CALIPSO DOIs
+function nlbl_reset_calipso() {
+	# NOTE: make sure there are no mappings left which use these DOIs else
+	#       you will run into errors if the DOI is currently in use
+	local list=$(netlabelctl calipso list)
+	for i in $list; do
+		local doi=$(echo $i | cut -d',' -f 1)
+		netlabelctl calipso del doi:$doi
+	done
+
+	return 0
+}
+
 # clear/reset the NetLabel outbound traffic mapping
 function nlbl_reset_map() {
 	# remove the existing mapping domains
@@ -93,6 +106,7 @@ function nlbl_reset() {
 	# NOTE: ordering is important here, see nlbl_reset_cipso() for details
 	nlbl_reset_map
 	nlbl_reset_cipso
+	nlbl_reset_calipso
 	nlbl_reset_unlbl
 	return 0
 }
