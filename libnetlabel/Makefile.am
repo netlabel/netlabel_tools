@@ -20,6 +20,7 @@
 
 SOURCES = \
 	netlabel_comm.c netlabel_init.c netlabel_msg.c netlabel_internal.h \
+	mod_calipso.h mod_calipso.c \
 	mod_cipsov4.h mod_cipsov4.c \
 	mod_mgmt.h mod_mgmt.c \
 	mod_unlabeled.h mod_unlabeled.c

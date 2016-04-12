@@ -34,6 +34,7 @@
 #include "mod_mgmt.h"
 #include "mod_unlabeled.h"
 #include "mod_cipsov4.h"
+#include "mod_calipso.h"
 
 /**
  * Handle any NetLabel setup needed
@@ -59,6 +60,10 @@ int nlbl_init(void)
 	rc = nlbl_unlbl_init();
 	if (rc < 0)
 		return rc;
+
+	/* CALISPO support may not exist in the kernel so
+	   don't return an error if it doesn't. */
+	nlbl_calipso_init();
 
 	return 0;
 }
