@@ -41,7 +41,7 @@
  * success, negative values on failure.
  *
  */
-int cipsov4_add(int argc, char *argv[])
+static int cipsov4_add(int argc, char *argv[])
 {
 	int rc;
 	uint32_t iter;
@@ -163,7 +163,7 @@ add_return:
  * success, negative values on failure.
  *
  */
-int cipsov4_del(int argc, char *argv[])
+static int cipsov4_del(int argc, char *argv[])
 {
 	uint32_t iter;
 	nlbl_cv4_doi doi = 0;
@@ -374,7 +374,7 @@ static int cipsov4_list_doi(uint32_t doi)
  * negative values on failure.
  *
  */
-int cipsov4_list(int argc, char *argv[])
+static int cipsov4_list(int argc, char *argv[])
 {
 	uint32_t iter;
 	uint32_t doi_flag = 0;

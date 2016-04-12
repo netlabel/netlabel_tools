@@ -43,7 +43,7 @@
  * success, negative values on failure.
  *
  */
-int map_add(int argc, char *argv[])
+static int map_add(int argc, char *argv[])
 {
 	uint32_t iter;
 	uint8_t def_flag = 0;
@@ -108,7 +108,7 @@ int map_add(int argc, char *argv[])
  * on success, negative values on failure.
  *
  */
-int map_del(int argc, char *argv[])
+static int map_del(int argc, char *argv[])
 {
 	uint32_t iter;
 	uint32_t def_flag = 0;
@@ -266,7 +266,7 @@ static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
  * negative values on failure.
  *
  */
-int map_list(int argc, char *argv[])
+static int map_list(int argc, char *argv[])
 {
 	int rc;
 	struct nlbl_dommap *mapping, *mapping_new;

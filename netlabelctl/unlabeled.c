@@ -44,7 +44,7 @@
  * negative values on failure.
  *
  */
-int unlbl_accept(int argc, char *argv[])
+static int unlbl_accept(int argc, char *argv[])
 {
 	int rc;
 	uint8_t flag;
@@ -75,7 +75,7 @@ int unlbl_accept(int argc, char *argv[])
  * success, negative values on failure.
  *
  */
-int unlbl_list(void)
+static int unlbl_list(void)
 {
 	int rc;
 	uint8_t flag;
@@ -177,7 +177,7 @@ list_return:
  * negative values on failure.
  *
  */
-int unlbl_add(int argc, char *argv[])
+static int unlbl_add(int argc, char *argv[])
 {
 	uint32_t iter;
 	uint8_t def_flag = 0;
@@ -221,7 +221,7 @@ int unlbl_add(int argc, char *argv[])
  * success, negative values on failure.
  *
  */
-int unlbl_del(int argc, char *argv[])
+static int unlbl_del(int argc, char *argv[])
 {
 	uint32_t iter;
 	uint8_t def_flag = 0;

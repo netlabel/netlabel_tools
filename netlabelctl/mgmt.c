@@ -38,7 +38,7 @@
  * the user.  Returns zero on success, negative values on failure.
  *
  */
-int mgmt_protocols(void)
+static int mgmt_protocols(void)
 {
 	int rc;
 	nlbl_proto *list = NULL;
@@ -86,7 +86,7 @@ int mgmt_protocols(void)
  * Returns zero on success, negative values on failure.
  *
  */
-int mgmt_version(void)
+static int mgmt_version(void)
 {
 	int rc;
 	uint32_t kernel_ver;
