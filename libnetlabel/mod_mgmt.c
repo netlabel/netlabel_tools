@@ -528,6 +528,9 @@ int nlbl_mgmt_add(struct nlbl_handle *hndl,
 	rc = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
 	if (rc != 0)
 		goto add_return;
+	rc = nla_put_u16(msg, NLBL_MGMT_A_FAMILY, domain->family);
+	if (rc != 0)
+		goto add_return;
 	switch (domain->proto_type) {
 	case NETLBL_NLTYPE_CIPSOV4:
 		rc = nla_put_u32(msg,
@@ -644,6 +647,9 @@ int nlbl_mgmt_adddef(struct nlbl_handle *hndl,
 
 	/* add the required attributes to the message */
 	rc = nla_put_u32(msg, NLBL_MGMT_A_PROTOCOL, domain->proto_type);
+	if (rc != 0)
+		goto adddef_return;
+	rc = nla_put_u16(msg, NLBL_MGMT_A_FAMILY, domain->family);
 	if (rc != 0)
 		goto adddef_return;
 	switch (domain->proto_type) {
@@ -858,7 +864,8 @@ deldef_return:
  * on failure.
  *
  */
-int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
+int nlbl_mgmt_listdef(struct nlbl_handle *hndl, uint16_t family,
+		      struct nlbl_dommap *domain)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -883,6 +890,10 @@ int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 	/* create a new message */
 	msg = nlbl_mgmt_msg_new(NLBL_MGMT_C_LISTDEF, 0);
 	if (msg == NULL)
+		goto listdef_return;
+
+	rc = nla_put_u16(msg, NLBL_MGMT_A_FAMILY, family);
+	if (rc != 0)
 		goto listdef_return;
 
 	/* send the request */
@@ -915,6 +926,11 @@ int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain)
 	genl_hdr = nlbl_msg_genlhdr(ans_msg);
 	if (genl_hdr == NULL || genl_hdr->cmd != NLBL_MGMT_C_LISTDEF)
 		goto listdef_return;
+	nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_FAMILY);
+	if (nla != NULL)
+		domain->family = nla_get_u16(nla);
+	else
+		domain->family = AF_UNSPEC;
 	nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_PROTOCOL);
 	if (nla != NULL) {
 		domain->proto_type = nla_get_u32(nla);
@@ -1053,6 +1069,12 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 				goto listall_return;
 			strncpy(dmns[dmns_count].domain, nla_data(nla),
 				nla_len(nla));
+			nla = nla_find(nla_head,
+				       data_attrlen, NLBL_MGMT_A_FAMILY);
+			if (nla != NULL)
+				dmns[dmns_count].family = nla_get_u16(nla);
+			else
+				dmns[dmns_count].family = AF_UNSPEC;
 			nla = nla_find(nla_head,
 				       data_attrlen, NLBL_MGMT_A_PROTOCOL);
 			if (nla != NULL) {

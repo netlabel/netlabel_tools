@@ -220,6 +220,7 @@ struct nlbl_dommap_addr {
 /**
  * NetLabel LSM/Domain mapping structure
  * @param domain LSM domain
+ * @param family address family
  * @param proto_type labeling protocol
  * @param proto.cv4_doi CIPSOv4 DOI
  * @param proto.addrsel IP address selector(s)
@@ -229,6 +230,7 @@ struct nlbl_dommap_addr {
  */
 struct nlbl_dommap {
 	char *domain;
+	uint16_t family;
 	nlbl_proto proto_type;
 	union {
 		nlbl_cv4_doi cv4_doi;
@@ -298,7 +300,8 @@ int nlbl_mgmt_adddef(struct nlbl_handle *hndl,
 int nlbl_mgmt_del(struct nlbl_handle *hndl, char *domain);
 int nlbl_mgmt_deldef(struct nlbl_handle *hndl);
 int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains);
-int nlbl_mgmt_listdef(struct nlbl_handle *hndl, struct nlbl_dommap *domain);
+int nlbl_mgmt_listdef(struct nlbl_handle *hndl, uint16_t family,
+		      struct nlbl_dommap *domain);
 
 /* Unlabeled Traffic */
 int nlbl_unlbl_accept(struct nlbl_handle *hndl, uint8_t allow_flag);

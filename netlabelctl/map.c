@@ -67,12 +67,15 @@ static int map_add(int argc, char *argv[])
 				return -EINVAL;
 		} else if (strncmp(argv[iter], "protocol:", 9) == 0) {
 			/* protocol specifics */
-			if (strncmp(argv[iter] + 9, "cipsov4", 7) == 0)
+			if (strncmp(argv[iter] + 9, "cipsov4", 7) == 0) {
 				domain.proto_type = NETLBL_NLTYPE_CIPSOV4;
-			else if (strncmp(argv[iter] + 9, "unlbl", 5) == 0)
+				domain.family = AF_INET;
+			} else if (strncmp(argv[iter] + 9, "unlbl", 5) == 0) {
 				domain.proto_type = NETLBL_NLTYPE_UNLABELED;
-			else
+				domain.family = AF_UNSPEC;
+			} else {
 				return -EINVAL;
+			}
 			domain_proto_extra = strstr(argv[iter] + 9, ",");
 			if (domain_proto_extra)
 				domain_proto_extra++;
@@ -89,7 +92,25 @@ static int map_add(int argc, char *argv[])
 			return -EINVAL;
 		domain.proto.cv4_doi = atoi(domain_proto_extra);
 		break;
+	case NETLBL_NLTYPE_UNLABELED:
+		if (domain_proto_extra != NULL) {
+			int family = atoi(domain_proto_extra);
+			switch (family) {
+			case 4:
+				domain.family = AF_INET;
+				break;
+			case 6:
+				domain.family = AF_INET6;
+				break;
+			default:
+				return -EINVAL;
+			}
+		}
+		break;
 	}
+
+	if (domain.family == AF_UNSPEC && addr.type != 0)
+		domain.family = addr.type;
 
 	/* add the mapping */
 	if (def_flag != 0)
@@ -159,6 +180,10 @@ static void map_list_print(struct nlbl_dommap *mapping, size_t count)
 		switch (mapping[iter_a].proto_type) {
 		case NETLBL_NLTYPE_UNLABELED:
 			printf("UNLABELED");
+			if (mapping[iter_a].family == AF_INET)
+				printf(",4");
+			else if (mapping[iter_a].family == AF_INET6)
+				printf(",6");
 			break;
 		case NETLBL_NLTYPE_CIPSOV4:
 			printf("CIPSOv4,%u", mapping[iter_a].proto.cv4_doi);
@@ -215,9 +240,16 @@ static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
 		/* domain string */
 		printf(" domain: ");
 		if (mapping[iter_a].domain != NULL)
-			printf("\"%s\"\n", mapping[iter_a].domain);
+			printf("\"%s\"", mapping[iter_a].domain);
 		else
-			printf("DEFAULT\n");
+			printf("DEFAULT");
+		/* family */
+		if (mapping[iter_a].family == AF_INET)
+			printf(" (IPv4)\n");
+		else if (mapping[iter_a].family == AF_INET6)
+			printf(" (IPv6)\n");
+		else if (mapping[iter_a].family == AF_UNSPEC)
+			printf(" (IPv4/IPv6)\n");
 		/* protocol */
 		switch (mapping[iter_a].proto_type) {
 		case NETLBL_NLTYPE_UNLABELED:
@@ -270,8 +302,9 @@ static int map_list(int argc, char *argv[])
 {
 	int rc;
 	struct nlbl_dommap *mapping, *mapping_new;
-	size_t count;
+	size_t count, def_count;
 	uint32_t iter;
+	uint16_t *family, families[] = {AF_INET, AF_INET6, AF_UNSPEC /* terminator */};
 
 	/* get the list of mappings */
 	rc = nlbl_mgmt_listall(NULL, &mapping);
@@ -280,18 +313,29 @@ static int map_list(int argc, char *argv[])
 	count = rc;
 
 	/* get the default mapping */
-	mapping_new = realloc(mapping, sizeof(*mapping) * (count + 1));
+	mapping_new = realloc(mapping, sizeof(*mapping) * (count + 2));
 	if (mapping_new == NULL)
 		goto list_return;
 	mapping = mapping_new;
-	memset(&mapping[count], 0, sizeof(*mapping));
-	rc = nlbl_mgmt_listdef(NULL, &mapping[count]);
-	if (rc < 0 && rc != -ENOENT)
-		goto list_return;
-	else if (rc == 0)
-		count += 1;
-	else
-		rc = 0;
+	memset(&mapping[count], 0, sizeof(*mapping) * 2);
+
+	for (family = families, def_count = 0; *family != AF_UNSPEC; family++) {
+		rc = nlbl_mgmt_listdef(NULL, *family, &mapping[count + def_count]);
+		if (rc < 0 && rc != -ENOENT)
+			goto list_return;
+		else if (rc == 0)
+			def_count += 1;
+		else
+			rc = 0;
+	}
+
+	/* If both defaults are unlabeled then combine them into a single entry */
+	if (def_count == 2 && mapping[count].proto_type == NETLBL_NLTYPE_UNLABELED &&
+	    mapping[count + 1].proto_type == NETLBL_NLTYPE_UNLABELED) {
+		mapping[count].family = AF_UNSPEC;
+		def_count--;
+	}
+	count += def_count;
 
 	/* display the results */
 	if (opt_pretty != 0)
