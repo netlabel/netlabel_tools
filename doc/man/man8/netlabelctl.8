@@ -68,7 +68,7 @@ specific labeling protocol configuration.  When specifying the unlabeled
 protocol, "unlbl", an extra value of either "4" or "6" may be used.  This
 restricts the mapping to IPv4 or IPv6 addresses.  Omitting the extra value will
 result in a mapping for all address families.  When specifying the CIPSO/IPv4
-or the CALIPSO/IPv6 protocol, "cipsov4" or "calipso", the DOI value should be
+or the CALIPSO/IPv6 protocol, "cipso" or "calipso", the DOI value should be
 specified; see the EXAMPLES section for details.  The different commands and their
 syntax are listed below.
 .HP
@@ -109,9 +109,9 @@ Delete an existing static/fallback entry.
 .br
 Display the status of the unlabeled accept flag.
 .TP 5
-.B cipsov4
+.B cipso
 .P
-The CIPSO/IPv4 (cipsov4) module controls the CIPSO/IPv4 labeling engine in the
+The CIPSO/IPv4 (cipso) module controls the CIPSO/IPv4 labeling engine in the
 kernel.  The CIPSO/IPv4 engine provided by NetLabel supports multiple Domains
 Of Interpretation (DOI) and the CIPSO/IPv4 module allows for different
 configurations for each DOI.  At present there are three types of 
@@ -191,39 +191,39 @@ Returns zero on success, errno values on failure.
 .SH "EXAMPLES"
 .\" //////////////////////////////////////////////////////////////////////////
 .TP 5
-.I netlabelctl cipsov4 add pass doi:16 tags:1
+.I netlabelctl cipso add pass doi:16 tags:1
 .br
 Add a CIPSO/IPv4 configuration with a DOI value of "16", using CIPSO tag "1"
 (the permissive bitmap tag).  The CIPSO and LSM levels/categories are passed
 through the NetLabel subsystem without any translation.
 .HP
-.I netlabelctl cipsov4 add trans doi:8 tags:1 levels:0=0,1=1 categories:0=1,1=0
+.I netlabelctl cipso add trans doi:8 tags:1 levels:0=0,1=1 categories:0=1,1=0
 .br
 Add a CIPSO/IPv4 configuration with a DOI value of "8", using CIPSO tag "1"
 (the permissive bitmap tag).  The specified mapping converts local LSM levels
 "0" and "1" to CIPSO levels "0" and "1" respectively while local LSM categories
 "0" and "1" are mapped to CIPSO categories "1" and "0" respectively.
 .HP
-.I netlabelctl \-p cipsov4 list
+.I netlabelctl \-p cipso list
 .br
 Display all of the CIPSO/IPv4 configurations in a human readable format.
 .HP
-.I netlabelctl \-p cipsov4 list doi:16
+.I netlabelctl \-p cipso list doi:16
 .br
 Display specific information about the CIPSO/IPv4 DOI 16 configuration.
 .HP
-.I netlabelctl cipsov4 del doi:8
+.I netlabelctl cipso del doi:8
 .br
 Delete the CIPSO/IPv4 configuration assigned to DOI 8.  In addition to
 removing the CIPSO/IPv4 configuration any domain mappings using this
 configuration will also be removed.
 .HP
-.I netlabelctl map add domain:lsm_domain protocol:cipsov4,8
+.I netlabelctl map add domain:lsm_domain protocol:cipso,8
 .br
 Add a domain mapping so that all outgoing packets sent from the "lsm_domain"
 will be labeled according to the CIPSO/IPv4 protocol using DOI 8.
 .HP
-.I netlabelctl map add domain:lsm_domain address:192.168.1.0/24 protocol:cipsov4,8
+.I netlabelctl map add domain:lsm_domain address:192.168.1.0/24 protocol:cipso,8
 .br
 Add a mapping so that all outgoing packets sent from the "lsm_domain" to the
 192.168.1.0/24 network will be labeled according to the CIPSO/IPv4 protocol
@@ -256,7 +256,8 @@ the 192.168.0.0/16 network.
 The NetLabel subsystem is supported on Linux Kernels version 2.6.19 and later.
 The static, or fallback, labels are only supported on Linux Kernels version
 2.6.25 and later.  The domain mapping address selectors are only supported on
-Linux Kernels 2.6.28 and later.
+Linux Kernels 2.6.28 and later and CALIPSO/RFC5570 is only supported on Linux
+Kernels 4.8.0 and later.
 .P
 The NetLabel project site, with more information including the source code
 repository, can be found at http://netlabel.sf.net.  This program is currently

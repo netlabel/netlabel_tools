@@ -21,7 +21,7 @@
 function doi_remove() {
 	local rc=1
 	while [[ $rc -ne 0 && $rc -lt 3 ]]; do
-		$GLBL_NETLABELCTL cipsov4 del doi:$1
+		$GLBL_NETLABELCTL cipso del doi:$1
 		[[ $? -ne 0 ]] && rc=$(($rc+1)) || rc=0
 		sleep 1
 	done
@@ -29,17 +29,17 @@ function doi_remove() {
 }
 
 # add the pass-through DOIs
-$GLBL_NETLABELCTL cipsov4 add pass doi:100 tags:1
+$GLBL_NETLABELCTL cipso add pass doi:100 tags:1
 [[ $? -ne 0 ]] && exit 1
-$GLBL_NETLABELCTL cipsov4 add pass doi:101 tags:1,2
+$GLBL_NETLABELCTL cipso add pass doi:101 tags:1,2
 [[ $? -ne 0 ]] && exit 1
-$GLBL_NETLABELCTL cipsov4 add pass doi:102 tags:1,2,5
+$GLBL_NETLABELCTL cipso add pass doi:102 tags:1,2,5
 [[ $? -ne 0 ]] && exit 1
 
 # verify the DOIs
-[[ "$($GLBL_NETLABELCTL cipsov4 list doi:100)" != "tags:1" ]] && exit 1
-[[ "$($GLBL_NETLABELCTL cipsov4 list doi:101)" != "tags:1,2" ]] && exit 1
-[[ "$($GLBL_NETLABELCTL cipsov4 list doi:102)" != "tags:1,2,5" ]] && exit 1
+[[ "$($GLBL_NETLABELCTL cipso list doi:100)" != "tags:1" ]] && exit 1
+[[ "$($GLBL_NETLABELCTL cipso list doi:101)" != "tags:1,2" ]] && exit 1
+[[ "$($GLBL_NETLABELCTL cipso list doi:102)" != "tags:1,2,5" ]] && exit 1
 
 # remove the DOIs
 doi_remove 100

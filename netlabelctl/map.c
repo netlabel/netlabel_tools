@@ -67,7 +67,8 @@ static int map_add(int argc, char *argv[])
 				return -EINVAL;
 		} else if (strncmp(argv[iter], "protocol:", 9) == 0) {
 			/* protocol specifics */
-			if (strncmp(argv[iter] + 9, "cipsov4", 7) == 0) {
+			if (strncmp(argv[iter] + 9, "cipsov4", 7) == 0 ||
+			    strncmp(argv[iter] + 9, "cipso", 5) == 0) {
 				domain.proto_type = NETLBL_NLTYPE_CIPSOV4;
 				domain.family = AF_INET;
 			} else if (strncmp(argv[iter] + 9, "calipso", 7) == 0) {
@@ -169,7 +170,8 @@ static int map_del(int argc, char *argv[])
  * @param mapping the domain mappings
  * @param count the number of domain mappings
  *
- * Helper function to be called by map_list().
+ * Helper function to be called by map_list().  Note that we have preserved
+ * the "CIPSOv4" so we don't break any scripts that may be in use.
  *
  */
 static void map_list_print(struct nlbl_dommap *mapping, size_t count)
@@ -271,7 +273,7 @@ static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
 			printf("   protocol: UNLABELED\n");
 			break;
 		case NETLBL_NLTYPE_CIPSOV4:
-			printf("   protocol: CIPSOv4, DOI = %u\n",
+			printf("   protocol: CIPSO, DOI = %u\n",
 			       mapping[iter_a].proto.cip_doi);
 			break;
 		case NETLBL_NLTYPE_CALIPSO:
@@ -290,7 +292,7 @@ static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
 					printf("UNLABELED\n");
 					break;
 				case NETLBL_NLTYPE_CIPSOV4:
-					printf("CIPSOv4, DOI = %u\n",
+					printf("CIPSO, DOI = %u\n",
 					       iter_b->proto.cip_doi);
 					break;
 				case NETLBL_NLTYPE_CALIPSO:

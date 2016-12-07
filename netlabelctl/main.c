@@ -107,7 +107,7 @@ static void nlctl_help_print(FILE *fp)
 		"                                label:<LABEL>\n"
 		"    del default|interface:<DEV> address:<ADDR>[/<MASK>]\n"
 		"    list\n"
-		"  cipsov4 : CIPSO/IPv4 packet handling\n"
+		"  cipso|cipsov4 : CIPSO/IPv4 packet handling\n"
 		"    add trans doi:<DOI> tags:<T1>,<Tn>\n"
 		"            levels:<LL1>=<RL1>,<LLn>=<RLn>\n"
 		"            categories:<LC1>=<RC1>,<LCn>=<RCn>\n"
@@ -381,7 +381,8 @@ int main(int argc, char *argv[])
 		module_main = map_main;
 	} else if (!strcmp(module_name, "unlbl")) {
 		module_main = unlbl_main;
-	} else if (!strcmp(module_name, "cipsov4")) {
+	} else if (!strcmp(module_name, "cipsov4") ||
+		   !strcmp(module_name, "cipso")) {
 		module_main = cipso_main;
 	} else if (!strcmp(module_name, "calipso")) {
 		module_main = calipso_main;

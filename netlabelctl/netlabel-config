@@ -56,10 +56,10 @@ function nlbl_reset_unlbl() {
 function nlbl_reset_cipso() {
 	# NOTE: make sure there are no mappings left which use these DOIs else
 	#       you will run into errors if the DOI is currently in use
-	local list=$(netlabelctl cipsov4 list)
+	local list=$(netlabelctl cipso list)
 	for i in $list; do
 		local doi=$(echo $i | cut -d',' -f 1)
-		netlabelctl cipsov4 del doi:$doi
+		netlabelctl cipso del doi:$doi
 	done
 
 	return 0

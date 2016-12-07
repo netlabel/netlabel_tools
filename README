@@ -51,13 +51,13 @@ If you are unsure about the necessary kernel support, or even the current
 NetLabel configuration, you can both verify the kernel and display the current
 configuration with the following commands:
 
- # netlabelctl -p cipsov4 list
+ # netlabelctl -p cipso list
  # netlabelctl -p map list
 
 If you see any configured CIPSO definitions you can remove them with the
 following command:
 
- # netlabelctl -p cipsov4 del doi:<DOI>
+ # netlabelctl -p cipso del doi:<DOI>
 
 If you see any domain mappings you can remove them with the following command:
 
@@ -80,17 +80,17 @@ to the kernel.  The command below creates a CIPSO/IPv4 definition using a DOI
 value of 1, the permissive bitmask tag (value 1), and a pass through mapping
 meaning the CIPSO MLS values are passed straight through to the LSM.
 
- # netlabelctl cipsov4 add pass doi:1 tags:1
+ # netlabelctl cipso add pass doi:1 tags:1
 
 The next step is to tell the NetLabel system to use this CIPSO/IPv4 defintion
 by default.  You do that with the following command:
 
- # netlabelctl map add default protocol:cipsov4,1
+ # netlabelctl map add default protocol:cipso,1
 
 You can verify that everything is configured correctly with the following two
 commands:
 
- # netlabelctl -p cipsov4 list doi:1
+ # netlabelctl -p cipso list doi:1
  # netlabelctl -p map list
 
 For a more in depth explanation of configuring NetLabel on your Linux system,

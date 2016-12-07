@@ -5,7 +5,7 @@
 #
 # See the netlabel-config(8) and netlabelctl(8) manpages for more information.
 #
-# http://netlabel.sf.net
+# https://github.com/netlabel
 #
 
 ##
@@ -26,9 +26,9 @@
 ##          device.
 ##
 #
-# cipsov4 add doi:9999 local
+# cipso add doi:9999 local
 # map del default
 # map add default address:0.0.0.0/0 protocol:unlbl
 # map add default address:::0/0 protocol:unlbl
-# map add default address:127.0.0.1 protocol:cipsov4,9999
+# map add default address:127.0.0.1 protocol:cipso,9999
 

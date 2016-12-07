@@ -60,7 +60,11 @@ static int mgmt_protocols(void)
 			printf("RIPSO");
 			break;
 		case NETLBL_NLTYPE_CIPSOV4:
-			printf("CIPSOv4");
+			/* preserve "CIPSOv4" for any scripts */
+			if (opt_pretty)
+				printf("CIPSO");
+			else
+				printf("CIPSOv4");
 			break;
 		case NETLBL_NLTYPE_CIPSOV6:
 			printf("CIPSOv6");

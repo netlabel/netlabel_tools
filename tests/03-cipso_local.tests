@@ -21,7 +21,7 @@
 function doi_remove() {
 	local rc=1
 	while [[ $rc -ne 0 && $rc -lt 3 ]]; do
-		$GLBL_NETLABELCTL cipsov4 del doi:$1
+		$GLBL_NETLABELCTL cipso del doi:$1
 		[[ $? -ne 0 ]] && rc=$(($rc+1)) || rc=0
 		sleep 1
 	done
@@ -29,11 +29,11 @@ function doi_remove() {
 }
 
 # add the local DOI
-$GLBL_NETLABELCTL cipsov4 add local doi:100
+$GLBL_NETLABELCTL cipso add local doi:100
 [[ $? -ne 0 ]] && exit 1
 
 # verify the DOI
-[[ "$($GLBL_NETLABELCTL cipsov4 list doi:100)" != "tags:128" ]] && exit 1
+[[ "$($GLBL_NETLABELCTL cipso list doi:100)" != "tags:128" ]] && exit 1
 
 # remove the DOI
 doi_remove 100
