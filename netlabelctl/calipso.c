@@ -201,7 +201,7 @@ static int calipso_list_doi(uint32_t doi)
 	} else {
 		switch (maptype) {
 		case CALIPSO_MAP_PASS:
-			printf(" type:PASS_THROUGH");
+			printf("type:PASS_THROUGH");
 			break;
 		}
 		printf("\n");
