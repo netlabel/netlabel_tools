@@ -29,6 +29,7 @@ if HAVE_SYSTEMD
 systemdsystemunit_DATA = netlabel.service
 endif
 
-netlabelctl_SOURCES = netlabelctl.h main.c mgmt.c map.c unlabeled.c cipsov4.c calipso.c
+netlabelctl_SOURCES = \
+	netlabelctl.h main.c mgmt.c map.c unlabeled.c cipso.c calipso.c
 netlabelctl_CPPFLAGS = ${AM_CPPFLAGS} -I$(topdir)/include
 netlabelctl_LDADD = ../libnetlabel/libnetlabel.a

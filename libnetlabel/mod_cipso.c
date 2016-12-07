@@ -33,23 +33,23 @@
 #include "netlabel_internal.h"
 
 /* Generic Netlink family ID */
-static uint16_t nlbl_cipsov4_fid = 0;
+static uint16_t nlbl_cipso_fid = 0;
 
 /*
  * Helper functions
  */
 
 /**
- * Create a new NetLabel CIPSOv4 message
+ * Create a new NetLabel CIPSO message
  * @param command the NetLabel management command
  * @param flags the message flags
  *
- * This function creates a new NetLabel CIPSOv4 message using @command and
+ * This function creates a new NetLabel CIPSO message using @command and
  * @flags.  Returns a pointer to the new message on success, or NULL on
  * failure.
  *
  */
-static nlbl_msg *nlbl_cipsov4_msg_new(uint16_t command, int flags)
+static nlbl_msg *nlbl_cipso_msg_new(uint16_t command, int flags)
 {
 	nlbl_msg *msg;
 	struct nlmsghdr *nl_hdr;
@@ -64,7 +64,7 @@ static nlbl_msg *nlbl_cipsov4_msg_new(uint16_t command, int flags)
 	nl_hdr = nlbl_msg_nlhdr(msg);
 	if (nl_hdr == NULL)
 		goto msg_new_failure;
-	nl_hdr->nlmsg_type = nlbl_cipsov4_fid;
+	nl_hdr->nlmsg_type = nlbl_cipso_fid;
 	nl_hdr->nlmsg_flags = flags;
 
 	/* setup the generic netlink header */
@@ -81,16 +81,16 @@ msg_new_failure:
 }
 
 /**
- * Read a NetLbel CIPSOv4 message
+ * Read a NetLbel CIPSO message
  * @param hndl the NetLabel handle
  * @param msg the message
  *
- * Try to read a NetLabel CIPSOv4 message and return the message in @msg.
+ * Try to read a NetLabel CIPSO message and return the message in @msg.
  * Returns the number of bytes read on success, zero on EOF, and negative
  * values on failure.
  *
  */
-static int nlbl_cipsov4_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
+static int nlbl_cipso_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 {
 	int rc;
 	struct nlmsghdr *nl_hdr;
@@ -102,7 +102,7 @@ static int nlbl_cipsov4_recv(struct nlbl_handle *hndl, nlbl_msg **msg)
 
 	/* process the response */
 	nl_hdr = nlbl_msg_nlhdr(*msg);
-	if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_cipsov4_fid &&
+	if (nl_hdr == NULL || (nl_hdr->nlmsg_type != nlbl_cipso_fid &&
 			       nl_hdr->nlmsg_type != NLMSG_DONE &&
 			       nl_hdr->nlmsg_type != NLMSG_ERROR)) {
 		rc = -EBADMSG;
@@ -124,7 +124,7 @@ recv_failure:
  * ACK.
  *
  */
-static int nlbl_cipsov4_parse_ack(nlbl_msg *msg)
+static int nlbl_cipso_parse_ack(nlbl_msg *msg)
 {
 	struct nlmsgerr *nl_err;
 
@@ -142,12 +142,12 @@ static int nlbl_cipsov4_parse_ack(nlbl_msg *msg)
 /**
  * Perform any setup needed
  *
- * Do any setup needed for the CIPSOv4 component, including determining the
- * NetLabel CIPSOv4 Generic Netlink family ID.  Returns zero on success,
+ * Do any setup needed for the CIPSO component, including determining the
+ * NetLabel CIPSO Generic Netlink family ID.  Returns zero on success,
  * negative values on error.
  *
  */
-int nlbl_cipsov4_init(void)
+int nlbl_cipso_init(void)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *hndl;
@@ -161,7 +161,7 @@ int nlbl_cipsov4_init(void)
 	rc = genl_ctrl_resolve(hndl->nl_sock, NETLBL_NLTYPE_CIPSOV4_NAME);
 	if (rc < 0)
 		goto init_return;
-	nlbl_cipsov4_fid = rc;
+	nlbl_cipso_fid = rc;
 
 	rc = 0;
 
@@ -175,7 +175,7 @@ init_return:
  */
 
 /**
- * Add a translated CIPSOv4 label mapping
+ * Add a translated CIPSO label mapping
  * @param hndl the NetLabel handle
  * @param doi the CIPSO DOI number
  * @param tags array of tags
@@ -188,11 +188,11 @@ init_return:
  * failure.
  *
  */
-int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
-			   nlbl_cv4_doi doi,
-			   struct nlbl_cv4_tag_a *tags,
-			   struct nlbl_cv4_lvl_a *lvls,
-			   struct nlbl_cv4_cat_a *cats)
+int nlbl_cipso_add_trans(struct nlbl_handle *hndl,
+			   nlbl_cip_doi doi,
+			   struct nlbl_cip_tag_a *tags,
+			   struct nlbl_cip_lvl_a *lvls,
+			   struct nlbl_cip_cat_a *cats)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -207,7 +207,7 @@ int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
 	    tags == NULL || tags->size == 0 ||
 	    lvls == NULL || lvls->size == 0)
 		return -EINVAL;
-	if (nlbl_cipsov4_fid == 0)
+	if (nlbl_cipso_fid == 0)
 		return -ENOPROTOOPT;
 
 	/* open a handle if we need one */
@@ -218,7 +218,7 @@ int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
 	}
 
 	/* create a new message */
-	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_ADD, 0);
+	msg = nlbl_cipso_msg_new(NLBL_CIPSOV4_C_ADD, 0);
 	if (msg == NULL)
 		goto add_std_return;
 
@@ -326,7 +326,7 @@ int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
 	}
 
 	/* read the response */
-	rc = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+	rc = nlbl_cipso_recv(p_hndl, &ans_msg);
 	if (rc <= 0) {
 		if (rc == 0)
 			rc = -ENODATA;
@@ -334,7 +334,7 @@ int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
 	}
 
 	/* process the response */
-	rc = nlbl_cipsov4_parse_ack(ans_msg);
+	rc = nlbl_cipso_parse_ack(ans_msg);
 
 add_std_return:
 	if (hndl == NULL)
@@ -347,7 +347,7 @@ add_std_return:
 }
 
 /**
- * Add a pass-through CIPSOv4 label mapping
+ * Add a pass-through CIPSO label mapping
  * @param hndl the NetLabel handle
  * @param doi the CIPSO DOI number
  * @param tags array of tags
@@ -358,9 +358,9 @@ add_std_return:
  * failure.
  *
  */
-int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
-			  nlbl_cv4_doi doi,
-			  struct nlbl_cv4_tag_a *tags)
+int nlbl_cipso_add_pass(struct nlbl_handle *hndl,
+			  nlbl_cip_doi doi,
+			  struct nlbl_cip_tag_a *tags)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -373,7 +373,7 @@ int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 	if (doi == 0 ||
 	    tags == NULL || tags->size == 0)
 		return -EINVAL;
-	if (nlbl_cipsov4_fid == 0)
+	if (nlbl_cipso_fid == 0)
 		return -ENOPROTOOPT;
 
 	/* open a handle if we need one */
@@ -384,7 +384,7 @@ int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 	}
 
 	/* create a new message */
-	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_ADD, 0);
+	msg = nlbl_cipso_msg_new(NLBL_CIPSOV4_C_ADD, 0);
 	if (msg == NULL)
 		goto add_pass_return;
 
@@ -421,7 +421,7 @@ int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 	}
 
 	/* read the response */
-	rc = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+	rc = nlbl_cipso_recv(p_hndl, &ans_msg);
 	if (rc <= 0) {
 		if (rc == 0)
 			rc = -ENODATA;
@@ -429,7 +429,7 @@ int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
 	}
 
 	/* process the response */
-	rc = nlbl_cipsov4_parse_ack(ans_msg);
+	rc = nlbl_cipso_parse_ack(ans_msg);
 
 add_pass_return:
 	if (hndl == NULL)
@@ -441,7 +441,7 @@ add_pass_return:
 }
 
 /**
- * Add a local CIPSOv4 label mapping
+ * Add a local CIPSO label mapping
  * @param hndl the NetLabel handle
  * @param doi the CIPSO DOI number
  *
@@ -451,7 +451,7 @@ add_pass_return:
  * failure.
  *
  */
-int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
+int nlbl_cipso_add_local(struct nlbl_handle *hndl, nlbl_cip_doi doi)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -462,7 +462,7 @@ int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 	/* sanity checks */
 	if (doi == 0)
 		return -EINVAL;
-	if (nlbl_cipsov4_fid == 0)
+	if (nlbl_cipso_fid == 0)
 		return -ENOPROTOOPT;
 
 	/* open a handle if we need one */
@@ -473,7 +473,7 @@ int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 	}
 
 	/* create a new message */
-	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_ADD, 0);
+	msg = nlbl_cipso_msg_new(NLBL_CIPSOV4_C_ADD, 0);
 	if (msg == NULL)
 		goto add_local_return;
 
@@ -507,7 +507,7 @@ int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 	}
 
 	/* read the response */
-	rc = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+	rc = nlbl_cipso_recv(p_hndl, &ans_msg);
 	if (rc <= 0) {
 		if (rc == 0)
 			rc = -ENODATA;
@@ -515,7 +515,7 @@ int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 	}
 
 	/* process the response */
-	rc = nlbl_cipsov4_parse_ack(ans_msg);
+	rc = nlbl_cipso_parse_ack(ans_msg);
 
 add_local_return:
 	if (hndl == NULL)
@@ -527,7 +527,7 @@ add_local_return:
 }
 
 /**
- * Delete a CIPSOv4 label mapping
+ * Delete a CIPSO label mapping
  * @param hndl the NetLabel handle
  * @param doi the CIPSO DOI number
  *
@@ -536,7 +536,7 @@ add_local_return:
  * handle.  Returns zero on success, negative values on failure.
  *
  */
-int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
+int nlbl_cipso_del(struct nlbl_handle *hndl, nlbl_cip_doi doi)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -546,7 +546,7 @@ int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 	/* sanity checks */
 	if (doi == 0)
 		return -EINVAL;
-	if (nlbl_cipsov4_fid == 0)
+	if (nlbl_cipso_fid == 0)
 		return -ENOPROTOOPT;
 
 	/* open a handle if we need one */
@@ -557,7 +557,7 @@ int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 	}
 
 	/* create a new message */
-	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_REMOVE, 0);
+	msg = nlbl_cipso_msg_new(NLBL_CIPSOV4_C_REMOVE, 0);
 	if (msg == NULL)
 		goto del_return;
 
@@ -575,7 +575,7 @@ int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 	}
 
 	/* read the response */
-	rc = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+	rc = nlbl_cipso_recv(p_hndl, &ans_msg);
 	if (rc <= 0) {
 		if (rc == 0)
 			rc = -ENODATA;
@@ -583,7 +583,7 @@ int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi)
 	}
 
 	/* process the response */
-	rc = nlbl_cipsov4_parse_ack(ans_msg);
+	rc = nlbl_cipso_parse_ack(ans_msg);
 
 del_return:
 	if (hndl == NULL)
@@ -594,7 +594,7 @@ del_return:
 }
 
 /**
- * List the details of a specific CIPSOv4 label mapping
+ * List the details of a specific CIPSO label mapping
  * @param hndl the NetLabel handle
  * @param doi the CIPSO DOI number
  * @param mtype the DOI mapping type
@@ -602,18 +602,18 @@ del_return:
  * @param lvls array of level mappings
  * @param cats array of category mappings
  *
- * Query the kernel for the specified CIPSOv4 mapping specified by @doi and
+ * Query the kernel for the specified CIPSO mapping specified by @doi and
  * return the details of the mapping to the caller.  If @hndl is NULL then the
  * function will handle opening and closing it's own NetLabel handle.  Returns
  * zero on success, negative values on failure.
  *
  */
-int nlbl_cipsov4_list(struct nlbl_handle *hndl,
-		      nlbl_cv4_doi doi,
-		      nlbl_cv4_mtype *mtype,
-		      struct nlbl_cv4_tag_a *tags,
-		      struct nlbl_cv4_lvl_a *lvls,
-		      struct nlbl_cv4_cat_a *cats)
+int nlbl_cipso_list(struct nlbl_handle *hndl,
+		      nlbl_cip_doi doi,
+		      nlbl_cip_mtype *mtype,
+		      struct nlbl_cip_tag_a *tags,
+		      struct nlbl_cip_lvl_a *lvls,
+		      struct nlbl_cip_cat_a *cats)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -630,7 +630,7 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 	if (doi == 0 ||
 	    mtype == NULL || tags == NULL || lvls == NULL || cats == NULL)
 		return -EINVAL;
-	if (nlbl_cipsov4_fid == 0)
+	if (nlbl_cipso_fid == 0)
 		return -ENOPROTOOPT;
 
 	/* open a handle if we need one */
@@ -641,7 +641,7 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 	}
 
 	/* create a new message */
-	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_LIST, 0);
+	msg = nlbl_cipso_msg_new(NLBL_CIPSOV4_C_LIST, 0);
 	if (msg == NULL)
 		goto list_return;
 
@@ -659,7 +659,7 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 	}
 
 	/* read the response */
-	rc = nlbl_cipsov4_recv(p_hndl, &ans_msg);
+	rc = nlbl_cipso_recv(p_hndl, &ans_msg);
 	if (rc <= 0) {
 		if (rc == 0)
 			rc = -ENODATA;
@@ -667,7 +667,7 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 	}
 
 	/* check the response */
-	rc = nlbl_cipsov4_parse_ack(ans_msg);
+	rc = nlbl_cipso_parse_ack(ans_msg);
 	if (rc < 0 && rc != -ENOMSG)
 		goto list_return;
 	genl_hdr = nlbl_msg_genlhdr(ans_msg);
@@ -712,7 +712,7 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 		if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSLVL) {
 			lvls->array = realloc(lvls->array,
 					      ((lvls->size + 1) * 2) *
-					      sizeof(nlbl_cv4_lvl));
+					      sizeof(nlbl_cip_lvl));
 			if (lvls->array == NULL) {
 				rc = -ENOMEM;
 				goto list_return;
@@ -740,7 +740,7 @@ int nlbl_cipsov4_list(struct nlbl_handle *hndl,
 		if (nla_b->nla_type == NLBL_CIPSOV4_A_MLSCAT) {
 			cats->array = realloc(cats->array,
 					      ((cats->size + 1) * 2) *
-					      sizeof(nlbl_cv4_cat));
+					      sizeof(nlbl_cip_cat));
 			if (cats->array == NULL) {
 				rc = -ENOMEM;
 				goto list_return;
@@ -772,21 +772,21 @@ list_return:
 }
 
 /**
- * List the CIPSOv4 label mappings
+ * List the CIPSO label mappings
  * @param hndl the NetLabel handle
  * @param dois an array of DOI values
  * @param mtypes an array of the mapping types
  *
- * Query the kernel for the configured CIPSOv4 mappings and return two arrays;
+ * Query the kernel for the configured CIPSO mappings and return two arrays;
  * @dois which contains the DOI values and @mtypes which contains the
  * type of mapping.  If @hndl is NULL then the function will handle opening
  * and closing it's own NetLabel handle.  Returns the number of mappings on
  * success, zero if no mappings exist, and negative values on failure.
  *
  */
-int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
-			 nlbl_cv4_doi **dois,
-			 nlbl_cv4_mtype **mtypes)
+int nlbl_cipso_listall(struct nlbl_handle *hndl,
+			 nlbl_cip_doi **dois,
+			 nlbl_cip_mtype **mtypes)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -798,14 +798,14 @@ int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 	struct nlattr *nla;
 	int data_len;
 	int data_attrlen;
-	nlbl_cv4_doi *doi_a = NULL, *doi_a_new;
-	nlbl_cv4_mtype *mtype_a = NULL, *mtype_a_new;
+	nlbl_cip_doi *doi_a = NULL, *doi_a_new;
+	nlbl_cip_mtype *mtype_a = NULL, *mtype_a_new;
 	uint32_t count = 0;
 
 	/* sanity checks */
 	if (dois == NULL || mtypes == NULL)
 		return -EINVAL;
-	if (nlbl_cipsov4_fid == 0)
+	if (nlbl_cipso_fid == 0)
 		return -ENOPROTOOPT;
 
 	/* open a handle if we need one */
@@ -816,7 +816,7 @@ int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 	}
 
 	/* create a new message */
-	msg = nlbl_cipsov4_msg_new(NLBL_CIPSOV4_C_LISTALL, NLM_F_DUMP);
+	msg = nlbl_cipso_msg_new(NLBL_CIPSOV4_C_LISTALL, NLM_F_DUMP);
 	if (msg == NULL) {
 		rc = -ENOMEM;
 		goto listall_return;
@@ -871,12 +871,12 @@ int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
 
 			/* resize the arrays */
 			doi_a_new = realloc(doi_a,
-					    sizeof(nlbl_cv4_doi) * (count + 1));
+					    sizeof(nlbl_cip_doi) * (count + 1));
 			if (doi_a_new == NULL)
 				goto listall_return;
 			doi_a = doi_a_new;
 			mtype_a_new = realloc(mtype_a,
-					      sizeof(nlbl_cv4_mtype) * (count + 1));
+					      sizeof(nlbl_cip_mtype) * (count + 1));
 			if (mtype_a_new == NULL)
 				goto listall_return;
 			mtype_a = mtype_a_new;

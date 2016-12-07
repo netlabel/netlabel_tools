@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
 	} else if (!strcmp(module_name, "unlbl")) {
 		module_main = unlbl_main;
 	} else if (!strcmp(module_name, "cipsov4")) {
-		module_main = cipsov4_main;
+		module_main = cipso_main;
 	} else if (!strcmp(module_name, "calipso")) {
 		module_main = calipso_main;
 	} else {

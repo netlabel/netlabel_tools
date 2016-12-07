@@ -33,23 +33,23 @@
 #include "netlabelctl.h"
 
 /**
- * Add a CIPSOv4 label mapping
+ * Add a CIPSO label mapping
  * @param argc the number of arguments
  * @param argv the argument list
  *
- * Add a CIPSOv4 label mapping to the NetLabel system.  Returns zero on
+ * Add a CIPSO label mapping to the NetLabel system.  Returns zero on
  * success, negative values on failure.
  *
  */
-static int cipsov4_add(int argc, char *argv[])
+static int cipso_add(int argc, char *argv[])
 {
 	int rc;
 	uint32_t iter;
 	uint32_t cipso_type = CIPSO_V4_MAP_UNKNOWN;
-	nlbl_cv4_doi doi = 0;
-	struct nlbl_cv4_tag_a tags = { .array = NULL, .size = 0 };
-	struct nlbl_cv4_lvl_a lvls = { .array = NULL, .size = 0 };
-	struct nlbl_cv4_cat_a cats = { .array = NULL, .size = 0 };
+	nlbl_cip_doi doi = 0;
+	struct nlbl_cip_tag_a tags = { .array = NULL, .size = 0 };
+	struct nlbl_cip_lvl_a lvls = { .array = NULL, .size = 0 };
+	struct nlbl_cip_cat_a cats = { .array = NULL, .size = 0 };
 	char *token_ptr;
 
 	/* sanity checks */
@@ -76,7 +76,7 @@ static int cipsov4_add(int argc, char *argv[])
 			token_ptr = strtok(argv[iter] + 5, ",");
 			while (token_ptr != NULL) {
 				tags.array = realloc(tags.array,
-						     sizeof(nlbl_cv4_tag) *
+						     sizeof(nlbl_cip_tag) *
 						     (tags.size + 1));
 				if (tags.array == NULL) {
 					rc = -ENOMEM;
@@ -90,7 +90,7 @@ static int cipsov4_add(int argc, char *argv[])
 			token_ptr = strtok(argv[iter] + 7, "=");
 			while (token_ptr != NULL) {
 				lvls.array = realloc(lvls.array,
-						     sizeof(nlbl_cv4_lvl) * 2 *
+						     sizeof(nlbl_cip_lvl) * 2 *
 						     (lvls.size + 1));
 				if (lvls.array == NULL) {
 					rc = -ENOMEM;
@@ -108,7 +108,7 @@ static int cipsov4_add(int argc, char *argv[])
 			token_ptr = strtok(argv[iter] + 11, "=");
 			while (token_ptr != NULL) {
 				cats.array = realloc(cats.array,
-						     sizeof(nlbl_cv4_cat) * 2 *
+						     sizeof(nlbl_cip_cat) * 2 *
 						     (cats.size + 1));
 				if (cats.array == NULL) {
 					rc = -ENOMEM;
@@ -129,16 +129,16 @@ static int cipsov4_add(int argc, char *argv[])
 	switch (cipso_type) {
 	case CIPSO_V4_MAP_TRANS:
 		/* translated mapping */
-		rc = nlbl_cipsov4_add_trans(NULL,
+		rc = nlbl_cipso_add_trans(NULL,
 					    doi, &tags, &lvls, &cats);
 		break;
 	case CIPSO_V4_MAP_PASS:
 		/* pass through mapping */
-		rc = nlbl_cipsov4_add_pass(NULL, doi, &tags);
+		rc = nlbl_cipso_add_pass(NULL, doi, &tags);
 		break;
 	case CIPSO_V4_MAP_LOCAL:
 		/* local mapping */
-		rc = nlbl_cipsov4_add_local(NULL, doi);
+		rc = nlbl_cipso_add_local(NULL, doi);
 		break;
 	default:
 		rc = -EINVAL;
@@ -155,18 +155,18 @@ add_return:
 }
 
 /**
- * Remove a CIPSOv4 label mapping
+ * Remove a CIPSO label mapping
  * @param argc the number of arguments
  * @param argv the argument list
  *
- * Remove a CIPSOv4 label mapping from the NetLabel system.  Returns zero on
+ * Remove a CIPSO label mapping from the NetLabel system.  Returns zero on
  * success, negative values on failure.
  *
  */
-static int cipsov4_del(int argc, char *argv[])
+static int cipso_del(int argc, char *argv[])
 {
 	uint32_t iter;
-	nlbl_cv4_doi doi = 0;
+	nlbl_cip_doi doi = 0;
 
 	/* sanity checks */
 	if (argc <= 0 || argv == NULL || argv[0] == NULL)
@@ -182,33 +182,33 @@ static int cipsov4_del(int argc, char *argv[])
 	}
 
 	/* delete the mapping */
-	return nlbl_cipsov4_del(NULL, doi);
+	return nlbl_cipso_del(NULL, doi);
 }
 
 /**
- * List all of the CIPSOv4 label mappings
+ * List all of the CIPSO label mappings
  * @param argc the number of arguments
  * @param argv the argument list
  *
- * List the configured CIPSOv4 label mappings.  Returns zero on success,
+ * List the configured CIPSO label mappings.  Returns zero on success,
  * negative values on failure.
  *
  */
-static int cipsov4_list_all(void)
+static int cipso_list_all(void)
 {
 	int rc;
 	uint32_t iter;
-	nlbl_cv4_doi *doi_list = NULL;
-	nlbl_cv4_mtype *mtype_list = NULL;
+	nlbl_cip_doi *doi_list = NULL;
+	nlbl_cip_mtype *mtype_list = NULL;
 	size_t count;
 
-	rc = nlbl_cipsov4_listall(NULL, &doi_list, &mtype_list);
+	rc = nlbl_cipso_listall(NULL, &doi_list, &mtype_list);
 	if (rc < 0)
 		goto list_all_return;
 	count = rc;
 
 	if (opt_pretty != 0) {
-		printf("Configured CIPSOv4 mappings (%zu)\n", count);
+		printf("Configured CIPSO mappings (%zu)\n", count);
 		for (iter = 0; iter < count; iter++) {
 			/* doi value */
 			printf(" DOI value : %u\n", doi_list[iter]);
@@ -265,28 +265,28 @@ list_all_return:
 }
 
 /**
- * List a specific CIPSOv4 DOI label mapping
+ * List a specific CIPSO DOI label mapping
  * @param doi the DOI value
  *
- * List the configured CIPSOv4 label mapping.  Returns zero on success,
+ * List the configured CIPSO label mapping.  Returns zero on success,
  * negative values on failure.
  *
  */
-static int cipsov4_list_doi(uint32_t doi)
+static int cipso_list_doi(uint32_t doi)
 {
 	int rc;
 	uint32_t iter;
-	nlbl_cv4_mtype maptype;
-	struct nlbl_cv4_tag_a tags = { .array = NULL, .size = 0 };
-	struct nlbl_cv4_lvl_a lvls = { .array = NULL, .size = 0 };
-	struct nlbl_cv4_cat_a cats = { .array = NULL, .size = 0 };
+	nlbl_cip_mtype maptype;
+	struct nlbl_cip_tag_a tags = { .array = NULL, .size = 0 };
+	struct nlbl_cip_lvl_a lvls = { .array = NULL, .size = 0 };
+	struct nlbl_cip_cat_a cats = { .array = NULL, .size = 0 };
 
-	rc = nlbl_cipsov4_list(NULL, doi, &maptype, &tags, &lvls, &cats);
+	rc = nlbl_cipso_list(NULL, doi, &maptype, &tags, &lvls, &cats);
 	if (rc < 0)
 		return rc;
 
 	if (opt_pretty != 0) {
-		printf("Configured CIPSOv4 mapping (DOI = %u)\n", doi);
+		printf("Configured CIPSO mapping (DOI = %u)\n", doi);
 		printf(" tags (%zu): \n", tags.size);
 		for (iter = 0; iter < tags.size; iter++) {
 			switch (tags.array[iter]) {
@@ -366,19 +366,19 @@ static int cipsov4_list_doi(uint32_t doi)
 }
 
 /**
- * List the CIPSOv4 label mappings
+ * List the CIPSO label mappings
  * @param argc the number of arguments
  * @param argv the argument list
  *
- * List the configured CIPSOv4 label mappings.  Returns zero on success,
+ * List the configured CIPSO label mappings.  Returns zero on success,
  * negative values on failure.
  *
  */
-static int cipsov4_list(int argc, char *argv[])
+static int cipso_list(int argc, char *argv[])
 {
 	uint32_t iter;
 	uint32_t doi_flag = 0;
-	nlbl_cv4_doi doi = 0;
+	nlbl_cip_doi doi = 0;
 
 	/* parse the arguments */
 	for (iter = 0; iter < argc && argv[iter] != NULL; iter++) {
@@ -391,9 +391,9 @@ static int cipsov4_list(int argc, char *argv[])
 	}
 
 	if (doi_flag != 0)
-		return cipsov4_list_doi(doi);
+		return cipso_list_doi(doi);
 	else
-		return cipsov4_list_all();
+		return cipso_list_all();
 }
 
 /**
@@ -405,7 +405,7 @@ static int cipsov4_list(int argc, char *argv[])
  * on success, negative values on failure.
  *
  */
-int cipsov4_main(int argc, char *argv[])
+int cipso_main(int argc, char *argv[])
 {
 	int rc;
 
@@ -416,13 +416,13 @@ int cipsov4_main(int argc, char *argv[])
 	/* handle the request */
 	if (strcmp(argv[0], "add") == 0) {
 		/* add */
-		rc = cipsov4_add(argc - 1, argv + 1);
+		rc = cipso_add(argc - 1, argv + 1);
 	} else if (strcmp(argv[0], "del") == 0) {
 		/* delete */
-		rc = cipsov4_del(argc - 1, argv + 1);
+		rc = cipso_del(argc - 1, argv + 1);
 	} else if (strcmp(argv[0], "list") == 0) {
 		/* list */
-		rc = cipsov4_list(argc - 1, argv + 1);
+		rc = cipso_list(argc - 1, argv + 1);
 	} else {
 		/* unknown request */
 		rc = -EINVAL;

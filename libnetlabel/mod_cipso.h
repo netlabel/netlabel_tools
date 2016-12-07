@@ -22,9 +22,9 @@
  *
  */
 
-#ifndef _MOD_CIPSOV4_H_
-#define _MOD_CIPSOV4_H_
+#ifndef _MOD_CIPSO_H_
+#define _MOD_CIPSO_H_
 
-int nlbl_cipsov4_init(void);
+int nlbl_cipso_init(void);
 
 #endif

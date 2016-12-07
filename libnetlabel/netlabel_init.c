@@ -33,7 +33,7 @@
 #include "netlabel_internal.h"
 #include "mod_mgmt.h"
 #include "mod_unlabeled.h"
-#include "mod_cipsov4.h"
+#include "mod_cipso.h"
 #include "mod_calipso.h"
 
 /**
@@ -53,7 +53,7 @@ int nlbl_init(void)
 	if (rc < 0)
 		return rc;
 
-	rc = nlbl_cipsov4_init();
+	rc = nlbl_cipso_init();
 	if (rc < 0)
 		return rc;
 

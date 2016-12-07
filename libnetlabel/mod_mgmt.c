@@ -201,7 +201,7 @@ static int nlbl_mgmt_list_addr(const struct nlattr *nla_head,
 						 NLBL_MGMT_A_CV4DOI);
 				if (nla_b == NULL)
 					return -EINVAL;
-				addr_iter->proto.cv4_doi =
+				addr_iter->proto.cip_doi =
 					nla_get_u32(nla_b);
 				break;
 			}
@@ -546,7 +546,7 @@ int nlbl_mgmt_add(struct nlbl_handle *hndl,
 	case NETLBL_NLTYPE_CIPSOV4:
 		rc = nla_put_u32(msg,
 				 NLBL_MGMT_A_CV4DOI,
-				 domain->proto.cv4_doi);
+				 domain->proto.cip_doi);
 		if (rc != 0)
 			goto add_return;
 		break;
@@ -674,7 +674,7 @@ int nlbl_mgmt_adddef(struct nlbl_handle *hndl,
 	case NETLBL_NLTYPE_CIPSOV4:
 		rc = nla_put_u32(msg,
 				 NLBL_MGMT_A_CV4DOI,
-				 domain->proto.cv4_doi);
+				 domain->proto.cip_doi);
 		if (rc != 0)
 			goto adddef_return;
 		break;
@@ -964,7 +964,7 @@ int nlbl_mgmt_listdef(struct nlbl_handle *hndl, uint16_t family,
 			nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_CV4DOI);
 			if (nla == NULL)
 				goto listdef_return;
-			domain->proto.cv4_doi = nla_get_u32(nla);
+			domain->proto.cip_doi = nla_get_u32(nla);
 			break;
 		case NETLBL_NLTYPE_CALIPSO:
 			nla = nlbl_attr_find(ans_msg, NLBL_MGMT_A_CLPDOI);
@@ -1117,7 +1117,7 @@ int nlbl_mgmt_listall(struct nlbl_handle *hndl, struct nlbl_dommap **domains)
 						       NLBL_MGMT_A_CV4DOI);
 					if (nla == NULL)
 						goto listall_return;
-					dmns[dmns_count].proto.cv4_doi =
+					dmns[dmns_count].proto.cip_doi =
 						nla_get_u32(nla);
 					break;
 				case NETLBL_NLTYPE_CALIPSO:

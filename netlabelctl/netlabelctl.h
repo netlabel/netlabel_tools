@@ -54,7 +54,7 @@ typedef int main_function_t(int argc, char *argv[]);
 int mgmt_main(int argc, char *argv[]);
 int map_main(int argc, char *argv[]);
 int unlbl_main(int argc, char *argv[]);
-int cipsov4_main(int argc, char *argv[]);
+int cipso_main(int argc, char *argv[]);
 int calipso_main(int argc, char *argv[]);
 
 #endif

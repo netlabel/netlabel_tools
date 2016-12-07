@@ -113,85 +113,85 @@ struct nlbl_netaddr {
  */
 typedef char *nlbl_secctx;
 
-/* CIPSOv4 Types */
+/* CIPSO Types */
 
 /**
- * NetLabel CIPSOv4 Domain Of Interpretation (DOI) value
+ * NetLabel CIPSO Domain Of Interpretation (DOI) value
  *
  * NetLabel type used to represent a CIPSO Domian of Interpretation (DOI).
  *
  */
-typedef uint32_t nlbl_cv4_doi;
+typedef uint32_t nlbl_cip_doi;
 
 /**
- * NetLabel CIPSOv4 mapping type
+ * NetLabel CIPSO mapping type
  *
- * NetLabel type used to represent the CIPSOv4 security label mapping method.
+ * NetLabel type used to represent the CIPSO security label mapping method.
  *
  */
-typedef uint32_t nlbl_cv4_mtype;
+typedef uint32_t nlbl_cip_mtype;
 
 /**
- * NetLabel CIPSOv4 tag type
+ * NetLabel CIPSO tag type
  *
- * NetLabel type used to represent CIPSOv4 tag types.
+ * NetLabel type used to represent CIPSO tag types.
  *
  */
-typedef uint8_t nlbl_cv4_tag;
+typedef uint8_t nlbl_cip_tag;
 
 /**
- * NetLabel CIPSOv4 tag array
+ * NetLabel CIPSO tag array
  * @param array array of tag types
  * @param size size of array
  *
- * NetLabel type used to represent an array of CIPSOv4 tags in decreasing order
+ * NetLabel type used to represent an array of CIPSO tags in decreasing order
  * of preference.
  *
  */
-struct nlbl_cv4_tag_a {
-	nlbl_cv4_tag *array;
+struct nlbl_cip_tag_a {
+	nlbl_cip_tag *array;
 	size_t size;
 };
 
 /**
- * NetLabel CIPSOv4 MLS level
+ * NetLabel CIPSO MLS level
  *
- * NetLabel type used to represent the CIPSOv4 MLS sensitivity level.
+ * NetLabel type used to represent the CIPSO MLS sensitivity level.
  *
  */
-typedef uint32_t nlbl_cv4_lvl;
+typedef uint32_t nlbl_cip_lvl;
 
 /**
- * NetLabel CIPSOv4 MLS level array
+ * NetLabel CIPSO MLS level array
  * @param array array of MLS levels
  * @param size size of array
  *
- * NetLabel type used to represent an array of CIPSOv4 MLS sensitivity levels.
+ * NetLabel type used to represent an array of CIPSO MLS sensitivity levels.
  *
  */
-struct nlbl_cv4_lvl_a {
-	nlbl_cv4_lvl *array;
+struct nlbl_cip_lvl_a {
+	nlbl_cip_lvl *array;
 	size_t size;
 };
 
 /**
- * NetLabel CIPSOv4 MLS category
+ * NetLabel CIPSO MLS category
  *
- * NetLabel type used to represent the CIPSOv4 MLS category/compartment.
+ * NetLabel type used to represent the CIPSO MLS category/compartment.
  *
  */
-typedef uint32_t nlbl_cv4_cat;
+typedef uint32_t nlbl_cip_cat;
 
 /**
- * NetLabel CIPSOv4 MLS category array
+ * NetLabel CIPSO MLS category array
  * @param array array of MLS categories
  * @param size size of array
  *
- * NetLabel type used to represent an array of CIPSOv4 MLS categories.
+ * NetLabel type used to represent an array of CIPSO MLS categories.
  *
  */
-struct nlbl_cv4_cat_a {
-	nlbl_cv4_cat *array;
+struct nlbl_cip_cat_a {
+	nlbl_cip_cat *array;
 	size_t size;
 };
 
@@ -219,7 +219,7 @@ typedef uint32_t nlbl_clp_mtype;
  * NetLabel IP address selector structure
  * @param addr IP address
  * @param proto_type labeling protocol
- * @param proto.cv4_doi CIPSOv4 DOI
+ * @param proto.cip_doi CIPSO DOI
  * @param proto.clp_doi CALIPSO DOI
  * @param next next address selector
  *
@@ -230,7 +230,7 @@ struct nlbl_dommap_addr {
 	struct nlbl_netaddr addr;
 	nlbl_proto proto_type;
 	union {
-		nlbl_cv4_doi cv4_doi;
+		nlbl_cip_doi cip_doi;
 		nlbl_clp_doi clp_doi;
 	} proto;
 
@@ -242,7 +242,7 @@ struct nlbl_dommap_addr {
  * @param domain LSM domain
  * @param family address family
  * @param proto_type labeling protocol
- * @param proto.cv4_doi CIPSOv4 DOI
+ * @param proto.cip_doi CIPSO DOI
  * @param proto.cpl_doi CALIPSO DOI
  * @param proto.addrsel IP address selector(s)
  *
@@ -254,7 +254,7 @@ struct nlbl_dommap {
 	uint16_t family;
 	nlbl_proto proto_type;
 	union {
-		nlbl_cv4_doi cv4_doi;
+		nlbl_cip_doi cip_doi;
 		nlbl_clp_doi clp_doi;
 		struct nlbl_dommap_addr *addrsel;
 	} proto;
@@ -345,26 +345,26 @@ int nlbl_unlbl_staticlist(struct nlbl_handle *hndl,
 int nlbl_unlbl_staticlistdef(struct nlbl_handle *hndl,
 			     struct nlbl_addrmap **addrs);
 
-/* CIPSOv4 Protocol */
-int nlbl_cipsov4_add_trans(struct nlbl_handle *hndl,
-			   nlbl_cv4_doi doi,
-			   struct nlbl_cv4_tag_a *tags,
-			   struct nlbl_cv4_lvl_a *lvls,
-			   struct nlbl_cv4_cat_a *cats);
-int nlbl_cipsov4_add_pass(struct nlbl_handle *hndl,
-			  nlbl_cv4_doi doi,
-			  struct nlbl_cv4_tag_a *tags);
-int nlbl_cipsov4_add_local(struct nlbl_handle *hndl, nlbl_cv4_doi doi);
-int nlbl_cipsov4_del(struct nlbl_handle *hndl, nlbl_cv4_doi doi);
-int nlbl_cipsov4_list(struct nlbl_handle *hndl,
-		      nlbl_cv4_doi doi,
-		      nlbl_cv4_mtype *mtype,
-		      struct nlbl_cv4_tag_a *tags,
-		      struct nlbl_cv4_lvl_a *lvls,
-		      struct nlbl_cv4_cat_a *cats);
-int nlbl_cipsov4_listall(struct nlbl_handle *hndl,
-			 nlbl_cv4_doi **dois,
-			 nlbl_cv4_mtype **mtypes);
+/* CIPSO Protocol */
+int nlbl_cipso_add_trans(struct nlbl_handle *hndl,
+			 nlbl_cip_doi doi,
+			 struct nlbl_cip_tag_a *tags,
+			 struct nlbl_cip_lvl_a *lvls,
+			 struct nlbl_cip_cat_a *cats);
+int nlbl_cipso_add_pass(struct nlbl_handle *hndl,
+			nlbl_cip_doi doi,
+			struct nlbl_cip_tag_a *tags);
+int nlbl_cipso_add_local(struct nlbl_handle *hndl, nlbl_cip_doi doi);
+int nlbl_cipso_del(struct nlbl_handle *hndl, nlbl_cip_doi doi);
+int nlbl_cipso_list(struct nlbl_handle *hndl,
+		    nlbl_cip_doi doi,
+		    nlbl_cip_mtype *mtype,
+		    struct nlbl_cip_tag_a *tags,
+		    struct nlbl_cip_lvl_a *lvls,
+		    struct nlbl_cip_cat_a *cats);
+int nlbl_cipso_listall(struct nlbl_handle *hndl,
+		       nlbl_cip_doi **dois,
+		       nlbl_cip_mtype **mtypes);
 /* CALIPSO Protocol */
 int nlbl_calipso_add_pass(struct nlbl_handle *hndl,
 			  nlbl_clp_doi doi);

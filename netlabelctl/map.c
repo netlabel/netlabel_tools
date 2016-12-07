@@ -93,7 +93,7 @@ static int map_add(int argc, char *argv[])
 	case NETLBL_NLTYPE_CIPSOV4:
 		if (domain_proto_extra == NULL)
 			return -EINVAL;
-		domain.proto.cv4_doi = atoi(domain_proto_extra);
+		domain.proto.cip_doi = atoi(domain_proto_extra);
 		break;
 	case NETLBL_NLTYPE_CALIPSO:
 		if (domain_proto_extra == NULL)
@@ -194,7 +194,7 @@ static void map_list_print(struct nlbl_dommap *mapping, size_t count)
 				printf(",6");
 			break;
 		case NETLBL_NLTYPE_CIPSOV4:
-			printf("CIPSOv4,%u", mapping[iter_a].proto.cv4_doi);
+			printf("CIPSOv4,%u", mapping[iter_a].proto.cip_doi);
 			break;
 		case NETLBL_NLTYPE_CALIPSO:
 			printf("CALIPSO,%u", mapping[iter_a].proto.clp_doi);
@@ -211,7 +211,7 @@ static void map_list_print(struct nlbl_dommap *mapping, size_t count)
 					break;
 				case NETLBL_NLTYPE_CIPSOV4:
 					printf("CIPSOv4,%u",
-					       iter_b->proto.cv4_doi);
+					       iter_b->proto.cip_doi);
 					break;
 				case NETLBL_NLTYPE_CALIPSO:
 					printf("CALIPSO,%u",
@@ -272,7 +272,7 @@ static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
 			break;
 		case NETLBL_NLTYPE_CIPSOV4:
 			printf("   protocol: CIPSOv4, DOI = %u\n",
-			       mapping[iter_a].proto.cv4_doi);
+			       mapping[iter_a].proto.cip_doi);
 			break;
 		case NETLBL_NLTYPE_CALIPSO:
 			printf("   protocol: CALIPSO, DOI = %u\n",
@@ -291,7 +291,7 @@ static void map_list_print_pretty(struct nlbl_dommap *mapping, size_t count)
 					break;
 				case NETLBL_NLTYPE_CIPSOV4:
 					printf("CIPSOv4, DOI = %u\n",
-					       iter_b->proto.cv4_doi);
+					       iter_b->proto.cip_doi);
 					break;
 				case NETLBL_NLTYPE_CALIPSO:
 					printf("CALIPSO, DOI = %u\n",
