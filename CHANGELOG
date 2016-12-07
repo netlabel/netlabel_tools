@@ -2,6 +2,10 @@ NetLabel Tools: Releases
 ===============================================================================
 https://github.com/netlabel/netlabel_tools
 
+* Version X.XX - XXX
+- Added support for CALIPSO/RFC5570, requires Linux v4.8
+- Interface now supports using "cipso" in place of "cipsov4"
+
 * Version 0.21 - July 10, 2015
 - Converted the build system to autotools
 - Fixed a number of style/formatting problems, see 'make check-syntax'
