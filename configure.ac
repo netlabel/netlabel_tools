@@ -21,7 +21,7 @@ dnl #
 dnl ####
 dnl netlabel_tools defines
 dnl ####
-AC_INIT([netlabel_tools], [0.21])
+AC_INIT([netlabel_tools], [0.30.0])
 
 dnl ####
 dnl autoconf configuration
