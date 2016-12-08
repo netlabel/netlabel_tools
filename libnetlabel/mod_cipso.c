@@ -189,10 +189,10 @@ init_return:
  *
  */
 int nlbl_cipso_add_trans(struct nlbl_handle *hndl,
-			   nlbl_cip_doi doi,
-			   struct nlbl_cip_tag_a *tags,
-			   struct nlbl_cip_lvl_a *lvls,
-			   struct nlbl_cip_cat_a *cats)
+			 nlbl_cip_doi doi,
+			 struct nlbl_cip_tag_a *tags,
+			 struct nlbl_cip_lvl_a *lvls,
+			 struct nlbl_cip_cat_a *cats)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -359,8 +359,8 @@ add_std_return:
  *
  */
 int nlbl_cipso_add_pass(struct nlbl_handle *hndl,
-			  nlbl_cip_doi doi,
-			  struct nlbl_cip_tag_a *tags)
+			nlbl_cip_doi doi,
+			struct nlbl_cip_tag_a *tags)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -609,11 +609,11 @@ del_return:
  *
  */
 int nlbl_cipso_list(struct nlbl_handle *hndl,
-		      nlbl_cip_doi doi,
-		      nlbl_cip_mtype *mtype,
-		      struct nlbl_cip_tag_a *tags,
-		      struct nlbl_cip_lvl_a *lvls,
-		      struct nlbl_cip_cat_a *cats)
+		    nlbl_cip_doi doi,
+		    nlbl_cip_mtype *mtype,
+		    struct nlbl_cip_tag_a *tags,
+		    struct nlbl_cip_lvl_a *lvls,
+		    struct nlbl_cip_cat_a *cats)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;
@@ -785,8 +785,8 @@ list_return:
  *
  */
 int nlbl_cipso_listall(struct nlbl_handle *hndl,
-			 nlbl_cip_doi **dois,
-			 nlbl_cip_mtype **mtypes)
+		       nlbl_cip_doi **dois,
+		       nlbl_cip_mtype **mtypes)
 {
 	int rc = -ENOMEM;
 	struct nlbl_handle *p_hndl = hndl;

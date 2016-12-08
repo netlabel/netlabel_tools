@@ -129,8 +129,7 @@ static int cipso_add(int argc, char *argv[])
 	switch (cipso_type) {
 	case CIPSO_V4_MAP_TRANS:
 		/* translated mapping */
-		rc = nlbl_cipso_add_trans(NULL,
-					    doi, &tags, &lvls, &cats);
+		rc = nlbl_cipso_add_trans(NULL, doi, &tags, &lvls, &cats);
 		break;
 	case CIPSO_V4_MAP_PASS:
 		/* pass through mapping */
