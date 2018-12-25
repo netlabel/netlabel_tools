@@ -1,7 +1,8 @@
 #
 # NetLabel Documentation Makefile
 #
-# Author: Paul Moore <paul@paul-moore.com>
+# Author: Aleksei Nikiforov <darktemplar@basealt.ru>
+# Based on doc/Makefile.am
 #
 
 #
@@ -18,23 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-EXTRA_DIST = doxyfile
+mandir = @mandir@/ru
 
 dist_man8_MANS = \
 	man/man8/netlabel-config.8 \
 	man/man8/netlabelctl.8
-
-SUBDIRS = ru
-
-if DOXYGEN
-all-local: doxygen
-
-clean-local: clean-doxygen
-
-doxygen: doxyfile
-	$(AM_V_P) || echo -e "  DOXYGEN  $<"
-	doxygen $<
-
-clean-doxygen:
-	${RM} -rf doxygen
-endif
