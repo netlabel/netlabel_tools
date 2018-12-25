@@ -146,6 +146,7 @@ AC_CONFIG_FILES([
 	libnetlabel/Makefile
 	netlabelctl/Makefile
 	doc/Makefile
+	doc/ru/Makefile
 	tests/Makefile
 ])
 
