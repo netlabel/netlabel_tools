@@ -114,15 +114,21 @@ function nlbl_reset() {
 # load the NetLabel configuration from the configuration file
 function nlbl_load() {
 	local ret_rc=0
+	local line_num=0
 	local line
 	while read line; do
+		line_num=$(($line_num + 1))
 		# skip comments and blank lines
 		echo "$line" | egrep '^#|^$' >& /dev/null && continue
 
 		# perform the configuration
-		netlabelctl $line >& /dev/null
+		output=$(netlabelctl $line 2>&1)
 		rc=$?
-		[[ $rc -ne 0 ]] && ret_rc=1
+		if [[ $rc -ne 0 ]]; then
+			ret_rc=1
+			echo "error: line $line_num \"$line\""
+			echo "$output"
+		fi
 	done < "$CFG_FILE"
 
 	return $ret_rc
