@@ -27,3 +27,5 @@ tags
 /stamp-h1
 /cov-int
 /netlabel_tools-coverity_*.tar.gz
+netlabelctl/netlabel-config
+netlabelctl/netlabel.service

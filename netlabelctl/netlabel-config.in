@@ -20,10 +20,12 @@
 #  7 - program is not running
 
 # set the PATH
-PATH="/sbin:/bin:/usr/sbin:/usr/bin"
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+PATH="@sbindir@:/sbin:/bin:/usr/sbin:/usr/bin"
 
 # core configuration
-CFG_FILE="/etc/netlabel.rules"
+CFG_FILE="@sysconfdir@/netlabel.rules"
 
 ####
 # functions

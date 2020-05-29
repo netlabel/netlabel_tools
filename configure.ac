@@ -145,10 +145,12 @@ AC_CONFIG_FILES([
 	include/Makefile
 	libnetlabel/Makefile
 	netlabelctl/Makefile
+	netlabelctl/netlabel.service
 	doc/Makefile
 	doc/ru/Makefile
 	tests/Makefile
 ])
+AC_CONFIG_FILES([netlabelctl/netlabel-config], [chmod +x netlabelctl/netlabel-config])
 
 dnl ####
 dnl done
