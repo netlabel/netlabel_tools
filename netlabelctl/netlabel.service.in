@@ -8,8 +8,8 @@ Before=NetworkManager.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/sbin/netlabel-config load
-ExecStop=/usr/sbin/netlabel-config reset
+ExecStart=@prefix@/sbin/netlabel-config load
+ExecStop=@prefix@/sbin/netlabel-config reset
 
 [Install]
 WantedBy=multi-user.target
