@@ -126,6 +126,15 @@ AS_IF([test "x$with_systemdsystemunitdir" != "xno"],
 AM_CONDITIONAL([HAVE_SYSTEMD], [test "x$with_systemdsystemunitdir" != "xno"])
 
 dnl ####
+dnl udev rules
+dnl ####
+AC_ARG_WITH([udevrulesdir],
+            AS_HELP_STRING([--with-udevrulesdir=DIR], [Directory for udev rules]),
+            [],
+            [with_udevrulesdir=$($PKG_CONFIG --variable=udevdir udev)"/rules.d"])
+AC_SUBST([udevrulesdir], [$with_udevrulesdir])
+
+dnl ####
 dnl doxygen checks
 dnl ####
 AC_CHECK_PROG(have_doxygen, doxygen, "yes", "no")

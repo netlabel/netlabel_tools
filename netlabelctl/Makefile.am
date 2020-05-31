@@ -27,6 +27,8 @@ dist_sysconf_DATA = netlabel.rules
 
 if HAVE_SYSTEMD
 systemdsystemunit_DATA = netlabel.service
+udevrules_DATA = 90-netlabel.rules
+EXTRA_DIST += $(udevrules_DATA)
 endif
 
 netlabelctl_SOURCES = \

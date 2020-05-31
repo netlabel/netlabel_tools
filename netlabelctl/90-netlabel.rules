@@ -1,0 +1,3 @@
+SUBSYSTEM!="net", GOTO="netlabel_end"
+RUN+="netlabel-config udev-action:$env{ACTION} device:$name"
+LABEL="netlabel_end"

@@ -39,6 +39,7 @@ function nlbl_reset_unlbl() {
 		[[ "$(echo $i | cut -d':' -f 1)" == "accept" ]] && continue
 
 		local iface=$(echo $i | cut -d',' -f 1 | cut -d':' -f 2)
+		[ "$1" != "all" -a "$1" != "$iface" ] && continue
 		local addr=$(echo $i | cut -d',' -f 2 | cut -d':' -f 2)
 		if [[ "$iface" == "DEFAULT" ]]; then
 			netlabelctl unlbl del default address:$addr
@@ -49,7 +50,7 @@ function nlbl_reset_unlbl() {
 
 	# reset the unlabeled traffic handling
 	# NOTE: only turn this off if you _really_ know what you are doing
-	netlabelctl unlbl accept on
+	[ "$1" == "all" ] && netlabelctl unlbl accept on
 
 	return 0
 }
@@ -109,7 +110,7 @@ function nlbl_reset() {
 	nlbl_reset_map
 	nlbl_reset_cipso
 	nlbl_reset_calipso
-	nlbl_reset_unlbl
+	nlbl_reset_unlbl all
 	return 0
 }
 
@@ -123,6 +124,9 @@ function nlbl_load() {
 		# skip comments and blank lines
 		echo "$line" | egrep '^#|^$' >& /dev/null && continue
 
+		if [ "$1" != "all" ]; then
+			echo "$line" | grep "interface:$1" >& /dev/null || continue
+		fi
 		# perform the configuration
 		output=$(netlabelctl $line 2>&1)
 		rc=$?
@@ -132,6 +136,29 @@ function nlbl_load() {
 			echo "$output"
 		fi
 	done < "$CFG_FILE"
+
+	return $ret_rc
+}
+
+# invocation from udev rules
+function udev_action() {
+	local ret_rc=0
+	local action="${1#udev-action:}"
+	local iface="${2#interface:}"
+	case "$action" in
+	add)
+		nlbl_load "$iface"
+		ret_rc=$?
+		;;
+	remove)
+		# reset only this interface but retain other configuration
+		nlbl_reset_unlbl "$iface"
+		ret_rc=$?
+		;;
+	*)
+		# ignore udev action "change" or unknown actions
+		;;
+	esac
 
 	return $ret_rc
 }
@@ -150,11 +177,16 @@ which netlabelctl >& /dev/null || exit 5
 # operation
 case "$1" in
 load)
-	nlbl_load
+	nlbl_load all
 	rc=$?
 	;;
 reset)
-	nlbl_reset
+	nlbl_reset all
+	rc=$?
+	;;
+udev-action:*)
+	echo udev_action "$1" "$2"
+	udev_action "$1" "$2"
 	rc=$?
 	;;
 *)
