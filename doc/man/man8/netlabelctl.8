@@ -57,7 +57,9 @@ Display the kernel's list of supported labeling protocols.
 The domain mapping module is used to map different NetLabel labeling protocols
 to either individual LSM domains or the default domain mapping.  It is up to
 each LSM to determine what defines a domain.  With SELinux, the normal SELinux
-domain should be used, i.e. "ping_t".  In addition to protocol selection based
+domain should be used, i.e. "ping_t" (however see the
+.B NOTES
+section below regarding SElinux).  In addition to protocol selection based
 only on the LSM domain, it is also possible to select the labeling protocol
 based on both the LSM domain and destination address.  The network address
 selectors can specify either single hosts or entire networks and work for both
@@ -258,6 +260,31 @@ The static, or fallback, labels are only supported on Linux Kernels version
 2.6.25 and later.  The domain mapping address selectors are only supported on
 Linux Kernels 2.6.28 and later and CALIPSO/RFC5570 is only supported on Linux
 Kernels 4.8.0 and later.
+.P
+When using the SELinux LSM, it is generally assumed that the
+.I type
+component of the process security label should be used as the
+.I domain:<domain>
+entry. However, NetLabel services actually use the socket security label to
+determine labeling.  Normally this would be the same
+.I type
+component as the process (as by default the socket inherits the process
+label).  There are cases where this matters, as it is possible with SELinux
+to set a different label on the socket using the libselinux function
+.BR setsockcreatecon (3),
+or a policy socket* class
+.I type_transition
+rule.  Should these be used to change a socket label, then the new socket
+.I type
+must be used in the
+.I domain:<domain>
+entry instead.
+If fallback labeling is configured and a new socket label is set on the
+client, the server will show that label when
+.BR getsockopt (2)
+with
+.I optname=SO_PEERSEC
+is called.
 .P
 The NetLabel project site, with more information including the source code
 repository, can be found at https://github.com/netlabel.  Please report any
