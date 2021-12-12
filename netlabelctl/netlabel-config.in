@@ -39,7 +39,7 @@ function nlbl_reset_unlbl() {
 		[[ "$(echo $i | cut -d':' -f 1)" == "accept" ]] && continue
 
 		local iface=$(echo $i | cut -d',' -f 1 | cut -d':' -f 2)
-		local addr=$(echo $i | cut -d',' -f 2 | cut -d':' -f 2)
+		local addr=$(echo $i | cut -d',' -f 2 | cut -d':' -f 2-)
 		if [[ "$iface" == "DEFAULT" ]]; then
 			netlabelctl unlbl del default address:$addr
 		else
