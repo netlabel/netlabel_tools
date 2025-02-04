@@ -22,7 +22,7 @@
  *
  */
 
-#ifndef _NETLINK_COMM_H
+#ifndef _NETLINK_COMM_H_
 #define _NETLINK_COMM_H_
 
 #include <netlink/netlink.h>
